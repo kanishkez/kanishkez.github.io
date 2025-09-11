@@ -1,1 +1,1 @@
-website: [kanishkez.github.io](kanishkez.github.io)
+website: [kanishkez.github.io](https://kanishkez.github.io/)
