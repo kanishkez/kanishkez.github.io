@@ -12,29 +12,30 @@
     *, *::before, *::after { box-sizing: inherit; }
 
     header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
 
-nav {
-  flex-grow: 1;
-  margin-left: 20px;
-}
+    nav {
+      flex-grow: 1;
+      margin-left: 20px;
+    }
 
-.social a {
-  margin-left: 12px;
-  color: #444;
-  display: inline-flex;
-  align-items: center;
-}
+    .social a {
+      margin-left: 12px;
+      color: #444;
+      display: inline-flex;
+      align-items: center;
+    }
 
-.social a:hover {
-  color: #8b6547;
-}
+    .social a:hover {
+      color: #8b6547;
+    }
+    
     section {
-  scroll-margin-top: 80px; 
-}
+      scroll-margin-top: 80px; 
+    }
    
     main { 
       background: rgba(255, 255, 255, 0.6);
@@ -45,6 +46,7 @@ nav {
       box-shadow: 0 4px 20px rgba(139, 101, 71, 0.04);
       margin: 0 -24px;
     } 
+    
     body {
       margin: 40px auto; padding: 0 12px; max-width: var(--page-width);
       font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial,
@@ -155,6 +157,67 @@ nav {
     
     /* Simple section anchor behavior */
     .hidden { display: none; }
+    
+    /* Blog section styling */
+    .blog-category {
+      margin-top: 40px;
+      margin-bottom: 32px;
+    }
+    
+    .blog-category-title {
+      font-size: 24px;
+      font-weight: 700;
+      color: #2c1810;
+      margin-bottom: 8px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid rgba(139, 101, 71, 0.15);
+    }
+    
+    .blog-category-desc {
+      color: #8b6547;
+      font-size: 16px;
+      margin-bottom: 20px;
+    }
+    
+    .blog-item {
+      background: rgba(255, 255, 255, 0.5);
+      border: 1px solid rgba(139, 101, 71, 0.08);
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 16px;
+      transition: all 0.3s ease;
+    }
+    
+    .blog-item:hover {
+      background: rgba(255, 255, 255, 0.7);
+      border-color: rgba(139, 101, 71, 0.15);
+      box-shadow: 0 2px 12px rgba(139, 101, 71, 0.08);
+      transform: translateY(-2px);
+    }
+    
+    .blog-item h3 {
+      margin: 0 0 8px 0;
+      font-size: 20px;
+      color: #2c1810;
+    }
+    
+    .blog-item a {
+      color: #8b6547;
+      font-size: 15px;
+      border-bottom: 1px solid rgba(139, 101, 71, 0.3);
+      word-break: break-all;
+    }
+    
+    .blog-item a:hover {
+      color: #6d4c33;
+      border-bottom-color: #6d4c33;
+    }
+    
+    .blogs-intro {
+      color: #444;
+      margin-bottom: 32px;
+      font-size: 17px;
+    }
   </style>
   <script>
     // Tiny hash-based router so the nav works like separate pages without needing multiple files
@@ -171,43 +234,43 @@ nav {
 </head>
 <body>
   <header>
-  <div class="site-title">kanishk's space</div>
-  <nav aria-label="Primary">
-    <a href="#home">Home</a>
-    <a href="#projects">Projects</a>
-    <a href="#blogs">Blogs</a>
-  </nav>
-  <div class="social">
-    <a href="https://github.com/kanishkez" target="_blank" rel="noopener" aria-label="GitHub">
-      <!-- GitHub SVG -->
-      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
-        <path d="M8 0C3.58 0 0 3.58 0 8a8 8 0 005.47 7.59c.4.07.55-.17.55-.38
-          0-.19-.01-.82-.01-1.49-2 .37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13
-          -.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87
-          2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95
-          0-.87.31-1.59.82-2.15-.08-.2-.36-1.01.08-2.11
-          0 0 .67-.21 2.2.82a7.65 7.65 0 012 0c1.53-1.03 2.2-.82
-          2.2-.82.44 1.1.16 1.91.08 2.11.51.56.82 1.28.82 2.15
-          0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48
-          0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8
-          c0-4.42-3.58-8-8-8z"/>
-      </svg>
-    </a>
-    <a href="https://www.linkedin.com/in/kanishk-k-b266a7348/" target="_blank" rel="noopener" aria-label="LinkedIn">
-      <!-- LinkedIn SVG -->
-      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
-        <path d="M0 1.146C0 .513.526 0 1.175 0h13.65C15.473 0 16 .513 
-          16 1.146v13.708c0 .633-.526 1.146-1.175 1.146H1.175C.527 
-          16 0 15.487 0 14.854V1.146zM4.943 13.542V6.169H2.542v7.373h2.401zM3.743 
-          5.22a1.39 1.39 0 110-2.779 1.39 1.39 0 010 2.779zM13.458 
-          13.542v-4.041c0-2.168-1.158-3.178-2.701-3.178-1.243 
-          0-1.805.682-2.12 1.162h-.03V6.169H6.206c.03.95 0 7.373 
-          0 7.373h2.401v-4.122c0-.22.016-.439.08-.597.176-.439.576-.894 
-          1.248-.894.88 0 1.234.674 1.234 1.662v3.951h2.289z"/>
-      </svg>
-    </a>
-  </div>
-</header>
+    <div class="site-title">kanishk's space</div>
+    <nav aria-label="Primary">
+      <a href="#home">Home</a>
+      <a href="#projects">Projects</a>
+      <a href="#blogs">Blogs</a>
+    </nav>
+    <div class="social">
+      <a href="https://github.com/kanishkez" target="_blank" rel="noopener" aria-label="GitHub">
+        <!-- GitHub SVG -->
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+          <path d="M8 0C3.58 0 0 3.58 0 8a8 8 0 005.47 7.59c.4.07.55-.17.55-.38
+            0-.19-.01-.82-.01-1.49-2 .37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13
+            -.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87
+            2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95
+            0-.87.31-1.59.82-2.15-.08-.2-.36-1.01.08-2.11
+            0 0 .67-.21 2.2.82a7.65 7.65 0 012 0c1.53-1.03 2.2-.82
+            2.2-.82.44 1.1.16 1.91.08 2.11.51.56.82 1.28.82 2.15
+            0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48
+            0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8
+            c0-4.42-3.58-8-8-8z"/>
+        </svg>
+      </a>
+      <a href="https://www.linkedin.com/in/kanishk-k-b266a7348/" target="_blank" rel="noopener" aria-label="LinkedIn">
+        <!-- LinkedIn SVG -->
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+          <path d="M0 1.146C0 .513.526 0 1.175 0h13.65C15.473 0 16 .513 
+            16 1.146v13.708c0 .633-.526 1.146-1.175 1.146H1.175C.527 
+            16 0 15.487 0 14.854V1.146zM4.943 13.542V6.169H2.542v7.373h2.401zM3.743 
+            5.22a1.39 1.39 0 110-2.779 1.39 1.39 0 010 2.779zM13.458 
+            13.542v-4.041c0-2.168-1.158-3.178-2.701-3.178-1.243 
+            0-1.805.682-2.12 1.162h-.03V6.169H6.206c.03.95 0 7.373 
+            0 7.373h2.401v-4.122c0-.22.016-.439.08-.597.176-.439.576-.894 
+            1.248-.894.88 0 1.234.674 1.234 1.662v3.951h2.289z"/>
+        </svg>
+      </a>
+    </div>
+  </header>
 
   <main>
     <!-- ===== Home ===== -->
@@ -215,21 +278,18 @@ nav {
       <p>I'm kanishk, an undergraduate student in computer science.</p>
       <p>Here, I share my love for machine learning, robotics, literature and other geeky stuff.</p>
 
-      <p> I like working on llms, curate datasets and deploy them in the real world. I also indulge in a fair bit of web development </p>
+      <p>I like working on llms, curate datasets and deploy them in the real world. I also indulge in a fair bit of web development</p>
 
       <p class="muted">things I love:</p>
       <ol>
         <li>deep learning</li>
-        <li>neovim ( I use nvim + kitty), linux (used arch but im on macos right now)</li>
+        <li>neovim (I use nvim + kitty), linux (used arch but im on macos right now)</li>
         <li>applied robotics</li>
         <li>hidden/subaltern history</li>
-        <li>tinkering with side projects that break more often than they work </li>
-        <li>long rabbit holes about science,tech or history.
+        <li>tinkering with side projects that break more often than they work</li>
+        <li>long rabbit holes about science, tech or history</li>
         <li>football (fc barcelona ftw)</li>
       </ol>
-      
-
-      
     </section>
 
     <!-- ===== Projects ===== -->
@@ -246,7 +306,7 @@ nav {
       <h2>mcp server for obsidian</h2>
       <p>this mcp server can act as an agent for obsidian allowing claude or any other mcp host to interact with obsidian to write content and delete them in any vault.</p>
       <p>
-        <strong>repo: </strong><a href="https://github.com/kanishkez/obsidian-mcp" target="_blank" rel="noopener">github.com/kanishkez/obsidian-mcp</a>
+        <strong>repo:</strong> <a href="https://github.com/kanishkez/obsidian-mcp" target="_blank" rel="noopener">github.com/kanishkez/obsidian-mcp</a>
       </p>
       
       <h2>hourswap</h2>
@@ -260,32 +320,43 @@ nav {
 
     <!-- ===== Blogs ===== -->
     <section id="blogs" class="hidden">
-      <p>I write my blogs on substack mostly, here are the links:</p>
+      <p class="blogs-intro">I write my blogs on substack mostly, here are the links:</p>
 
-      <h1> The LLM blog series: </h1>
-      <p> A series of blogs that I'm currently writing that explain the technology/architecture used in modern large language models.</p>
-
-      <h2>Beyond Transformers</h2>
-      <p><stong>link:</stong> <a href="https://kanishkk.substack.com/p/beyond-transformers" target="_blank" rel="noopener">https://kanishkk.substack.com/p/beyond-transformers</a></p>
-
-      <h2>The Transformer Architecture Explained</h2>
-      <p><strong>link:</strong> <a href="https://kanishkk.substack.com/p/the-transformer-architecture-explained" target="_blank" rel="noopener">https://kanishkk.substack.com/p/the-transformer-architecture-explained</a></p>
-
-        <h1>Random stuff:</h1>
-      <p>Just some blogs about things I find interesting.</p>
-
-      
-
-      <h2>An Introduction to Functional Programming and Lambda Calculus</h2>
-      <p><strong>link:</strong> <a href="https://kanishkk.substack.com/p/an-introduction-to-functional-programming" target="_blank" rel="noopener">https://kanishkk.substack.com/p/an-introduction-to-functional-programming</a></p>
-      
-      <h2>how far is agi?</h2>
-      <p><strong>link:</strong> <a href="https://kanishkk.substack.com/p/how-far-is-agi" target="_blank" rel="noopener">kanishkk.substack.com/p/how-far-is-agi</a></p>
-
-      <h2>why I hate existentialism</h2>
-      <p><strong>link:</strong> <a href="https://kanishkk.substack.com/p/why-i-hate-existentialism" target="_blank" rel="noopener">kanishkk.substack.com/p/why-i-hate-existentialism</a></p>
-
+      <div class="blog-category">
+        <h2 class="blog-category-title">The LLM blog series</h2>
+        <p class="blog-category-desc">A series of blogs that I'm currently writing that explain the technology/architecture used in modern large language models.</p>
+        
+        <div class="blog-item">
+          <h3>Beyond Transformers - GPT, BERT and BART </h3>
   
+          <a href="https://kanishkk.substack.com/p/beyond-transformers" target="_blank" rel="noopener">kanishkk.substack.com/p/beyond-transformers</a>
+        </div>
+
+        <div class="blog-item">
+          <h3>The Transformer Architecture Explained</h3>
+          <a href="https://kanishkk.substack.com/p/the-transformer-architecture-explained" target="_blank" rel="noopener">kanishkk.substack.com/p/the-transformer-architecture-explained</a>
+        </div>
+      </div>
+
+      <div class="blog-category">
+        <h2 class="blog-category-title">Random stuff</h2>
+        <p class="blog-category-desc">Just some blogs about things I find interesting.</p>
+        
+        <div class="blog-item">
+          <h3>An Introduction to Functional Programming and Lambda Calculus</h3>
+          <a href="https://kanishkk.substack.com/p/an-introduction-to-functional-programming" target="_blank" rel="noopener">kanishkk.substack.com/p/an-introduction-to-functional-programming</a>
+        </div>
+
+        <div class="blog-item">
+          <h3>how far is agi?</h3>
+          <a href="https://kanishkk.substack.com/p/how-far-is-agi" target="_blank" rel="noopener">kanishkk.substack.com/p/how-far-is-agi</a>
+        </div>
+
+        <div class="blog-item">
+          <h3>why I hate existentialism</h3>
+          <a href="https://kanishkk.substack.com/p/why-i-hate-existentialism" target="_blank" rel="noopener">kanishkk.substack.com/p/why-i-hate-existentialism</a>
+        </div>
+      </div>
     </section>
   </main>
 
