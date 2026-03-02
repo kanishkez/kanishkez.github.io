@@ -262,7 +262,7 @@
 
       <nav id="topnav">
         <button class="nav-btn" data-section="home">home</button>
-        <button class="nav-btn" data-section="projects">projects</button>
+        <button class="nav-btn" data-section="projects">projects/research</button>
         <button class="nav-btn" data-section="blogs">blogs</button>
       </nav>
 
@@ -306,6 +306,24 @@
       <section id="projects" class="fade" style="display:none;">
         <p style="font-size:18px; margin-bottom:32px; color:var(--muted)">These are some of the projects I've worked on:</p>
 
+
+         <div class="card">
+          <h3>Can LLMs act as RL Agents?</h3>
+          <p>This project explores whether an LLM can function as a policy inside classic Gym environments, without reinforcement learning, gradient updates, or weight training. <br> Instead of updating parameters, the LLM reasons over context and episode history to choose actions.
+
+<br>
+            I tested this by using an LLM directly as the policy in:
+            • CartPole
+            • FrozenLake
+            • LunarLander <br>
+          <div class="card-links">
+            <a class="text-link" href="https://kanishkk.substack.com/p/can-llms-solve-gym-environments" target="_blank" rel="noopener"> Blog</a>
+              <a class="text-link" href="https://github.com/kanishkez/LLMs-as-Gym-Agents" target="_blank" rel="noopener"><i data-lucide="github"></i> GitHub</a>
+          </div>
+        </div>
+
+        
+
         
         <div class="card">
           <h3>TinyPEFT</h3>
@@ -317,18 +335,10 @@
             <a class="text-link" href="https://github.com/kanishkez/TinyPEFT" target="_blank" rel="noopener"><i data-lucide="github"></i> GitHub</a>
           </div>
         </div>
-   
 
-       
-        <div class="card">
-          <h3>Llama3.2 fine-tuned on Physics</h3>
-          <p>A fine-tuned version of Meta's Llama 3.2 model trained specifically on physics datasets using Unsloth's efficient training framework with LoRA and PEFT techniques for parameter-efficient adaptation.</p>
-          <div class="card-links">
-            <a class="text-link" href="https://huggingface.co/kanishkez/llama3.2-fine-tuned-on-physics" target="_blank" rel="noopener"><i data-lucide="external-link"></i> Model</a>
-            <a class="text-link" href="https://github.com/kanishkez/llama3.2-physics-finetune" target="_blank" rel="noopener"><i data-lucide="github"></i> GitHub</a>
-          </div>
-        </div>
- <div class="card">
+        
+
+        
           <h3>Kisangpt</h3>
           <p>An AI-powered agricultural assistant that supports multiple languages, image recognition and uses real-time data from reputable sources like data.gov.in to act as an assistant for Indian farmers.</p>
           <div class="card-links">
@@ -336,6 +346,7 @@
             <a class="text-link" href="https://github.com/kanishkez/KisanGPT" target="_blank" rel="noopener"><i data-lucide="github"></i> GitHub</a>
           </div>
         </div>
+       
 
         <div class="card">
           <h3>Reward Model</h3>
@@ -369,6 +380,15 @@
             <a class="text-link" href="https://kanishkk.substack.com" target="_blank" rel="noopener"><i data-lucide="external-link"></i> Blog</a>
           </div>
         </div>
+        <div class="card">
+          <h3>Llama3.2 fine-tuned on Physics</h3>
+          <p>A fine-tuned version of Meta's Llama 3.2 model trained specifically on physics datasets using Unsloth's efficient training framework with LoRA and PEFT techniques for parameter-efficient adaptation.</p>
+          <div class="card-links">
+            <a class="text-link" href="https://huggingface.co/kanishkez/llama3.2-fine-tuned-on-physics" target="_blank" rel="noopener"><i data-lucide="external-link"></i> Model</a>
+            <a class="text-link" href="https://github.com/kanishkez/llama3.2-physics-finetune" target="_blank" rel="noopener"><i data-lucide="github"></i> GitHub</a>
+          </div>
+        </div>
+ <div class="card">
 
         
 
