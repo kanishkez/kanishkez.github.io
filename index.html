@@ -4,6 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>kanishk</title>
+  <link rel="icon" type="image/png" href="favicon.png" />
   <style>
     :root {
       --bg: #f4ede4;
@@ -13,7 +14,6 @@
       --acc: #8b6547;
       --line: rgba(139,101,71,0.14);
       --grid: rgba(139,101,71,0.065);
-      --nav-text: #1a1008;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -26,20 +26,37 @@
       color: var(--ink);
       min-height: 100vh;
     }
-    .wrap { max-width: 700px; margin: 0 auto; padding: 52px 24px 80px; }
 
-    .topbar {
+    .layout {
       display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 52px;
-      padding-bottom: 14px;
-      border-bottom: 1px solid var(--line);
+      min-height: 100vh;
+      max-width: 1100px;
+      margin: 0 auto;
     }
-    .topbar-left { display: flex; gap: 0; }
-    .topbar-left button {
+
+    /* SIDEBAR */
+    .sidebar {
+      width: 180px;
+      flex-shrink: 0;
+      padding: 52px 24px 52px 24px;
+      border-right: 1px solid var(--line);
+      display: flex;
+      flex-direction: column;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+    }
+
+    .sidebar-nav {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-bottom: auto;
+    }
+
+    .sidebar-nav button {
       font-size: 12px;
-      color: var(--nav-text);
+      color: var(--dim);
       background: none;
       border: none;
       cursor: pointer;
@@ -47,41 +64,60 @@
       text-transform: uppercase;
       font-family: system-ui, sans-serif;
       font-weight: 700;
-      padding: 6px 0;
-      margin-right: 24px;
-      border-bottom: 2px solid transparent;
-      transition: color 0.15s;
+      padding: 7px 0 7px 10px;
+      text-align: left;
+      border-left: 2px solid transparent;
+      transition: color 0.15s, border-color 0.15s;
     }
-    .topbar-left button:hover { color: var(--acc); }
-    .topbar-left button.active { color: var(--acc); border-bottom-color: var(--acc); }
+    .sidebar-nav button:hover { color: var(--acc); }
+    .sidebar-nav button.active { color: var(--acc); border-left-color: var(--acc); }
 
-    .topbar-right { display: flex; gap: 18px; }
-    .topbar-right a {
-      font-size: 12px;
-      color: var(--nav-text);
+    .sidebar-links {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 40px;
+      padding-top: 20px;
+      border-top: 1px solid var(--line);
+    }
+    .sidebar-links a {
+      font-size: 11px;
+      color: var(--dim);
       text-decoration: none;
       font-family: system-ui, sans-serif;
       font-weight: 700;
-      letter-spacing: 0.05em;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
     }
-    .topbar-right a:hover { color: var(--acc); }
+    .sidebar-links a:hover { color: var(--acc); }
 
-    
+    /* MAIN */
+    .main {
+      flex: 1;
+      padding: 52px 56px 80px 56px;
+      min-width: 0;
+    }
+
     .section { display: none; }
     .section.active { display: block; }
 
- 
-    .home-text p { font-size: 15px; line-height: 1.85; margin-bottom: 12px; }
+    /* HOME */
+    .home-text p {
+      font-size: 17px;
+      line-height: 1.9;
+      margin-bottom: 14px;
+      max-width: 620px;
+    }
     .home-text p.dim {
-      font-size: 13px;
+      font-size: 15px;
       color: var(--dim);
       font-family: system-ui, sans-serif;
-      line-height: 1.75;
+      line-height: 1.8;
       margin-bottom: 0;
     }
-    .home-links { display: flex; gap: 16px; margin-top: 22px; flex-wrap: wrap; }
+    .home-links { display: flex; gap: 18px; margin-top: 26px; flex-wrap: wrap; }
     .home-links a {
-      font-size: 12px;
+      font-size: 13px;
       color: var(--acc);
       text-decoration: none;
       font-family: system-ui, sans-serif;
@@ -90,89 +126,86 @@
     }
     .home-links a:hover { border-bottom-color: var(--acc); }
 
-  
     .below-bio {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 32px;
-      margin-top: 44px;
+      gap: 40px;
+      margin-top: 52px;
       border-top: 1px solid var(--line);
-      padding-top: 28px;
+      padding-top: 32px;
     }
     .col-label {
       font-size: 10px;
       font-weight: 700;
-      color: var(--nav-text);
+      color: var(--ink);
       letter-spacing: 0.15em;
       text-transform: uppercase;
       font-family: system-ui, sans-serif;
-      margin-bottom: 14px;
+      margin-bottom: 16px;
       padding-bottom: 8px;
       border-bottom: 1px solid var(--line);
     }
 
     .mini-proj {
-      padding: 10px 12px;
+      padding: 11px 14px;
       background: var(--tile);
       border: 1px solid var(--line);
       border-radius: 8px;
-      margin-bottom: 8px;
+      margin-bottom: 9px;
       transition: box-shadow 0.15s, transform 0.15s;
     }
     .mini-proj:hover { box-shadow: 0 4px 14px rgba(139,101,71,0.11); transform: translateY(-1px); }
-    .mini-proj h4 { font-size: 12px; font-weight: 400; font-style: italic; color: var(--ink); margin-bottom: 5px; line-height: 1.35; }
-    .mini-proj-links { display: flex; gap: 8px; }
-    .mini-proj-links a { font-size: 10px; color: var(--acc); text-decoration: none; font-family: system-ui, sans-serif; }
+    .mini-proj h4 { font-size: 13px; font-weight: 400; font-style: italic; color: var(--ink); margin-bottom: 6px; line-height: 1.35; }
+    .mini-proj-links { display: flex; gap: 10px; }
+    .mini-proj-links a { font-size: 11px; color: var(--acc); text-decoration: none; font-family: system-ui, sans-serif; }
     .mini-proj-links a:hover { text-decoration: underline; }
 
     .see-all {
-      font-size: 11px;
-      color: var(--nav-text);
+      font-size: 12px;
+      color: var(--dim);
       font-family: system-ui, sans-serif;
       font-weight: 700;
-      text-decoration: none;
       cursor: pointer;
       background: none;
       border: none;
-      padding: 8px 0 0;
+      padding: 10px 0 0;
       display: block;
       letter-spacing: 0.04em;
     }
     .see-all:hover { color: var(--acc); }
 
- 
     .mini-blog {
       display: flex;
       justify-content: space-between;
       align-items: baseline;
-      padding: 9px 0;
+      padding: 11px 0;
       border-bottom: 1px solid var(--line);
-      gap: 8px;
+      gap: 10px;
     }
-    .mini-blog span { font-size: 12px; font-style: italic; color: var(--ink); line-height: 1.4; }
-    .mini-blog a { font-size: 10px; color: var(--acc); text-decoration: none; font-family: system-ui, sans-serif; white-space: nowrap; }
+    .mini-blog span { font-size: 13px; font-style: italic; color: var(--ink); line-height: 1.4; }
+    .mini-blog a { font-size: 11px; color: var(--acc); text-decoration: none; font-family: system-ui, sans-serif; white-space: nowrap; }
     .mini-blog a:hover { text-decoration: underline; }
 
-    .colophon { margin-top: 48px; border-top: 1px solid var(--line); padding-top: 20px; }
-    .colophon p { font-size: 12px; color: var(--dim); margin-bottom: 6px; font-family: system-ui, sans-serif; }
-    .colophon a { font-size: 14px; color: var(--acc); text-decoration: none; font-style: italic; }
+    .colophon { margin-top: 56px; border-top: 1px solid var(--line); padding-top: 22px; }
+    .colophon p { font-size: 13px; color: var(--dim); margin-bottom: 6px; font-family: system-ui, sans-serif; }
+    .colophon a { font-size: 15px; color: var(--acc); text-decoration: none; font-style: italic; }
     .colophon a:hover { text-decoration: underline; }
 
-
-    .proj-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    /* PROJECTS */
+    .proj-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
     .proj-tile {
       background: var(--tile);
       border: 1px solid var(--line);
       border-radius: 10px;
-      padding: 18px 18px 14px;
+      padding: 20px 20px 16px;
       transition: box-shadow 0.18s, transform 0.18s;
     }
     .proj-tile:hover { box-shadow: 0 6px 20px rgba(139,101,71,0.12); transform: translateY(-2px); }
-    .proj-tile h3 { font-size: 14px; font-weight: 400; font-style: italic; color: var(--ink); line-height: 1.35; margin-bottom: 8px; }
-    .proj-tile p { font-size: 12px; line-height: 1.65; color: var(--dim); font-family: system-ui, sans-serif; margin-bottom: 12px; }
+    .proj-tile h3 { font-size: 15px; font-weight: 400; font-style: italic; color: var(--ink); line-height: 1.35; margin-bottom: 9px; }
+    .proj-tile p { font-size: 13px; line-height: 1.65; color: var(--dim); font-family: system-ui, sans-serif; margin-bottom: 13px; }
     .proj-links { display: flex; gap: 10px; }
     .proj-links a {
-      font-size: 10px;
+      font-size: 11px;
       color: var(--acc);
       text-decoration: none;
       font-family: system-ui, sans-serif;
@@ -181,222 +214,236 @@
     }
     .proj-links a:hover { border-bottom-color: var(--acc); }
 
-    .blog-group { margin-bottom: 36px; }
+    /* BLOGS */
+    .blog-group { margin-bottom: 40px; }
     .blog-group-label {
       font-size: 10px;
       font-weight: 700;
-      color: var(--nav-text);
+      color: var(--ink);
       letter-spacing: 0.15em;
       text-transform: uppercase;
       font-family: system-ui, sans-serif;
-      padding-bottom: 8px;
+      padding-bottom: 9px;
       border-bottom: 1px solid var(--line);
       margin-bottom: 2px;
     }
-    .blog-row { display: flex; justify-content: space-between; align-items: center; padding: 11px 0; border-bottom: 1px solid var(--line); }
-    .blog-row span { font-size: 14px; font-style: italic; color: var(--ink); }
-    .blog-row a { font-size: 10px; color: var(--acc); text-decoration: none; font-family: system-ui, sans-serif; letter-spacing: 0.07em; white-space: nowrap; margin-left: 12px; }
+    .blog-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 13px 0;
+      border-bottom: 1px solid var(--line);
+    }
+    .blog-row span { font-size: 15px; font-style: italic; color: var(--ink); }
+    .blog-row a { font-size: 11px; color: var(--acc); text-decoration: none; font-family: system-ui, sans-serif; letter-spacing: 0.07em; white-space: nowrap; margin-left: 14px; }
     .blog-row a:hover { text-decoration: underline; }
 
-    @media (max-width: 560px) {
-      .proj-grid { grid-template-columns: 1fr; }
-      .below-bio { grid-template-columns: 1fr; }
+    @media (max-width: 700px) {
+      .layout { flex-direction: column; }
+      .sidebar { width: 100%; height: auto; position: static; flex-direction: row; flex-wrap: wrap; align-items: center; padding: 24px; border-right: none; border-bottom: 1px solid var(--line); gap: 16px; }
+      .sidebar-nav { flex-direction: row; margin-bottom: 0; gap: 0; }
+      .sidebar-nav button { border-left: none; border-bottom: 2px solid transparent; padding-left: 0; margin-right: 16px; }
+      .sidebar-nav button.active { border-bottom-color: var(--acc); }
+      .sidebar-links { flex-direction: row; margin-top: 0; padding-top: 0; border-top: none; gap: 12px; }
+      .main { padding: 32px 24px 60px; }
+      .proj-grid, .below-bio { grid-template-columns: 1fr; }
     }
   </style>
 </head>
 <body>
-<div class="wrap">
+<div class="layout">
 
-  <div class="topbar">
-    <div class="topbar-left">
+  <aside class="sidebar">
+    <nav class="sidebar-nav">
       <button class="active" onclick="show('home', this)">Home</button>
       <button onclick="show('projects', this)">Projects</button>
       <button onclick="show('blogs', this)">Blogs</button>
-    </div>
-    <div class="topbar-right">
+    </nav>
+    <div class="sidebar-links">
       <a href="https://github.com/kanishkez" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://kanishkk.substack.com" target="_blank" rel="noopener">Substack</a>
       <a href="mailto:mkanishkkulkarni@gmail.com">Email</a>
     </div>
-  </div>
+  </aside>
 
-  <div id="home" class="section active">
-    <div class="home-text">
-      <p>I'm kanishk, an undergraduate student in computer science.</p>
-      <p>I love working on LLMs and machine learning, making machines think using mathematics excites me a lot.</p>
-      <p class="dim">Currently exploring reinforcement learning, NLP, and computer vision. I like exploring rabbit holes about science, tech, and history.</p>
-      <div class="home-links">
-        <a href="https://github.com/kanishkez" target="_blank" rel="noopener">GitHub</a>
-        <a href="https://kanishkk.substack.com" target="_blank" rel="noopener">Substack</a>
-        <a href="mailto:mkanishkkulkarni@gmail.com">Email</a>
+  <main class="main">
+
+    <div id="home" class="section active">
+      <div class="home-text">
+        <p>I'm kanishk, an undergraduate student in computer science.</p>
+        <p>I love working on LLMs and machine learning, making machines think using mathematics excites me a lot.</p>
+        <p class="dim">Currently exploring reinforcement learning, NLP, and computer vision. I like exploring rabbit holes about science, tech, and history.</p>
+        <div class="home-links">
+          <a href="https://github.com/kanishkez" target="_blank" rel="noopener">GitHub</a>
+          <a href="https://kanishkk.substack.com" target="_blank" rel="noopener">Substack</a>
+          <a href="mailto:mkanishkkulkarni@gmail.com">Email</a>
+        </div>
+      </div>
+
+      <div class="below-bio">
+        <div>
+          <div class="col-label">Projects</div>
+          <div class="mini-proj">
+            <h4>Can LLMs act as RL Agents?</h4>
+            <div class="mini-proj-links">
+              <a href="https://kanishkk.substack.com/p/can-llms-solve-gym-environments" target="_blank">Blog ↗</a>
+              <a href="https://github.com/kanishkez/LLMs-as-Gym-Agents" target="_blank">GitHub ↗</a>
+            </div>
+          </div>
+          <div class="mini-proj">
+            <h4>TinyLLM</h4>
+            <div class="mini-proj-links"><a href="https://github.com/kanishkez/TinyLLM" target="_blank">GitHub ↗</a></div>
+          </div>
+          <div class="mini-proj">
+            <h4>TinyPEFT</h4>
+            <div class="mini-proj-links"><a href="https://github.com/kanishkez/TinyPEFT" target="_blank">GitHub ↗</a></div>
+          </div>
+          <div class="mini-proj">
+            <h4>Sentinel</h4>
+            <div class="mini-proj-links"><a href="https://github.com/kanishkez/SentinelSENTINEL" target="_blank">GitHub ↗</a></div>
+          </div>
+          <div class="mini-proj">
+            <h4>KisanGPT</h4>
+            <div class="mini-proj-links">
+              <a href="https://kisangpt-idgi.onrender.com" target="_blank">Live ↗</a>
+              <a href="https://github.com/kanishkez/KisanGPT" target="_blank">GitHub ↗</a>
+            </div>
+          </div>
+          <button class="see-all" onclick="showFull('projects')">see all →</button>
+        </div>
+
+        <div>
+          <div class="col-label">Writing</div>
+          <div class="mini-blog"><span>Intro to Reinforcement Learning</span><a href="https://kanishkk.substack.com/p/an-intro-to-rl" target="_blank">read ↗</a></div>
+          <div class="mini-blog"><span>Mixture of Experts Explained</span><a href="https://kanishkk.substack.com/p/mixture-of-experts-explained" target="_blank">read ↗</a></div>
+          <div class="mini-blog"><span>Create Your Own GPT — PEFT</span><a href="https://kanishkk.substack.com/p/create-your-own-gpt" target="_blank">read ↗</a></div>
+          <div class="mini-blog"><span>RoPE Explained</span><a href="https://kanishkk.substack.com/p/rotatory-positional-embeddings-rope" target="_blank">read ↗</a></div>
+          <div class="mini-blog"><span>The Transformer Architecture</span><a href="https://kanishkk.substack.com/p/the-transformer-architecture-explained" target="_blank">read ↗</a></div>
+          <button class="see-all" onclick="showFull('blogs')">see all →</button>
+        </div>
+      </div>
+
+      <div class="colophon">
+        <p>want to talk or build something together?</p>
+        <a href="mailto:mkanishkkulkarni@gmail.com">mkanishkkulkarni@gmail.com</a>
       </div>
     </div>
 
-    <div class="below-bio">
-   
-      <div>
-        <div class="col-label">Projects</div>
-        <div class="mini-proj">
-          <h4>Can LLMs act as RL Agents?</h4>
-          <div class="mini-proj-links">
+    <div id="projects" class="section">
+      <div class="proj-grid">
+        <div class="proj-tile">
+          <h3>Can LLMs act as RL Agents?</h3>
+          <p>LLM as policy in CartPole, FrozenLake, LunarLander — reasoning over episode history, no gradient updates.</p>
+          <div class="proj-links">
             <a href="https://kanishkk.substack.com/p/can-llms-solve-gym-environments" target="_blank">Blog ↗</a>
             <a href="https://github.com/kanishkez/LLMs-as-Gym-Agents" target="_blank">GitHub ↗</a>
           </div>
         </div>
-        <div class="mini-proj">
-          <h4>TinyLLM</h4>
-          <div class="mini-proj-links"><a href="https://github.com/kanishkez/TinyLLM" target="_blank">GitHub ↗</a></div>
+        <div class="proj-tile">
+          <h3>TinyLLM</h3>
+          <p>Decoder-only Transformer from scratch. RMSNorm, RoPE, SwiGLU FFN, KV Cache — pure PyTorch.</p>
+          <div class="proj-links"><a href="https://github.com/kanishkez/TinyLLM" target="_blank">GitHub ↗</a></div>
         </div>
-        <div class="mini-proj">
-          <h4>TinyPEFT</h4>
-          <div class="mini-proj-links"><a href="https://github.com/kanishkez/TinyPEFT" target="_blank">GitHub ↗</a></div>
+        <div class="proj-tile">
+          <h3>TinyPEFT</h3>
+          <p>PEFT engine: LoRA, Adapter Tuning, Bitfit, Prompt Tuning. pip install tinypeft.</p>
+          <div class="proj-links"><a href="https://github.com/kanishkez/TinyPEFT" target="_blank">GitHub ↗</a></div>
         </div>
-        <div class="mini-proj">
-          <h4>Sentinel</h4>
-          <div class="mini-proj-links"><a href="https://github.com/kanishkez/SentinelSENTINEL" target="_blank">GitHub ↗</a></div>
+        <div class="proj-tile">
+          <h3>Sentinel</h3>
+          <p>Global disease surveillance dashboard. Aggregates outbreak data from multiple public health APIs.</p>
+          <div class="proj-links"><a href="https://github.com/kanishkez/SentinelSENTINEL" target="_blank">GitHub ↗</a></div>
         </div>
-        <div class="mini-proj">
-          <h4>KisanGPT</h4>
-          <div class="mini-proj-links">
+        <div class="proj-tile">
+          <h3>KisanGPT</h3>
+          <p>Multilingual AI assistant for Indian farmers with image recognition and real-time data.gov.in feeds.</p>
+          <div class="proj-links">
             <a href="https://kisangpt-idgi.onrender.com" target="_blank">Live ↗</a>
             <a href="https://github.com/kanishkez/KisanGPT" target="_blank">GitHub ↗</a>
           </div>
         </div>
-        <button class="see-all" onclick="showFull('projects')">see all →</button>
-      </div>
-
-   
-      <div>
-        <div class="col-label">Writing</div>
-        <div class="mini-blog"><span>Intro to Reinforcement Learning</span><a href="https://kanishkk.substack.com/p/an-intro-to-rl" target="_blank">read ↗</a></div>
-        <div class="mini-blog"><span>Mixture of Experts Explained</span><a href="https://kanishkk.substack.com/p/mixture-of-experts-explained" target="_blank">read ↗</a></div>
-        <div class="mini-blog"><span>Create Your Own GPT — PEFT</span><a href="https://kanishkk.substack.com/p/create-your-own-gpt" target="_blank">read ↗</a></div>
-        <div class="mini-blog"><span>RoPE Explained</span><a href="https://kanishkk.substack.com/p/rotatory-positional-embeddings-rope" target="_blank">read ↗</a></div>
-        <div class="mini-blog"><span>The Transformer Architecture</span><a href="https://kanishkk.substack.com/p/the-transformer-architecture-explained" target="_blank">read ↗</a></div>
-        <button class="see-all" onclick="showFull('blogs')">see all →</button>
-      </div>
-    </div>
-
-    <div class="colophon">
-      <p>want to talk or build something together?</p>
-      <a href="mailto:mkanishkkulkarni@gmail.com">mkanishkkulkarni@gmail.com</a>
-    </div>
-  </div>
-
-  
-  <div id="projects" class="section">
-    <div class="proj-grid">
-      <div class="proj-tile">
-        <h3>Can LLMs act as RL Agents?</h3>
-        <p>LLM as policy in CartPole, FrozenLake, LunarLander — reasoning over episode history, no gradient updates.</p>
-        <div class="proj-links">
-          <a href="https://kanishkk.substack.com/p/can-llms-solve-gym-environments" target="_blank">Blog ↗</a>
-          <a href="https://github.com/kanishkez/LLMs-as-Gym-Agents" target="_blank">GitHub ↗</a>
+        <div class="proj-tile">
+          <h3>Reward Model (Qwen 2.5 3B)</h3>
+          <p>Fine-tuned on Anthropic RLHF dataset. Scores completions for RLHF pipelines. Evaluated on RewardBench.</p>
+          <div class="proj-links">
+            <a href="https://huggingface.co/kanishkez/Reward-Model" target="_blank">HuggingFace ↗</a>
+            <a href="https://github.com/kanishkez/Reward-Model" target="_blank">GitHub ↗</a>
+          </div>
         </div>
-      </div>
-      <div class="proj-tile">
-        <h3>TinyLLM</h3>
-        <p>Decoder-only Transformer from scratch. RMSNorm, RoPE, SwiGLU FFN, KV Cache — pure PyTorch.</p>
-        <div class="proj-links"><a href="https://github.com/kanishkez/TinyLLM" target="_blank">GitHub ↗</a></div>
-      </div>
-      <div class="proj-tile">
-        <h3>TinyPEFT</h3>
-        <p>PEFT engine: LoRA, Adapter Tuning, Bitfit, Prompt Tuning. pip install tinypeft.</p>
-        <div class="proj-links"><a href="https://github.com/kanishkez/TinyPEFT" target="_blank">GitHub ↗</a></div>
-      </div>
-      <div class="proj-tile">
-        <h3>Sentinel</h3>
-        <p>Global disease surveillance dashboard. Aggregates outbreak data from multiple public health APIs.</p>
-        <div class="proj-links"><a href="https://github.com/kanishkez/SentinelSENTINEL" target="_blank">GitHub ↗</a></div>
-      </div>
-      <div class="proj-tile">
-        <h3>KisanGPT</h3>
-        <p>Multilingual AI assistant for Indian farmers with image recognition and real-time data.gov.in feeds.</p>
-        <div class="proj-links">
-          <a href="https://kisangpt-idgi.onrender.com" target="_blank">Live ↗</a>
-          <a href="https://github.com/kanishkez/KisanGPT" target="_blank">GitHub ↗</a>
+        <div class="proj-tile">
+          <h3>RL Implementations</h3>
+          <p>REINFORCE, Actor-Critic, PPO from scratch in PyTorch + Gymnasium.</p>
+          <div class="proj-links"><a href="https://github.com/kanishkez/RL-Algorithms" target="_blank">GitHub ↗</a></div>
         </div>
-      </div>
-      <div class="proj-tile">
-        <h3>Reward Model (Qwen 2.5 3B)</h3>
-        <p>Fine-tuned on Anthropic RLHF dataset. Scores completions for RLHF pipelines. Evaluated on RewardBench.</p>
-        <div class="proj-links">
-          <a href="https://huggingface.co/kanishkez/Reward-Model" target="_blank">HuggingFace ↗</a>
-          <a href="https://github.com/kanishkez/Reward-Model" target="_blank">GitHub ↗</a>
+        <div class="proj-tile">
+          <h3>Paper Implementations</h3>
+          <p>KV Caching, Flash Attention, RoPE, GPT — transformer architecture deep dives.</p>
+          <div class="proj-links">
+            <a href="https://github.com/kanishkez/llm-implementations" target="_blank">GitHub ↗</a>
+            <a href="https://kanishkk.substack.com" target="_blank">Blog ↗</a>
+          </div>
         </div>
-      </div>
-      <div class="proj-tile">
-        <h3>RL Implementations</h3>
-        <p>REINFORCE, Actor-Critic, PPO from scratch in PyTorch + Gymnasium.</p>
-        <div class="proj-links"><a href="https://github.com/kanishkez/RL-Algorithms" target="_blank">GitHub ↗</a></div>
-      </div>
-      <div class="proj-tile">
-        <h3>Paper Implementations</h3>
-        <p>KV Caching, Flash Attention, RoPE, GPT — transformer architecture deep dives.</p>
-        <div class="proj-links">
-          <a href="https://github.com/kanishkez/llm-implementations" target="_blank">GitHub ↗</a>
-          <a href="https://kanishkk.substack.com" target="_blank">Blog ↗</a>
+        <div class="proj-tile">
+          <h3>Llama 3.2 fine-tuned on Physics</h3>
+          <p>Fine-tuned on physics datasets using LoRA and PEFT via Unsloth.</p>
+          <div class="proj-links">
+            <a href="https://huggingface.co/kanishkez/llama3.2-fine-tuned-on-physics" target="_blank">Model ↗</a>
+            <a href="https://github.com/kanishkez/llama3.2-physics-finetune" target="_blank">GitHub ↗</a>
+          </div>
         </div>
-      </div>
-      <div class="proj-tile">
-        <h3>Llama 3.2 fine-tuned on Physics</h3>
-        <p>Fine-tuned on physics datasets using LoRA and PEFT via Unsloth.</p>
-        <div class="proj-links">
-          <a href="https://huggingface.co/kanishkez/llama3.2-fine-tuned-on-physics" target="_blank">Model ↗</a>
-          <a href="https://github.com/kanishkez/llama3.2-physics-finetune" target="_blank">GitHub ↗</a>
+        <div class="proj-tile">
+          <h3>KeyGoblin</h3>
+          <p>CLI tool for detecting exposed API keys, tokens, and endpoints in web applications.</p>
+          <div class="proj-links"><a href="https://github.com/kanishkez/KeyGoblin" target="_blank">GitHub ↗</a></div>
         </div>
-      </div>
-      <div class="proj-tile">
-        <h3>KeyGoblin</h3>
-        <p>CLI tool for detecting exposed API keys, tokens, and endpoints in web applications.</p>
-        <div class="proj-links"><a href="https://github.com/kanishkez/KeyGoblin" target="_blank">GitHub ↗</a></div>
-      </div>
-      <div class="proj-tile">
-        <h3>MCP server for Obsidian</h3>
-        <p>Lets Claude and MCP hosts read and write Obsidian vault notes.</p>
-        <div class="proj-links"><a href="https://github.com/kanishkez/obsidian-mcp" target="_blank">GitHub ↗</a></div>
-      </div>
-      <div class="proj-tile">
-        <h3>HourSwap</h3>
-        <p>Barter platform for students to exchange skills without money.</p>
-        <div class="proj-links">
-          <a href="http://hourswap.vercel.app" target="_blank">Live ↗</a>
-          <a href="https://github.com/kanishkez/HourSwap" target="_blank">GitHub ↗</a>
+        <div class="proj-tile">
+          <h3>MCP server for Obsidian</h3>
+          <p>Lets Claude and MCP hosts read and write Obsidian vault notes.</p>
+          <div class="proj-links"><a href="https://github.com/kanishkez/obsidian-mcp" target="_blank">GitHub ↗</a></div>
+        </div>
+        <div class="proj-tile">
+          <h3>HourSwap</h3>
+          <p>Barter platform for students to exchange skills without money.</p>
+          <div class="proj-links">
+            <a href="http://hourswap.vercel.app" target="_blank">Live ↗</a>
+            <a href="https://github.com/kanishkez/HourSwap" target="_blank">GitHub ↗</a>
+          </div>
         </div>
       </div>
     </div>
-  </div>
 
-  <div id="blogs" class="section">
-    <div class="blog-group">
-      <div class="blog-group-label">The LLM blog series</div>
-      <div class="blog-row"><span>Intro to Reinforcement Learning</span><a href="https://kanishkk.substack.com/p/an-intro-to-rl" target="_blank">read ↗</a></div>
-      <div class="blog-row"><span>Mixture of Experts Explained</span><a href="https://kanishkk.substack.com/p/mixture-of-experts-explained" target="_blank">read ↗</a></div>
-      <div class="blog-row"><span>Create Your Own GPT — PEFT</span><a href="https://kanishkk.substack.com/p/create-your-own-gpt" target="_blank">read ↗</a></div>
-      <div class="blog-row"><span>RoPE Explained and Implemented</span><a href="https://kanishkk.substack.com/p/rotatory-positional-embeddings-rope" target="_blank">read ↗</a></div>
-      <div class="blog-row"><span>Beyond Transformers — GPT, BERT, BART</span><a href="https://kanishkk.substack.com/p/beyond-transformers" target="_blank">read ↗</a></div>
-      <div class="blog-row"><span>The Transformer Architecture Explained</span><a href="https://kanishkk.substack.com/p/the-transformer-architecture-explained" target="_blank">read ↗</a></div>
+    <div id="blogs" class="section">
+      <div class="blog-group">
+        <div class="blog-group-label">The LLM blog series</div>
+        <div class="blog-row"><span>Intro to Reinforcement Learning</span><a href="https://kanishkk.substack.com/p/an-intro-to-rl" target="_blank">read ↗</a></div>
+        <div class="blog-row"><span>Mixture of Experts Explained</span><a href="https://kanishkk.substack.com/p/mixture-of-experts-explained" target="_blank">read ↗</a></div>
+        <div class="blog-row"><span>Create Your Own GPT — PEFT</span><a href="https://kanishkk.substack.com/p/create-your-own-gpt" target="_blank">read ↗</a></div>
+        <div class="blog-row"><span>RoPE Explained and Implemented</span><a href="https://kanishkk.substack.com/p/rotatory-positional-embeddings-rope" target="_blank">read ↗</a></div>
+        <div class="blog-row"><span>Beyond Transformers — GPT, BERT, BART</span><a href="https://kanishkk.substack.com/p/beyond-transformers" target="_blank">read ↗</a></div>
+        <div class="blog-row"><span>The Transformer Architecture Explained</span><a href="https://kanishkk.substack.com/p/the-transformer-architecture-explained" target="_blank">read ↗</a></div>
+      </div>
+      <div class="blog-group">
+        <div class="blog-group-label">Random stuff</div>
+        <div class="blog-row"><span>Functional Programming and Lambda Calculus</span><a href="https://kanishkk.substack.com/p/an-introduction-to-functional-programming" target="_blank">read ↗</a></div>
+        <div class="blog-row"><span>How far is AGI?</span><a href="https://kanishkk.substack.com/p/how-far-is-agi" target="_blank">read ↗</a></div>
+        <div class="blog-row"><span>Why I hate existentialism</span><a href="https://kanishkk.substack.com/p/why-i-hate-existentialism" target="_blank">read ↗</a></div>
+      </div>
     </div>
-    <div class="blog-group">
-      <div class="blog-group-label">Random stuff</div>
-      <div class="blog-row"><span>Functional Programming and Lambda Calculus</span><a href="https://kanishkk.substack.com/p/an-introduction-to-functional-programming" target="_blank">read ↗</a></div>
-      <div class="blog-row"><span>How far is AGI?</span><a href="https://kanishkk.substack.com/p/how-far-is-agi" target="_blank">read ↗</a></div>
-      <div class="blog-row"><span>Why I hate existentialism</span><a href="https://kanishkk.substack.com/p/why-i-hate-existentialism" target="_blank">read ↗</a></div>
-    </div>
-  </div>
 
+  </main>
 </div>
 
 <script>
   function show(id, btn) {
     document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-    document.querySelectorAll('.topbar-left button').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.sidebar-nav button').forEach(b => b.classList.remove('active'));
     document.getElementById(id).classList.add('active');
     btn.classList.add('active');
     window.scrollTo(0, 0);
   }
   function showFull(id) {
-    const idx = id === 'projects' ? 2 : 3;
-    const btn = document.querySelector(`.topbar-left button:nth-child(${idx})`);
+    const map = { projects: 1, blogs: 2 };
+    const btn = document.querySelectorAll('.sidebar-nav button')[map[id]];
     show(id, btn);
   }
 </script>
