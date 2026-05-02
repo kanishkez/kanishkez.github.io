@@ -58,7 +58,8 @@
       margin-bottom: auto;
     }
 
-    .sidebar-nav button {
+    .sidebar-nav a {
+      display: block;
       font-size: 12px;
       color: var(--dim);
       background: none;
@@ -72,9 +73,10 @@
       text-align: left;
       border-left: 2px solid transparent;
       transition: color 0.15s, border-color 0.15s;
+      text-decoration: none;
     }
-    .sidebar-nav button:hover { color: var(--acc); }
-    .sidebar-nav button.active { color: var(--acc); border-left-color: var(--acc); }
+    .sidebar-nav a:hover { color: var(--acc); }
+    .sidebar-nav a.active { color: var(--acc); border-left-color: var(--acc); }
 
     .sidebar-links {
       display: flex;
@@ -252,8 +254,8 @@
       .layout { flex-direction: column; }
       .sidebar { width: 100%; height: auto; position: static; flex-direction: row; flex-wrap: wrap; align-items: center; padding: 24px; border-right: none; border-bottom: 1px solid var(--line); gap: 16px; }
       .sidebar-nav { flex-direction: row; margin-bottom: 0; gap: 0; }
-      .sidebar-nav button { border-left: none; border-bottom: 2px solid transparent; padding-left: 0; margin-right: 16px; }
-      .sidebar-nav button.active { border-bottom-color: var(--acc); }
+      .sidebar-nav a { border-left: none; border-bottom: 2px solid transparent; padding-left: 0; margin-right: 16px; }
+      .sidebar-nav a.active { border-bottom-color: var(--acc); }
       .sidebar-links { flex-direction: row; margin-top: 0; padding-top: 0; border-top: none; gap: 12px; }
       .main { padding: 32px 24px 60px; }
       .proj-grid, .below-bio { grid-template-columns: 1fr; }
@@ -265,9 +267,9 @@
 
   <aside class="sidebar">
     <nav class="sidebar-nav">
-      <button class="active" onclick="show('home', this)">Home</button>
-      <button onclick="show('projects', this)">Projects</button>
-      <button onclick="show('blogs', this)">Blogs</button>
+      <a href="/" class="active" id="nav-home" onclick="navigate('home', event)">Home</a>
+      <a href="/projects" id="nav-projects" onclick="navigate('projects', event)">Projects</a>
+      <a href="/blogs" id="nav-blogs" onclick="navigate('blogs', event)">Blogs</a>
     </nav>
     <div class="sidebar-links">
       <a href="https://github.com/kanishkez" target="_blank" rel="noopener">GitHub</a>
@@ -309,8 +311,8 @@
             <div class="mini-proj-links"><a href="https://github.com/kanishkez/TinyPEFT" target="_blank">GitHub ↗</a></div>
           </div>
           <div class="mini-proj">
-            <h4>Sentinel</h4>
-            <div class="mini-proj-links"><a href="https://github.com/kanishkez/SentinelSENTINEL" target="_blank">GitHub ↗</a></div>
+            <h4>Linesman — AI Referee</h4>
+            <div class="mini-proj-links"><a href="https://github.com/kanishkez/Linesman-AIReferee" target="_blank">GitHub ↗</a></div>
           </div>
           <div class="mini-proj">
             <h4>KisanGPT</h4>
@@ -319,7 +321,7 @@
               <a href="https://github.com/kanishkez/KisanGPT" target="_blank">GitHub ↗</a>
             </div>
           </div>
-          <button class="see-all" onclick="showFull('projects')">see all →</button>
+          <button class="see-all" onclick="navigateTo('projects')">see all →</button>
         </div>
 
         <div>
@@ -329,7 +331,7 @@
           <div class="mini-blog"><span>Create Your Own GPT — PEFT</span><a href="https://kanishkk.substack.com/p/create-your-own-gpt" target="_blank">read ↗</a></div>
           <div class="mini-blog"><span>RoPE Explained</span><a href="https://kanishkk.substack.com/p/rotatory-positional-embeddings-rope" target="_blank">read ↗</a></div>
           <div class="mini-blog"><span>The Transformer Architecture</span><a href="https://kanishkk.substack.com/p/the-transformer-architecture-explained" target="_blank">read ↗</a></div>
-          <button class="see-all" onclick="showFull('blogs')">see all →</button>
+          <button class="see-all" onclick="navigateTo('blogs')">see all →</button>
         </div>
       </div>
 
@@ -343,7 +345,7 @@
       <div class="proj-grid">
         <div class="proj-tile">
           <h3>Can LLMs act as RL Agents?</h3>
-          <p>LLM as policy in CartPole, FrozenLake, LunarLander — reasoning over episode history, no gradient updates.</p>
+          <p>Explores using an LLM as a pure policy in classic Gym environments: CartPole, FrozenLake, and LunarLander. The model reasons over episode history in natural language with no gradient updates or fine-tuning, relying entirely on in-context reasoning to select actions.</p>
           <div class="proj-links">
             <a href="https://kanishkk.substack.com/p/can-llms-solve-gym-environments" target="_blank">Blog ↗</a>
             <a href="https://github.com/kanishkez/LLMs-as-Gym-Agents" target="_blank">GitHub ↗</a>
@@ -351,22 +353,29 @@
         </div>
         <div class="proj-tile">
           <h3>TinyLLM</h3>
-          <p>Decoder-only Transformer from scratch. RMSNorm, RoPE, SwiGLU FFN, KV Cache — pure PyTorch.</p>
+          <p>A decoder-only Transformer built entirely from scratch in pure PyTorch. Implements modern architectural components — RMSNorm, Rotary Positional Embeddings (RoPE), SwiGLU feed-forward networks, and KV Caching, mirroring the design choices found in production-scale LLMs like LLaMA.</p>
           <div class="proj-links"><a href="https://github.com/kanishkez/TinyLLM" target="_blank">GitHub ↗</a></div>
         </div>
         <div class="proj-tile">
           <h3>TinyPEFT</h3>
-          <p>PEFT engine: LoRA, Adapter Tuning, Bitfit, Prompt Tuning. pip install tinypeft.</p>
+          <p>A lightweight parameter-efficient fine-tuning engine supporting LoRA, Adapter Tuning, Bitfit, and Prompt Tuning in a single unified package. Designed to make fine-tuning large language models cheap and accessible: installable via <code style="font-size:11px;background:var(--bg);padding:1px 4px;border-radius:3px;">pip install tinypeft</code>.</p>
           <div class="proj-links"><a href="https://github.com/kanishkez/TinyPEFT" target="_blank">GitHub ↗</a></div>
         </div>
         <div class="proj-tile">
+          <h3>Linesman — AI Referee</h3>
+          <p>A Video Assistant Referee (VAR) system that analyzes football match footage to evaluate incidents and make foul decisions according to FIFA Law 12. Uses a two-stage pipeline combining computer vision for player and action detection with a multimodal LLM for objective, rule-aware decision-making.</p>
+          <div class="proj-links">
+            <a href="https://github.com/kanishkez/Linesman-AIReferee" target="_blank">GitHub ↗</a>
+          </div>
+        </div>
+        <div class="proj-tile">
           <h3>Sentinel</h3>
-          <p>Global disease surveillance dashboard. Aggregates outbreak data from multiple public health APIs.</p>
+          <p>A global disease surveillance dashboard that aggregates real-time outbreak data from multiple public health APIs and WHO feeds. Visualizes emerging threats on an interactive map, providing early-warning signals for pandemic preparedness and public health monitoring.</p>
           <div class="proj-links"><a href="https://github.com/kanishkez/SentinelSENTINEL" target="_blank">GitHub ↗</a></div>
         </div>
         <div class="proj-tile">
           <h3>KisanGPT</h3>
-          <p>Multilingual AI assistant for Indian farmers with image recognition and real-time data.gov.in feeds.</p>
+          <p>A multilingual AI assistant built specifically for Indian farmers, combining image recognition for crop disease diagnosis with real-time market price feeds from data.gov.in. Supports regional languages and covers crop advice, pest management, government schemes, and weather-based recommendations.</p>
           <div class="proj-links">
             <a href="https://kisangpt-idgi.onrender.com" target="_blank">Live ↗</a>
             <a href="https://github.com/kanishkez/KisanGPT" target="_blank">GitHub ↗</a>
@@ -374,7 +383,7 @@
         </div>
         <div class="proj-tile">
           <h3>Reward Model (Qwen 2.5 3B)</h3>
-          <p>Fine-tuned on Anthropic RLHF dataset. Scores completions for RLHF pipelines. Evaluated on RewardBench.</p>
+          <p>A reward model fine-tuned on Anthropic's RLHF preference dataset, designed to score model completions for use in RLHF training pipelines. Evaluated on the RewardBench benchmark to assess alignment quality across categories like safety, reasoning, and instruction-following.</p>
           <div class="proj-links">
             <a href="https://huggingface.co/kanishkez/Reward-Model" target="_blank">HuggingFace ↗</a>
             <a href="https://github.com/kanishkez/Reward-Model" target="_blank">GitHub ↗</a>
@@ -382,12 +391,12 @@
         </div>
         <div class="proj-tile">
           <h3>RL Implementations</h3>
-          <p>REINFORCE, Actor-Critic, PPO from scratch in PyTorch + Gymnasium.</p>
+          <p>Clean from-scratch implementations of core reinforcement learning algorithms: REINFORCE, Actor-Critic, and PPO — built in PyTorch with Gymnasium environments. </p>
           <div class="proj-links"><a href="https://github.com/kanishkez/RL-Algorithms" target="_blank">GitHub ↗</a></div>
         </div>
         <div class="proj-tile">
           <h3>Paper Implementations</h3>
-          <p>KV Caching, Flash Attention, RoPE, GPT — transformer architecture deep dives.</p>
+          <p>A collection of transformer architecture deep dives implemented from paper to code: KV Caching, Flash Attention, Rotary Positional Embeddings, and GPT. Each implementation is paired with a detailed blog post explaining the math and intuition behind the technique.</p>
           <div class="proj-links">
             <a href="https://github.com/kanishkez/llm-implementations" target="_blank">GitHub ↗</a>
             <a href="https://kanishkk.substack.com" target="_blank">Blog ↗</a>
@@ -395,7 +404,7 @@
         </div>
         <div class="proj-tile">
           <h3>Llama 3.2 fine-tuned on Physics</h3>
-          <p>Fine-tuned on physics datasets using LoRA and PEFT via Unsloth.</p>
+          <p>Llama 3.2 fine-tuned on curated physics question-answer datasets using LoRA and PEFT via Unsloth for efficient training. The resulting model demonstrates improved reasoning on physics problems spanning mechanics, electromagnetism, and thermodynamics compared to the base model.</p>
           <div class="proj-links">
             <a href="https://huggingface.co/kanishkez/llama3.2-fine-tuned-on-physics" target="_blank">Model ↗</a>
             <a href="https://github.com/kanishkez/llama3.2-physics-finetune" target="_blank">GitHub ↗</a>
@@ -403,17 +412,17 @@
         </div>
         <div class="proj-tile">
           <h3>KeyGoblin</h3>
-          <p>CLI tool for detecting exposed API keys, tokens, and endpoints in web applications.</p>
+          <p>A CLI security tool that scans web applications for exposed API keys, secret tokens, and sensitive endpoints in JavaScript bundles, HTML source, and network responses. Helps developers catch credential leaks before they reach production or get picked up by automated scanners.</p>
           <div class="proj-links"><a href="https://github.com/kanishkez/KeyGoblin" target="_blank">GitHub ↗</a></div>
         </div>
         <div class="proj-tile">
           <h3>MCP server for Obsidian</h3>
-          <p>Lets Claude and MCP hosts read and write Obsidian vault notes.</p>
+          <p>A Model Context Protocol server that gives Claude and other MCP-compatible hosts the ability to read and write notes directly inside an Obsidian vault. Enables AI-assisted note-taking workflows, knowledge graph traversal, and automated linking between related notes.</p>
           <div class="proj-links"><a href="https://github.com/kanishkez/obsidian-mcp" target="_blank">GitHub ↗</a></div>
         </div>
         <div class="proj-tile">
           <h3>HourSwap</h3>
-          <p>Barter platform for students to exchange skills without money.</p>
+          <p>A barter platform designed for students to exchange skills and services without money: trade a guitar lesson for a coding session, or tutoring for design help. Built to foster community and make skill-sharing accessible on campus without financial barriers.</p>
           <div class="proj-links">
             <a href="http://hourswap.vercel.app" target="_blank">Live ↗</a>
             <a href="https://github.com/kanishkez/HourSwap" target="_blank">GitHub ↗</a>
@@ -426,48 +435,40 @@
       <div class="proj-grid">
         <div class="proj-tile">
           <h3>Intro to Reinforcement Learning</h3>
-          <p>A ground-up introduction to RL — agents, environments, rewards, and policies.</p>
-          <div class="proj-links"><a href="https://kanishkk.substack.com/p/an-intro-to-rl" target="_blank">read ↗</a></div>
+                   <div class="proj-links"><a href="https://kanishkk.substack.com/p/an-intro-to-rl" target="_blank">read ↗</a></div>
         </div>
         <div class="proj-tile">
           <h3>Mixture of Experts Explained</h3>
-          <p>How MoE architectures route tokens to specialist sub-networks for efficiency at scale.</p>
-          <div class="proj-links"><a href="https://kanishkk.substack.com/p/mixture-of-experts-explained" target="_blank">read ↗</a></div>
+                    <div class="proj-links"><a href="https://kanishkk.substack.com/p/mixture-of-experts-explained" target="_blank">read ↗</a></div>
         </div>
         <div class="proj-tile">
           <h3>Create Your Own GPT — PEFT</h3>
-          <p>Fine-tune large language models cheaply using parameter-efficient techniques like LoRA.</p>
-          <div class="proj-links"><a href="https://kanishkk.substack.com/p/create-your-own-gpt" target="_blank">read ↗</a></div>
+                   <div class="proj-links"><a href="https://kanishkk.substack.com/p/create-your-own-gpt" target="_blank">read ↗</a></div>
         </div>
         <div class="proj-tile">
           <h3>RoPE Explained and Implemented</h3>
-          <p>Rotary positional embeddings — the math behind how transformers understand token positions.</p>
-          <div class="proj-links"><a href="https://kanishkk.substack.com/p/rotatory-positional-embeddings-rope" target="_blank">read ↗</a></div>
+                   <div class="proj-links"><a href="https://kanishkk.substack.com/p/rotatory-positional-embeddings-rope" target="_blank">read ↗</a></div>
         </div>
         <div class="proj-tile">
           <h3>Beyond Transformers — GPT, BERT, BART</h3>
-          <p>How the transformer base spawned GPT, BERT, and BART — and where they differ.</p>
-          <div class="proj-links"><a href="https://kanishkk.substack.com/p/beyond-transformers" target="_blank">read ↗</a></div>
+                   <div class="proj-links"><a href="https://kanishkk.substack.com/p/beyond-transformers" target="_blank">read ↗</a></div>
         </div>
         <div class="proj-tile">
           <h3>The Transformer Architecture Explained</h3>
-          <p>Attention, residual streams, layer norms — the full transformer dissected from scratch.</p>
-          <div class="proj-links"><a href="https://kanishkk.substack.com/p/the-transformer-architecture-explained" target="_blank">read ↗</a></div>
+                   <div class="proj-links"><a href="https://kanishkk.substack.com/p/the-transformer-architecture-explained" target="_blank">read ↗</a></div>
         </div>
         <div class="proj-tile">
           <h3>Functional Programming and Lambda Calculus</h3>
-          <p>The mathematical roots of functional programming and how lambda calculus underpins it.</p>
+         
           <div class="proj-links"><a href="https://kanishkk.substack.com/p/an-introduction-to-functional-programming" target="_blank">read ↗</a></div>
         </div>
         <div class="proj-tile">
           <h3>How far is AGI?</h3>
-          <p>An honest look at where we are, what's missing, and what AGI might actually mean.</p>
-          <div class="proj-links"><a href="https://kanishkk.substack.com/p/how-far-is-agi" target="_blank">read ↗</a></div>
+                    <div class="proj-links"><a href="https://kanishkk.substack.com/p/how-far-is-agi" target="_blank">read ↗</a></div>
         </div>
         <div class="proj-tile">
           <h3>Why I hate existentialism</h3>
-          <p>A rant about Sartre, bad faith, and why "existence precedes essence" frustrates me.</p>
-          <div class="proj-links"><a href="https://kanishkk.substack.com/p/why-i-hate-existentialism" target="_blank">read ↗</a></div>
+                   <div class="proj-links"><a href="https://kanishkk.substack.com/p/why-i-hate-existentialism" target="_blank">read ↗</a></div>
         </div>
       </div>
     </div>
@@ -476,18 +477,61 @@
 </div>
 
 <script>
-  function show(id, btn) {
+  const isFileProtocol = location.protocol === 'file:';
+
+  const hashToSection = { '#projects': 'projects', '#blogs': 'blogs', '#home': 'home' };
+  const pathToSection = { '/': 'home', '/projects': 'projects', '/blogs': 'blogs' };
+  const sectionToHash = { home: '#home', projects: '#projects', blogs: '#blogs' };
+  const sectionToPath = { home: '/', projects: '/projects', blogs: '/blogs' };
+
+  function setActive(sectionId) {
     document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-    document.querySelectorAll('.sidebar-nav button').forEach(b => b.classList.remove('active'));
-    document.getElementById(id).classList.add('active');
-    btn.classList.add('active');
+    document.querySelectorAll('.sidebar-nav a').forEach(a => a.classList.remove('active'));
+    const el = document.getElementById(sectionId);
+    if (el) el.classList.add('active');
+    const navEl = document.getElementById('nav-' + sectionId);
+    if (navEl) navEl.classList.add('active');
     window.scrollTo(0, 0);
   }
-  function showFull(id) {
-    const map = { projects: 1, blogs: 2 };
-    const btn = document.querySelectorAll('.sidebar-nav button')[map[id]];
-    show(id, btn);
+
+  function navigate(sectionId, event) {
+    if (event) event.preventDefault();
+    if (isFileProtocol) {
+      location.hash = sectionToHash[sectionId] || '#home';
+    } else {
+      history.pushState({ section: sectionId }, '', sectionToPath[sectionId] || '/');
+    }
+    setActive(sectionId);
   }
+
+  function navigateTo(sectionId) {
+    navigate(sectionId, null);
+  }
+
+  window.addEventListener('popstate', function(e) {
+    const section = e.state?.section || pathToSection[location.pathname] || 'home';
+    setActive(section);
+  });
+
+  window.addEventListener('hashchange', function() {
+    if (isFileProtocol) {
+      const section = hashToSection[location.hash] || 'home';
+      setActive(section);
+    }
+  });
+
+  // On load, resolve initial section
+  (function() {
+    let section = 'home';
+    if (isFileProtocol) {
+      section = hashToSection[location.hash] || 'home';
+    } else {
+      const path = location.pathname.replace(/\/$/, '') || '/';
+      section = pathToSection[path] || 'home';
+      history.replaceState({ section }, '', location.pathname);
+    }
+    setActive(section);
+  })();
 </script>
 </body>
 </html>
