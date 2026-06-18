@@ -757,7 +757,6 @@
 
 /* Dark mint redesign overrides */
 .note-header,
-.note-toc,
 .note-content blockquote,
 .note-content table,
 .notes-category,
@@ -766,7 +765,6 @@
 }
 
 .note-header,
-.note-toc,
 .notes-category {
   background: linear-gradient(180deg, rgba(126, 247, 201, 0.055), rgba(255, 255, 255, 0.018));
   border-color: var(--line);
