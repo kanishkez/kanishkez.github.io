@@ -406,8 +406,8 @@ function generateNotePage(note, category, prev, next) {
   <title>${note.title} — kanishk's notes</title>
   <meta name="description" content="${note.title} — ${category.title} notes by kanishk" />
   <link rel="icon" type="image/png" href="../assets/favicon.png" />
-  <link rel="stylesheet" href="../css/style.css" />
-  <link rel="stylesheet" href="../css/notes.css" />
+  <link rel="stylesheet" href="../css/style.css?v=2" />
+  <link rel="stylesheet" href="../css/notes.css?v=2" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous" />
 </head>
 <body>
