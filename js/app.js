@@ -171,26 +171,6 @@ window.addEventListener("hashchange", () => {
   draw();
 })();
 
-// ─── Cursor Glow ─────────────────────────────────────────────────────────
-(function initCursorGlow() {
-  const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  if (prefersReduced) return;
-  if (window.matchMedia("(pointer: coarse)").matches) return;
-
-  const glow = document.createElement("div");
-  glow.id = "cursor-glow";
-  document.body.appendChild(glow);
-
-  let mx = -200, my = -200, cx = -200, cy = -200;
-  window.addEventListener("mousemove", (e) => { mx = e.clientX; my = e.clientY; });
-
-  (function tick() {
-    cx += (mx - cx) * 0.08;
-    cy += (my - cy) * 0.08;
-    glow.style.transform = `translate(${cx - 180}px, ${cy - 180}px)`;
-    requestAnimationFrame(tick);
-  })();
-})();
 
 // ─── Text scramble on intro ───────────────────────────────────────────────
 class TextScramble {
