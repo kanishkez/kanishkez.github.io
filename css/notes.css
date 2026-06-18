@@ -89,15 +89,15 @@
 }
 
 .toc-title {
-  font-family: "Georgia", "Times New Roman", serif;
-  font-size: 22px;
-  font-style: italic;
-  font-weight: normal;
-  color: var(--ink);
-  text-transform: none;
-  border: none;
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--dim);
   margin-bottom: 16px;
   padding-bottom: 0;
+  border: none;
 }
 
 .toc-items {
@@ -109,8 +109,8 @@
 
 .toc-item {
   display: block;
-  font-size: 15px;
-  font-family: "Georgia", "Times New Roman", serif;
+  font-size: 14px;
+  font-family: var(--font-sans);
   color: var(--dim);
   text-decoration: none;
   padding: 4px 0;
@@ -1109,44 +1109,4 @@ body{
 
 mjx-container{
   color:#000 !important;
-}
-
-/* Note page styling overrides for Georgia font and cream background */
-body {
-  font-family: "Georgia", "Times New Roman", serif !important;
-  background-color: #f4ede4 !important; /* cream background */
-  color: #102018 !important;
-}
-
-.navbar {
-  background: rgba(244, 237, 228, 0.92) !important;
-  border-bottom: 1px solid rgba(139, 101, 71, 0.14) !important;
-}
-
-.navbar a {
-  font-family: system-ui, -apple-system, sans-serif !important;
-}
-
-.note-header {
-  background: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
-  padding: 0 !important;
-  margin-bottom: 36px !important;
-}
-
-.note-category-tag {
-  color: var(--dim) !important;
-  background: transparent !important;
-  border: 1px solid var(--line) !important;
-  padding: 3px 10px !important;
-}
-
-.note-content h1,
-.note-content h2,
-.note-content h3,
-.note-content h4,
-.note-content h5,
-.note-content h6 {
-  font-family: "Georgia", "Times New Roman", serif !important;
 }
