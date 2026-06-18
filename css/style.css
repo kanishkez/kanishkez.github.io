@@ -411,13 +411,7 @@ h1 {
   transition: transform 180ms ease, background 180ms ease, border-color 180ms ease;
 }
 
-.project-list time {
-  grid-row: span 3;
-  color: var(--faint);
-  font-family: var(--font-mono);
-  font-size: 12px;
-  padding-top: 4px;
-}
+
 
 .project-list h2 {
   margin: 0;
@@ -437,9 +431,7 @@ h1 {
   gap: 8px;
 }
 
-.project-list .item-actions {
-  grid-column: 2;
-}
+
 
 .project-list a {
   margin-right: 0;
@@ -753,13 +745,7 @@ h1 {
     grid-template-columns: 1fr;
   }
 
-  .project-list .item-actions {
-    grid-column: 1;
-  }
 
-  .project-list time {
-    grid-row: auto;
-  }
 
   .toc-items {
     grid-template-columns: 1fr;
