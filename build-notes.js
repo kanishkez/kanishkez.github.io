@@ -382,7 +382,7 @@ function generateNotePage(note, category, prev, next) {
 
   const tocHtml = headings.length > 2
     ? `<nav class="note-toc" id="note-toc">
-        <div class="toc-title">Contents</div>
+        <div class="toc-title">Table of Contents</div>
         <div class="toc-items">
           ${headings.map(h =>
             `<a href="#${h.id}" class="toc-item toc-h${h.level}">${h.text}</a>`
@@ -412,7 +412,7 @@ function generateNotePage(note, category, prev, next) {
 </head>
 <body>
 <canvas id="ambient-canvas"></canvas>
-
+ 
 <!-- Top Floating Navigation Bar -->
 <header class="navbar">
   <div class="nav-container">
@@ -429,7 +429,7 @@ function generateNotePage(note, category, prev, next) {
     </div>
   </div>
 </header>
-
+ 
 <div class="container">
   <main class="main-content">
     <article class="note-page">
