@@ -138,48 +138,12 @@ class TextScramble {
 
 // ─── Intersection Observer for stagger reveals ───────────────────────────
 function triggerSectionAnimations(sectionId) {
-  const section = document.getElementById(sectionId);
-  if (!section) return;
-  const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  if (prefersReduced) return;
-
-  // Stagger project articles
-  setTimeout(() => {
-    const articles = section.querySelectorAll(".project-list article, .mini-item");
-    articles.forEach((el, i) => {
-      el.style.opacity = "0";
-      el.style.transform = "translateY(18px)";
-      setTimeout(() => {
-        el.style.transition = "opacity 380ms ease, transform 380ms ease";
-        el.style.opacity = "1";
-        el.style.transform = "translateY(0)";
-      }, i * 55 + 80);
-    });
-  }, 60);
+  // Animations removed per user request
 }
 
 // ─── Scramble the name on load ────────────────────────────────────────────
 window.addEventListener("DOMContentLoaded", () => {
-  const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  if (!prefersReduced) {
-    const nameEl = document.querySelector(".identity");
-    if (nameEl) {
-      const scrambler = new TextScramble(nameEl);
-      scrambler.setText("kanishk");
-    }
-
-    // Fade in intro lines with stagger
-    const introLines = document.querySelectorAll(".intro-line, .lead, .hero-actions");
-    introLines.forEach((el, i) => {
-      el.style.opacity = "0";
-      el.style.transform = "translateY(14px)";
-      setTimeout(() => {
-        el.style.transition = "opacity 500ms ease, transform 500ms ease";
-        el.style.opacity = "1";
-        el.style.transform = "translateY(0)";
-      }, 300 + i * 140);
-    });
-  }
+  // Scramble and intro fade animations removed per user request
 });
 
 // ─── Typing cursor on intro span ─────────────────────────────────────────
