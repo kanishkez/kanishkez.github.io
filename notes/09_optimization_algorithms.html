@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Optimization Algorithms — kanishk's notes</title>
+  <meta name="description" content="Optimization Algorithms — Deep Learning Foundations notes by kanishk" />
+  <link rel="icon" type="image/png" href="../assets/favicon.png" />
+  <link rel="stylesheet" href="../css/style.css" />
+  <link rel="stylesheet" href="../css/notes.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous" />
+</head>
+<body>
+<canvas id="ambient-canvas"></canvas>
+
+<!-- Top Floating Navigation Bar -->
+<header class="navbar">
+  <div class="nav-container">
+    <a href="../index.html" class="nav-logo">kanishk</a>
+    <nav class="nav-links">
+      <a href="../index.html#home">Home</a>
+      <a href="../index.html#projects">Projects</a>
+      <a href="../index.html#blogs">Blogs</a>
+      <a href="../index.html#notes" class="active">Notes</a>
+    </nav>
+    <div class="nav-socials">
+      <a href="https://github.com/kanishkez" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://huggingface.co/kanishkez" target="_blank" rel="noopener">HuggingFace</a>
+    </div>
+  </div>
+</header>
+
+<div class="container">
+  <main class="main-content">
+    <article class="note-page">
+      <div class="note-breadcrumb">
+        <a href="../index.html#notes">Notes</a>
+        <span class="breadcrumb-sep">›</span>
+        <a href="../index.html#notes">Deep Learning Foundations</a>
+        <span class="breadcrumb-sep">›</span>
+        <span>Optimization Algorithms</span>
+      </div>
+
+      <header class="note-header">
+        <div class="note-category-tag">Deep Learning Foundations</div>
+        <h1>Optimization Algorithms</h1>
+      </header>
+
+      <nav class="note-toc" id="note-toc">
+        <div class="toc-title">Contents</div>
+        <div class="toc-items">
+          <a href="#gradient_descent" class="toc-item toc-h2">Gradient Descent</a>
+          <a href="#stochastic_gradient_descent" class="toc-item toc-h2">Stochastic Gradient Descent</a>
+          <a href="#mini_batch_gradient_descent" class="toc-item toc-h2">Mini Batch Gradient Descent</a>
+          <a href="#momentum" class="toc-item toc-h2">Momentum</a>
+          <a href="#nesterov_accelerated_gradient" class="toc-item toc-h2">Nesterov Accelerated Gradient</a>
+          <a href="#adagrad" class="toc-item toc-h2">Adagrad</a>
+          <a href="#rmsprop" class="toc-item toc-h2">RMSProp</a>
+          <a href="#adam" class="toc-item toc-h2">Adam</a>
+          <a href="#convergence" class="toc-item toc-h2">Convergence</a>
+          <a href="#learning_rate" class="toc-item toc-h2">Learning Rate</a>
+        </div>
+      </nav>
+
+      <div class="note-content" id="note-content">
+        <h2 id="gradient_descent">Gradient Descent</h2>
+<p>Gradient Descent is the most basic optimization algorithm in machine learning.</p>
+<p>The idea is: take the gradient of the loss function with respect to the weights and move in the opposite direction (because the gradient points in the direction of the steepest ascent).</p>
+<p>Update rule:
+<span class="math-display">$$\theta = \theta - \eta \nabla_\theta J(\theta)$$</span>
+<p>where:</p>
+<ul>
+<li><span class="math-inline">$\theta$</span> represents the parameters (weights)</li>
+<li><span class="math-inline">$\eta$</span> is the learning rate</li>
+<li><span class="math-inline">$J(\theta)$</span> is the loss function</li>
+</ul>
+<p>Here we compute the gradient over the <strong>entire dataset</strong> before taking a single step. That means every update is very accurate, but it is also <strong>very slow</strong> when the dataset is large.</p>
+<h2 id="stochastic_gradient_descent">Stochastic Gradient Descent</h2>
+<p>Stochastic gradient descent (SGD) updates parameters using the gradient computed from a single randomly chosen data point at each iteration. This introduces noise into the updates, which can help escape local minima and saddle points. </p>
+<p>Update rule:
+<span class="math-display">$$\theta = \theta - \eta \nabla_\theta J(\theta; x^{(i)}, y^{(i)})$$</span>
+<h2 id="mini_batch_gradient_descent">Mini Batch Gradient Descent</h2>
+<p>Mini batch gradient descent computes the gradient using a small batch of data points at each iteration. The update rule is:
+<span class="math-display">$$\theta = \theta - \eta \nabla_\theta J(\theta; \text{batch})$$</span>
+where the average gradient is calculated over the batch. Mini batching balances the efficiency of vectorized computation with the noise reduction of averaging.</p>
+<p>We split the dataset into <strong>mini batches</strong> (for example 32, 64, or 128 samples) and compute the gradient on each batch.</p>
+<h2 id="momentum">Momentum</h2>
+<p>Momentum accelerates gradient descent by accumulating a velocity vector in the direction of persistent reduction in the loss. The update rule is:
+<span class="math-display">$$\begin{align*}
+v_{t} &= \gamma v_{t-1} - \eta \nabla J(\theta_t) \\
+\theta_{t+1} &= \theta_t + v_t
+\end{align*}$$</span>
+where <span class="math-inline">$\gamma$</span> is the momentum coefficient. Momentum helps overcome shallow minima and dampens oscillations.</p>
+<p>Momentum is used to speed up gradient descent by adding a weighted moving average of past gradients. If successive gradients point in the same direction, it accelerates the process. If the gradients oscillate, it dampens the steps, ensuring that the optimizer does not take steps that are too large.</p>
+<p>Update rule:
+<span class="math-display">$$w_{t+1} = w_{t} - \alpha m_{t}$$</span>
+where:</p>
+<ul>
+<li><span class="math-inline">$w_t$</span> and <span class="math-inline">$w_{t+1}$</span> are the weights at times <span class="math-inline">$t$</span> and <span class="math-inline">$t+1$</span></li>
+<li><span class="math-inline">$m_t$</span> is the momentum term, which is the moving average of gradients at time <span class="math-inline">$t$</span></li>
+<li><span class="math-inline">$\alpha$</span> is the step size</li>
+</ul>
+<span class="math-display">$$m_{t} = \beta_{1} m_{t-1} + (1 - \beta_{1}) \frac{\partial \mathcal{L}}{\partial w_{t}}$$</span>
+where <span class="math-inline">$\beta_1$</span> is the momentum parameter.</p>
+<p>Clearly, the previous weighted average is used to calculate the new weighted average along with the gradient of the loss and the weight at time <span class="math-inline">$t$</span>. The momentum parameter is a hyperparameter that controls the influence of past gradients on the current update of model parameters.</p>
+<h2 id="nesterov_accelerated_gradient">Nesterov Accelerated Gradient</h2>
+<p>Nesterov accelerated gradient (NAG) improves upon momentum by computing the gradient at the anticipated next position:
+<span class="math-display">$$\begin{align*}
+v_t &= \gamma v_{t-1} - \eta \nabla J(\theta_t + \gamma v_{t-1}) \\
+\theta_{t+1} &= \theta_t + v_t
+\end{align*}$$</span>
+This lookahead mechanism can lead to faster convergence and better handling of curvature.</p>
+<p>%TOKEN_LINE_115%NAG is widely used in machine learning for training deep networks, providing improved convergence rates and robustness to hyperparameter choices. Its theoretical foundations connect to accelerated methods in convex optimization.</p>
+<h2 id="adagrad">Adagrad</h2>
+<p>Adagrad adapts the learning rate for each parameter based on the historical sum of squared gradients.</p>
+<p>The update rule using Adagrad:
+<span class="math-display">$$\theta_j \leftarrow \theta_j - \frac{\eta}{\sqrt{G_{jj} + \epsilon}} \nabla_j J(\theta)$$</span>
+where:</p>
+<ul>
+<li><span class="math-inline">$\eta$</span> is the global learning rate</li>
+<li><span class="math-inline">$G_{jj}$</span> is the sum of squared gradients for a given parameter up to time step <span class="math-inline">$t$</span></li>
+<li><span class="math-inline">$\epsilon$</span> is a small value added to avoid division by zero</li>
+</ul>
+<p>Here, the denominator grows as the squared gradients accumulate, causing the learning rate to decrease over time, which helps to stabilize the training. Conversely, the updates become larger if the historical sum of gradients is small.</p>
+<p>It is used to individually adjust the learning rate for parameters since some of them need a higher learning rate and others do not.</p>
+<p>In machine learning, Adagrad is used for problems with sparse gradients, such as natural language processing and recommender systems. Its adaptive learning rates can improve convergence but may lead to overly aggressive decay in the learning rate.</p>
+<h2 id="rmsprop">RMSProp</h2>
+<p>RMSProp modifies Adagrad by using an exponentially decaying average of squared gradients.</p>
+<p>Update rule using RMSProp:
+<span class="math-display">$$w_{t+1} = w_{t} - \frac{\alpha}{\sqrt{ v_{t} + \epsilon }} \frac{\partial \mathcal{L}}{\partial w_{t}}$$</span>
+where:</p>
+<ul>
+<li><span class="math-inline">$w_t$</span> represents the weights</li>
+<li><span class="math-inline">$\alpha$</span> is the learning rate</li>
+<li><span class="math-inline">$v_t$</span> is the exponentially weighted average of squared gradients</li>
+<li><span class="math-inline">$\epsilon$</span> is a small positive constant to avoid division by zero</li>
+</ul>
+<span class="math-display">$$v_{t} = \beta_{2} v_{t-1} + (1 - \beta_{2}) \left( \frac{\partial \mathcal{L}}{\partial w_{t}} \right)^2$$</span>
+where <span class="math-inline">$\beta_2$</span> is the decay rate that controls how quickly the moving average of squared gradients decays over time. It determines how much influence past gradients have on the current update.</p>
+<p>This prevents the learning rate from decaying too quickly and improves performance on non stationary problems.</p>
+<p>RMSProp is widely used in machine learning for training deep networks, especially in settings with non stationary or noisy gradients. Its adaptive learning rates enable stable and efficient optimization.</p>
+<h2 id="adam">Adam</h2>
+<p>Adam combines momentum and RMSProp by maintaining both a moving average of gradients and squared gradients.</p>
+<p>Momentum (mean of gradients):
+<span class="math-display">$$m_t = \beta_1 m_{t-1} + (1 - \beta_1) g_t$$</span>
+<p>RMSProp (mean of squared gradients):
+<span class="math-display">$$v_t = \beta_2 v_{t-1} + (1 - \beta_2) g_t^2$$</span>
+<p>The update is:
+<span class="math-display">$$\theta \leftarrow \theta - \frac{\eta}{\sqrt{v_t} + \epsilon} m_t$$</span>
+Adam is robust, efficient, and requires little hyperparameter tuning.</p>
+<p>At the start of training, both <span class="math-inline">$m$</span> and <span class="math-inline">$v$</span> are initialized to zero. So the first computed value <span class="math-inline">$m_1$</span> is:
+<span class="math-display">$$m_{1} = (1 - \beta_{1}) g_{1}$$</span>
+which means the optimizer thinks gradients are smaller than they really are.</p>
+<p>So we perform <strong>bias correction</strong>:
+<span class="math-display">$$\hat{m}_t = \frac{m_t}{1 - \beta_1^t}$$</span>
+<span class="math-display">$$\hat{v}_t = \frac{v_t}{1 - \beta_2^t}$$</span>
+<p>For example:
+Consider <span class="math-inline">$\beta_{1} = 0.9$</span> and <span class="math-inline">$t = 1$</span>, then <span class="math-inline">$1 - \beta_{1} = 0.1$</span>, so:
+<span class="math-display">$$\hat{m}_1 = \frac{m_1}{0.1} = 10 \cdot m_1$$</span>
+So this rescales <span class="math-inline">$m_1$</span> properly to reflect its true value. Over time as <span class="math-inline">$t$</span> increases, <span class="math-inline">$\beta^t$</span> approaches 0 and <span class="math-inline">$\hat{m} = m$</span>.</p>
+<p>In machine learning, Adam is the default optimizer for many deep learning applications, providing fast convergence and good generalization. Its popularity stems from its empirical performance and ease of use.</p>
+<h4 id="key_parameters">Key Parameters:</h4>
+<ul>
+<li><span class="math-inline">$\alpha$</span>: The learning rate or step size (default is 0.001)</li>
+<li><span class="math-inline">$\beta_1$</span> and <span class="math-inline">$\beta_2$</span>: Decay rates for the moving averages of the gradient and squared gradient, typically set to <span class="math-inline">$\beta_1 = 0.9$</span> and <span class="math-inline">$\beta_2 = 0.999$</span></li>
+<li><span class="math-inline">$\epsilon$</span>: A small positive constant (typically <span class="math-inline">$10^{-8}$</span>) used to avoid division by zero when computing the final update</li>
+</ul>
+<h2 id="convergence">Convergence</h2>
+<p>Convergence refers to the process by which an optimization algorithm approaches a minimum of the loss function. Factors affecting convergence include the choice of learning rate, batch size, momentum, and the properties of the loss surface. Convergence can be slow or unstable in the presence of saddle points, plateaus, or ill conditioning.</p>
+<p>In machine learning, monitoring convergence is essential for diagnosing training issues, tuning hyperparameters, and ensuring robust model performance. Techniques such as learning rate schedules, early stopping, and adaptive optimizers are used to improve convergence.</p>
+<h2 id="learning_rate">Learning Rate</h2>
+<p>The learning rate <span class="math-inline">$\eta$</span> controls the step size in gradient descent. Too large a learning rate can cause divergence, while too small a learning rate leads to slow convergence. Learning rate schedules, such as exponential decay or cyclical learning rates, are used to adapt <span class="math-inline">$\eta$</span> during training.</p>
+<p>In machine learning, careful tuning of the learning rate is critical for efficient and stable optimization. Automated methods, such as learning rate finders and adaptive optimizers, have become standard practice in deep learning.</p>
+
+      </div>
+
+      <nav class="note-nav-bottom">
+        <a href="08_non_linearity_and_activation_functions.html" class="nav-prev"><span class="nav-label">Previous</span><span class="nav-title">← Non Linearity and Activation Functions</span></a>
+        <a href="10_backpropagation.html" class="nav-next"><span class="nav-label">Next</span><span class="nav-title">Backpropagation →</span></a>
+      </nav>
+    </article>
+  </main>
+</div>
+
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"
+  onload="renderMathInElement(document.getElementById('note-content'), {
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '$', right: '$', display: false}
+    ],
+    throwOnError: false,
+    trust: true,
+    strict: false
+  });"></script>
+<script>
+(function initAmbientBackground() {
+  const canvas = document.getElementById('ambient-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  
+  let width = canvas.width = window.innerWidth;
+  let height = canvas.height = window.innerHeight;
+  
+  window.addEventListener('resize', () => {
+    width = canvas.width = window.innerWidth;
+    height = canvas.height = window.innerHeight;
+  });
+  
+  const particles = [];
+  const particleCount = Math.min(60, Math.floor((width * height) / 20000));
+  const connectionDistance = 120;
+  
+  class Particle {
+    constructor() {
+      this.x = Math.random() * width;
+      this.y = Math.random() * height;
+      this.vx = (Math.random() - 0.5) * 0.25;
+      this.vy = (Math.random() - 0.5) * 0.25;
+      this.radius = Math.random() * 1.2 + 0.6;
+    }
+    
+    update() {
+      this.x += this.vx;
+      this.y += this.vy;
+      
+      if (this.x < 0 || this.x > width) this.vx *= -1;
+      if (this.y < 0 || this.y > height) this.vy *= -1;
+    }
+    
+    draw() {
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(126, 247, 201, 0.4)';
+      ctx.fill();
+    }
+  }
+  
+  for (let i = 0; i < particleCount; i++) {
+    particles.push(new Particle());
+  }
+  
+  function animate() {
+    ctx.clearRect(0, 0, width, height);
+    particles.forEach(p => {
+      p.update();
+      p.draw();
+    });
+    
+    for (let i = 0; i < particles.length; i++) {
+      for (let j = i + 1; j < particles.length; j++) {
+        const dx = particles[i].x - particles[j].x;
+        const dy = particles[i].y - particles[j].y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        
+        if (dist < connectionDistance) {
+          const alpha = (1 - (dist / connectionDistance)) * 0.08;
+          ctx.beginPath();
+          ctx.moveTo(particles[i].x, particles[i].y);
+          ctx.lineTo(particles[j].x, particles[j].y);
+          ctx.strokeStyle = "rgba(126, 247, 201, " + alpha + ")";
+          ctx.lineWidth = 0.8;
+          ctx.stroke();
+        }
+      }
+    }
+    requestAnimationFrame(animate);
+  }
+  animate();
+})();
+</script>
+</body>
+</html>

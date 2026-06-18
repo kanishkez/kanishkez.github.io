@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>KV Caching — kanishk's notes</title>
+  <meta name="description" content="KV Caching — Transformers & LLMs notes by kanishk" />
+  <link rel="icon" type="image/png" href="../assets/favicon.png" />
+  <link rel="stylesheet" href="../css/style.css" />
+  <link rel="stylesheet" href="../css/notes.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous" />
+</head>
+<body>
+<canvas id="ambient-canvas"></canvas>
+
+<!-- Top Floating Navigation Bar -->
+<header class="navbar">
+  <div class="nav-container">
+    <a href="../index.html" class="nav-logo">kanishk</a>
+    <nav class="nav-links">
+      <a href="../index.html#home">Home</a>
+      <a href="../index.html#projects">Projects</a>
+      <a href="../index.html#blogs">Blogs</a>
+      <a href="../index.html#notes" class="active">Notes</a>
+    </nav>
+    <div class="nav-socials">
+      <a href="https://github.com/kanishkez" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://huggingface.co/kanishkez" target="_blank" rel="noopener">HuggingFace</a>
+    </div>
+  </div>
+</header>
+
+<div class="container">
+  <main class="main-content">
+    <article class="note-page">
+      <div class="note-breadcrumb">
+        <a href="../index.html#notes">Notes</a>
+        <span class="breadcrumb-sep">›</span>
+        <a href="../index.html#notes">Transformers & LLMs</a>
+        <span class="breadcrumb-sep">›</span>
+        <span>KV Caching</span>
+      </div>
+
+      <header class="note-header">
+        <div class="note-category-tag">Transformers & LLMs</div>
+        <h1>KV Caching</h1>
+      </header>
+
+      
+
+      <div class="note-content" id="note-content">
+        <h1 id="kv_caching">KV Caching</h1>
+<p>When we generate text with transformers, generating token by token is incredibly slow because we keep recalculating the same representations. KV caching is a standard optimization to speed up inference by saving previously computed key and value states. Here is a breakdown of how it works under the hood and why it is so necessary.</p>
+<p>In self attention, every token wants to &quot;look at&quot; other tokens in the same sequence and decide <strong>how much attention to pay to them</strong>.</p>
+<p>That decision is made using the <strong>dot product between Query and Key vectors</strong>.</p>
+<p>For a given token <span class="math-inline">$i$</span>:</p>
+<span class="math-display">$$\text{attention weights for token } i = \text{softmax}\left( \frac{Q_i K^\top}{\sqrt{d_k}} \right)$$</span>
+<p>where <span class="math-inline">$Q_i$</span> is the query vector for token <span class="math-inline">$i$</span> and <span class="math-inline">$K$</span> is the matrix containing key vectors for all tokens processed so far. Then, using those weights, we combine the <strong>Values</strong> <span class="math-inline">$V_j$</span> of all tokens to produce a new representation for token <span class="math-inline">$i$</span>:</p>
+<span class="math-display">$$\text{output}_i = \sum_j \text{attention weight}(i, j) \, V_j$$</span>
+<p>When you process a new token, you take the old keys and value vectors to see what has been generated so far and the current token&#39;s query being generated.</p>
+<p>So in each iteration of generating a new token, old key and value vectors are used.</p>
+<p>In vanilla transformers, these vectors are computed again and again for each step:</p>
+<ul>
+<li>For <span class="math-inline">$t = 2 \rightarrow$</span> recompute token <span class="math-inline">$1$</span></li>
+<li>For <span class="math-inline">$t = 3 \rightarrow$</span> recompute tokens <span class="math-inline">$1$</span> and <span class="math-inline">$2$</span></li>
+<li>For <span class="math-inline">$t = 4 \rightarrow$</span> recompute tokens <span class="math-inline">$1, 2, 3$</span></li>
+<li>For <span class="math-inline">$t = n \rightarrow$</span> recompute tokens <span class="math-inline">$1$</span> to <span class="math-inline">$n - 1$</span></li>
+</ul>
+<p>What this does is that it makes the decoder time complexity <span class="math-inline">$O(n^2)$</span> for generating a sequence of length <span class="math-inline">$n$</span>.</p>
+<p>Since:
+<span class="math-display">$$1 + 2 + 3 + \dots + n = \frac{n(n+1)}{2} = O(n^2)$$</span>
+<p>Since this is obviously inefficient, we introduce KV caching.</p>
+<p>What we do is that instead of recomputing key and value tokens, we store them in a tensor in the GPU&#39;s VRAM so that we just fetch those values instead of recomputing them again and again.</p>
+<h3 id="how_kv_cache_actually_looks_like">How KV Cache actually looks like</h3>
+<p>Inside the GPU they are stored in tensors like these:</p>
+<ul>
+<li>K cache <span class="math-inline">$\rightarrow$</span> (num layers, batch size, num heads, sequence length, head dimension)</li>
+<li>V cache <span class="math-inline">$\rightarrow$</span> (num layers, batch size, num heads, sequence length, head dimension)</li>
+</ul>
+<p>Every time a new token is generated, we compute its key and value vectors and append them to the cache tensors.</p>
+<p><strong>The Trade Off</strong></p>
+<p>The big trade off is that as the model size increases, the size of the KV cache also increases. All of this is stored in GPU VRAM. So it might grow really big and clutter our VRAM.</p>
+<p>So KV caching basically trades off GPU memory for inference speed. We save a ton of compute time by not reprojecting past tokens, but we pay for it with a massive memory footprint. Managing this memory overhead is where things like PagedAttention and other cache optimization techniques come into play.</p>
+
+      </div>
+
+      <nav class="note-nav-bottom">
+        <a href="02_gpt_bert_and_bart.html" class="nav-prev"><span class="nav-label">Previous</span><span class="nav-title">← GPT BERT and BART</span></a>
+        <a href="04_flash_attention.html" class="nav-next"><span class="nav-label">Next</span><span class="nav-title">Flash Attention →</span></a>
+      </nav>
+    </article>
+  </main>
+</div>
+
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"
+  onload="renderMathInElement(document.getElementById('note-content'), {
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '$', right: '$', display: false}
+    ],
+    throwOnError: false,
+    trust: true,
+    strict: false
+  });"></script>
+<script>
+(function initAmbientBackground() {
+  const canvas = document.getElementById('ambient-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  
+  let width = canvas.width = window.innerWidth;
+  let height = canvas.height = window.innerHeight;
+  
+  window.addEventListener('resize', () => {
+    width = canvas.width = window.innerWidth;
+    height = canvas.height = window.innerHeight;
+  });
+  
+  const particles = [];
+  const particleCount = Math.min(60, Math.floor((width * height) / 20000));
+  const connectionDistance = 120;
+  
+  class Particle {
+    constructor() {
+      this.x = Math.random() * width;
+      this.y = Math.random() * height;
+      this.vx = (Math.random() - 0.5) * 0.25;
+      this.vy = (Math.random() - 0.5) * 0.25;
+      this.radius = Math.random() * 1.2 + 0.6;
+    }
+    
+    update() {
+      this.x += this.vx;
+      this.y += this.vy;
+      
+      if (this.x < 0 || this.x > width) this.vx *= -1;
+      if (this.y < 0 || this.y > height) this.vy *= -1;
+    }
+    
+    draw() {
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(126, 247, 201, 0.4)';
+      ctx.fill();
+    }
+  }
+  
+  for (let i = 0; i < particleCount; i++) {
+    particles.push(new Particle());
+  }
+  
+  function animate() {
+    ctx.clearRect(0, 0, width, height);
+    particles.forEach(p => {
+      p.update();
+      p.draw();
+    });
+    
+    for (let i = 0; i < particles.length; i++) {
+      for (let j = i + 1; j < particles.length; j++) {
+        const dx = particles[i].x - particles[j].x;
+        const dy = particles[i].y - particles[j].y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        
+        if (dist < connectionDistance) {
+          const alpha = (1 - (dist / connectionDistance)) * 0.08;
+          ctx.beginPath();
+          ctx.moveTo(particles[i].x, particles[i].y);
+          ctx.lineTo(particles[j].x, particles[j].y);
+          ctx.strokeStyle = "rgba(126, 247, 201, " + alpha + ")";
+          ctx.lineWidth = 0.8;
+          ctx.stroke();
+        }
+      }
+    }
+    requestAnimationFrame(animate);
+  }
+  animate();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,486 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Quantization — kanishk's notes</title>
+  <meta name="description" content="Quantization — Transformers & LLMs notes by kanishk" />
+  <link rel="icon" type="image/png" href="../assets/favicon.png" />
+  <link rel="stylesheet" href="../css/style.css" />
+  <link rel="stylesheet" href="../css/notes.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous" />
+</head>
+<body>
+<canvas id="ambient-canvas"></canvas>
+
+<!-- Top Floating Navigation Bar -->
+<header class="navbar">
+  <div class="nav-container">
+    <a href="../index.html" class="nav-logo">kanishk</a>
+    <nav class="nav-links">
+      <a href="../index.html#home">Home</a>
+      <a href="../index.html#projects">Projects</a>
+      <a href="../index.html#blogs">Blogs</a>
+      <a href="../index.html#notes" class="active">Notes</a>
+    </nav>
+    <div class="nav-socials">
+      <a href="https://github.com/kanishkez" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://huggingface.co/kanishkez" target="_blank" rel="noopener">HuggingFace</a>
+    </div>
+  </div>
+</header>
+
+<div class="container">
+  <main class="main-content">
+    <article class="note-page">
+      <div class="note-breadcrumb">
+        <a href="../index.html#notes">Notes</a>
+        <span class="breadcrumb-sep">›</span>
+        <a href="../index.html#notes">Transformers & LLMs</a>
+        <span class="breadcrumb-sep">›</span>
+        <span>Quantization</span>
+      </div>
+
+      <header class="note-header">
+        <div class="note-category-tag">Transformers & LLMs</div>
+        <h1>Quantization</h1>
+      </header>
+
+      <nav class="note-toc" id="note-toc">
+        <div class="toc-title">Contents</div>
+        <div class="toc-items">
+          <a href="#quantization" class="toc-item toc-h1">Quantization</a>
+          <a href="#bits_and_bytes_of_a_number" class="toc-item toc-h3">Bits and Bytes of a Number</a>
+          <a href="#storing_decimals_using_the_floating_point_system" class="toc-item toc-h3">Storing Decimals Using the Floating Point System</a>
+          <a href="#the_tradeoff" class="toc-item toc-h3">The Tradeoff</a>
+          <a href="#floating_point_types" class="toc-item toc-h3">Floating Point Types</a>
+          <a href="#what_is_quantization" class="toc-item toc-h3">What is Quantization</a>
+          <a href="#how_it_works" class="toc-item toc-h3">How it Works</a>
+          <a href="#types_of_quantization" class="toc-item toc-h2">Types of Quantization</a>
+          <a href="#static_and_dynamic_quantization" class="toc-item toc-h3">Static and Dynamic Quantization</a>
+          <a href="#symmetric_and_asymmetric_quantization" class="toc-item toc-h3">Symmetric and Asymmetric Quantization</a>
+          <a href="#weight_only_and_activation_only_vs_full_quantization" class="toc-item toc-h2">Weight Only and Activation Only vs Full Quantization</a>
+          <a href="#quantization_aware_training_and_post_training_quantization" class="toc-item toc-h2">Quantization Aware Training and Post Training Quantization</a>
+          <a href="#quantization_aware_training" class="toc-item toc-h3">Quantization Aware Training</a>
+          <a href="#fake_quantization" class="toc-item toc-h3">Fake Quantization</a>
+          <a href="#why_fake_quantization" class="toc-item toc-h3">Why Fake Quantization?</a>
+          <a href="#the_backward_pass" class="toc-item toc-h3">The Backward Pass</a>
+          <a href="#efficient_qat" class="toc-item toc-h3">Efficient QAT</a>
+          <a href="#block_wise_training_of_all_parameters_block_ap" class="toc-item toc-h2">Block Wise Training of All Parameters (Block AP)</a>
+          <a href="#end_to_end_quantization_parameter_tuning" class="toc-item toc-h3">End to End Quantization Parameter Tuning</a>
+          <a href="#inference_vs_training" class="toc-item toc-h2">Inference vs Training</a>
+          <a href="#training" class="toc-item toc-h3">Training</a>
+          <a href="#inference" class="toc-item toc-h3">Inference</a>
+          <a href="#learned_step_size_quantization_lsq" class="toc-item toc-h3">Learned Step Size Quantization (LSQ)</a>
+          <a href="#lsq_gradient_computation" class="toc-item toc-h3">LSQ Gradient Computation</a>
+          <a href="#lsq" class="toc-item toc-h3">LSQ+</a>
+          <a href="#gptq" class="toc-item toc-h2">GPTQ</a>
+          <a href="#the_hessian" class="toc-item toc-h3">The Hessian</a>
+          <a href="#the_residual" class="toc-item toc-h3">The Residual</a>
+          <a href="#error_compensation" class="toc-item toc-h3">Error Compensation</a>
+          <a href="#efficient_computation_of_the_hessian_inverse" class="toc-item toc-h3">Efficient Computation of the Hessian Inverse</a>
+          <a href="#the_complete_gptq_workflow" class="toc-item toc-h3">The Complete GPTQ Workflow</a>
+        </div>
+      </nav>
+
+      <div class="note-content" id="note-content">
+        <h1 id="quantization">Quantization</h1>
+<p>Before looking at quantization itself, we need to understand how numbers are actually stored in computer memory and GPU VRAM. It helps to look at how bits and bytes represent values, especially when dealing with floating point representations. Once we get a handle on that, we can see why we need to compress these numbers and how quantization makes LLMs run way faster without blowing up the memory.</p>
+<h3 id="bits_and_bytes_of_a_number">Bits and Bytes of a Number</h3>
+<p>A bit is the smallest unit of a number, and it can be either 0 or 1.</p>
+<p>A byte is made up of 8 bits and can store 256 different values, typically from 0 to 255 (unsigned) or -128 to 127 (signed).</p>
+<p>Computers store negative numbers using <strong>two&#39;s complement</strong>.</p>
+<p><strong>Two&#39;s Complement</strong></p>
+<p>A 2&#39;s complement of a binary number is obtained by finding the 1&#39;s complement and then adding 1 to the result. The most significant bit represents the sign: 0 indicates positive and 1 indicates negative.</p>
+<p><strong>Decimal Binary Representation</strong></p>
+<p>To represent fractions like 1/2, 1/4, 1/8, etc., we use the power of 2 rule, just like any binary representation.</p>
+<div class="table-wrapper"><table>
+<thead><tr><th>Fraction</th><th>Binary</th></tr></thead>
+<tbody><tr><td>1/2</td><td>0.1</td></tr><tr><td>1/4</td><td>0.01</td></tr><tr><td>1/8</td><td>0.001</td></tr><tr><td>1/16</td><td>0.0001</td></tr></tbody>
+</table></div>
+<p>To represent numbers like <span class="math-inline">$0.75$</span>, we can write <span class="math-inline">$0.75 = \frac{3}{4} = \frac{1}{2} + \frac{1}{4} = 0.11_2$</span>.</p>
+<p><strong>Multiply by 2 Method</strong></p>
+<p>This works for any fractional number.</p>
+<p>Example: <span class="math-inline">$0.23 \rightarrow ?$</span>
+<p>Repeatedly multiply by 2 and record the integer part:</p>
+<div class="table-wrapper"><table>
+<thead><tr><th><strong>Step</strong></th><th><strong>x × 2</strong></th><th><strong>Integer part</strong></th></tr></thead>
+<tbody><tr><td>1</td><td>0.23 × 2 = 0.46</td><td>0</td></tr><tr><td>2</td><td>0.46 × 2 = 0.92</td><td>0</td></tr><tr><td>3</td><td>0.92 × 2 = 1.84</td><td>1</td></tr><tr><td>4</td><td>0.84 × 2 = 1.68</td><td>1</td></tr><tr><td>5</td><td>0.68 × 2 = 1.36</td><td>1</td></tr><tr><td>…</td><td>continues</td><td></td></tr></tbody>
+</table></div>
+<p>Fractional binary digits = <span class="math-inline">$0.00111..._2$</span>
+<p><strong>Normalized Scientific Binary</strong></p>
+<p>Normalized binary looks like this:
+<span class="math-display">$$1.xxxxx \times 2^{\text{exponent}}$$</span>
+<p>So, if you need to move the binary point to the left, you add that many steps to the exponent of 2.
+If you need to move it right to get it into that form, you subtract that many steps from the exponent of 2.</p>
+<h3 id="storing_decimals_using_the_floating_point_system">Storing Decimals Using the Floating Point System</h3>
+<p>To store decimals, we use a system called floating point.</p>
+<p>It consists of:</p>
+<ul>
+<li><strong>Sign bit</strong>: A single bit that tells you if the number is positive (0) or negative (1).</li>
+<li><strong>Exponent</strong>: A set of bits that determine the number&#39;s magnitude (how big the number is). The exponent is not stored directly as a signed number; instead, we use something called an exponent <strong>bias</strong>. This bias makes numerical comparison easier. For FP32, the bias is 127. We add the bias to the actual exponent to get the stored exponent:
+<span class="math-display">$$E_{\text{stored}} = E_{\text{actual}} + \text{bias}$$</span>
+So if the actual exponent is 3, we add 127 and store 130 instead.</li>
+<li><strong>Significand</strong>: It represents the precision bits. In normalized form, it is always the fraction bits (the numbers after the binary point).</li>
+</ul>
+<p>Representing <span class="math-inline">$13.25$</span> in FP32:</p>
+<span class="math-display">$$13.25 = 13 + 0.25$$</span>
+<span class="math-display">$$13 = 1101_2$$</span>
+<span class="math-display">$$0.25 = 0.01_2$$</span>
+<p>So:
+<span class="math-display">$$1101.01_2 = 1.10101_2 \times 2^3$$</span>
+<p>Rewriting in scientific binary:</p>
+<ul>
+<li>Exponent = 3</li>
+<li>Significand = <span class="math-inline">$1.10101_2$</span></li>
+</ul>
+<p>We calculate the stored exponent:
+<span class="math-display">$$\text{Stored Exponent} = 127 + 3 = 130$$</span>
+<span class="math-display">$$130 = 10000010_2$$</span>
+<p>We ignore the leading 1 (since it is implicit in normalized form) and store only the fractional part in the significand:
+<span class="math-display">$$1.10101_2 \rightarrow \text{store } 10101000000000000000000_2 \quad (23 \text{ bits})$$</span>
+<p>The sign bit is 0 since it is a positive number.</p>
+<p>So, the final representation is:</p>
+<div class="table-wrapper"><table>
+<thead><tr><th><strong>Field</strong></th><th><strong>Bits</strong></th></tr></thead>
+<tbody><tr><td>Sign</td><td>0</td></tr><tr><td>Exponent</td><td>10000010</td></tr><tr><td>Significand</td><td>10101000000000000000000</td></tr></tbody>
+</table></div>
+<p>Final bit pattern:
+<code class="inline-code">0 10000010 10101000000000000000000</code></p>
+<h3 id="the_tradeoff">The Tradeoff</h3>
+<p>The tradeoff between the bits assigned to the exponent or the significand is what varies across different floating point formats.</p>
+<h3 id="floating_point_types">Floating Point Types</h3>
+<p><strong>16 bit numbers (FP16 and BF16)</strong></p>
+<p>They both use 2 bytes (16 bits total) but prioritize different things:</p>
+<ul>
+<li><strong>FP16</strong>: Known as half precision. The significand (or mantissa) stores the detail of the number, while the exponent controls its scale. FP16 has a limited exponent (only 5 bits), so it cannot represent very large or very small values well. During LLM training, activations and gradients can grow or shrink rapidly. FP16 cannot represent these ranges very well, leading to overflow or underflow.</li>
+</ul>
+<figure><img src="https://miro.medium.com/v2/resize:fit:700/1*vOaLIPloGfDbnc9_ytUhfA.png" alt="" loading="lazy"></figure>
+<ul>
+<li><strong>BF16</strong>: Developed to solve the range issue, it keeps the same exponent size as the FP32 standard (8 bits) but reduces the number of significand bits. It is the preferred standard for LLM training today.</li>
+</ul>
+<figure><img src="https://miro.medium.com/v2/resize:fit:700/1*xQrjzic_eioTbpmHpzhCiQ.png" alt="" loading="lazy"></figure>
+<p><strong>8 bit numbers (FP8)</strong></p>
+<p>It comes in two formats: <strong>E4M3</strong> (4 bit exponent, 3 bit significand) and <strong>E5M2</strong> (5 bit exponent, 2 bit significand). It maintains the floating point exponent structure while compressing the float. This superior range of the exponent makes it a preferred format for quantizing activations (the outputs of network layers) since it handles extreme outliers better than integer formats like INT8.</p>
+<p><strong>32 bit numbers (FP32)</strong></p>
+<p>The standard &quot;full precision&quot; format for many calculations, offering a large range and high precision. This uses 4 bytes (32 bits) per number. The more bits we use to represent a number, the more precise it becomes.</p>
+<figure><img src="https://miro.medium.com/v2/resize:fit:700/1*oi2mWD7AOLi3O6BPZymQ9g.png" alt="" loading="lazy"></figure>
+<p>Most LLMs use FP16 or BF16. Each parameter therefore takes 2 bytes (16 bits total).</p>
+<p>For a 7 billion parameter model, if each parameter used 4 bytes in FP32, the total memory for weights alone would be 28 GB. In FP16 or BF16, that would be 14 GB. This footprint is still too large for many consumer GPUs, which is why quantization is used to shrink it further.</p>
+<p>While the memory footprint is the initial barrier (making the model too big to fit), the ultimate purpose of quantization is to dramatically improve inference speed and throughput (how many requests a model can handle per second). Depending on the format and bits used, matrix multiplication can also run much faster, improving both training and inference speeds.</p>
+<h3 id="what_is_quantization">What is Quantization</h3>
+<p>The main aim of quantization is to reduce high precision weights into lower precision formats to improve speed and make large language models more practical, which is often better than just reducing the number of parameters in a model.</p>
+<p>Quantization is the process of efficiently replacing high precision numbers (weights, biases, and activations) with lower precision ones with the goal of using less memory and less compute while keeping the same model behavior.</p>
+<p>We map floating point values into discrete values represented by fewer bits, and then use a scale factor to convert back and forth between the smaller representation and an approximate floating point value.</p>
+<h3 id="how_it_works">How it Works</h3>
+<p>The core idea is that we convert real values to an integer range. We determine a minimum and maximum range for our weights, and all values are mapped into that range. This range can be chosen before quantization (static) or can change dynamically during runtime.</p>
+<p>General formula:
+<span class="math-display">$$q = \text{round}\left(\frac{x}{\text{scale}}\right) + \text{zero point}$$</span>
+where:</p>
+<ul>
+<li><span class="math-inline">$\text{round}()$</span> rounds to the nearest integer.</li>
+<li><span class="math-inline">$\text{scale}$</span> scales the real value into the target integer range.</li>
+<li><span class="math-inline">$\text{zero point}$</span> is an integer that represents the real value <span class="math-inline">$0.0$</span>. Since we are shifting the values into a specific unsigned or signed integer range, true zero shifts, and the zero point acts as that offset.</li>
+</ul>
+<p><strong>Scale Formula</strong>:
+<span class="math-display">$$\text{scale} = \frac{x_{\max} - x_{\min}}{q_{\max} - q_{\min}}$$</span>
+where:</p>
+<ul>
+<li><span class="math-inline">$q_{\min}$</span> and <span class="math-inline">$q_{\max}$</span> are the minimum and maximum values of the target integer range.</li>
+<li><span class="math-inline">$x_{\min}$</span> and <span class="math-inline">$x_{\max}$</span> are the minimum and maximum values of the floating point range being converted.</li>
+</ul>
+<p>This scale helps us map an input into the target integer range along with the zero point offset.</p>
+<h2 id="types_of_quantization">Types of Quantization</h2>
+<h3 id="static_and_dynamic_quantization">Static and Dynamic Quantization</h3>
+<p><strong>Static Quantization</strong></p>
+<p>Static quantization runs a calibration step through the model using a representative calibration dataset to measure the minimum/maximum values or the distribution of weights and activations. Using this data, we compute the scale and zero point, which are then frozen and used during inference. This requires an extra calibration step but usually preserves accuracy better.</p>
+<p><strong>Dynamic Quantization</strong></p>
+<p>We do not calculate the range ahead of time. Instead, we calculate the range on the fly for each batch, head, or layer during runtime, using the minimum and maximum values of the active batch. You dynamically recompute the scale and zero point for each input batch. This is simpler to set up since it does not require calibration data, but it adds runtime compute overhead.</p>
+<h3 id="symmetric_and_asymmetric_quantization">Symmetric and Asymmetric Quantization</h3>
+<p><strong>Symmetric Quantization</strong></p>
+<p>The quantization range is centered around zero, meaning we set the zero point to 0. This is commonly used for weights because weight distributions are often roughly symmetric around zero. The formula is simpler since there is no zero point offset.</p>
+<p><strong>Asymmetric Quantization</strong></p>
+<p>The quantization range is not centered around zero and can include a non zero minimum. The zero point shifts during mapping to align the real range with the integer range. This is commonly used for activations because activations (like ReLU or GeLU outputs) are often non negative or highly asymmetric.</p>
+<h2 id="weight_only_and_activation_only_vs_full_quantization">Weight Only and Activation Only vs Full Quantization</h2>
+<p><strong>Weight Only Quantization</strong></p>
+<p>Only the model weights are quantized. Activations remain in high precision floating point formats like FP16 or BF16. We do this because activations vary a lot between inputs and quantizing them can hurt accuracy, whereas weights are static and much easier to quantize. QLoRA is an example of weight only quantization used during fine tuning.</p>
+<p><strong>Activation Quantization</strong></p>
+<p>Only activations are quantized. This is used in frameworks like SmoothQuant and the Nvidia Transformer Engine.</p>
+<p><strong>Full Quantization</strong></p>
+<p>We quantize both weights and activations to maximize memory savings and speed up matrix multiplication.</p>
+<h2 id="quantization_aware_training_and_post_training_quantization">Quantization Aware Training and Post Training Quantization</h2>
+<h3 id="quantization_aware_training">Quantization Aware Training</h3>
+<p>Quantization Aware Training (QAT) simulates quantization during the forward pass of training. Even though the model still computes gradients and updates in floating point (like FP16 or FP32) during training, it uses fake quantized weights and activations to calculate the loss. This helps the model adapt to the quantization errors and rounding effects before the final model is compiled.</p>
+<p>If you train on pure floating point weights and then quantize them afterwards (Post Training Quantization or PTQ), you often see a drop in accuracy. QAT exists to force the model to adapt to these errors during the training process, so it performs much better during integer inference.</p>
+<h3 id="fake_quantization">Fake Quantization</h3>
+<ol>
+<li>Take a floating point value <span class="math-inline">$x$</span>.</li>
+<li>Quantize it to an integer: <span class="math-inline">$q = \text{round}(x/s + z)$</span>.</li>
+<li>Immediately convert it back to a float: <span class="math-inline">$x_{\text{fake}} = s \cdot (q - z)$</span>.</li>
+</ol>
+<p>For example, an input like <span class="math-inline">$16.2$</span> might be quantized and then dequantized back to a float value like <span class="math-inline">$16.0$</span>. This allows the model to experience the precision loss of quantization while still using floating point tensors for the actual backpropagation.</p>
+<h3 id="why_fake_quantization">Why Fake Quantization?</h3>
+<p>Fake quantization simulates the precision loss of integer formats during training. This forces the model to adjust its remaining parameters to compensate for the quantization noise.</p>
+<h3 id="the_backward_pass">The Backward Pass</h3>
+<p>Quantization (specifically the rounding step) is non differentiable because its derivative is zero almost everywhere and undefined at integers. To train through this, we use a <strong>Straight Through Estimator (STE)</strong>. We simply ignore the rounding step during the backward pass and pass the gradient straight through as if the derivative were 1:
+<span class="math-display">$$\frac{\partial \hat{x}}{\partial x} \approx 1$$</span>
+<h3 id="efficient_qat">Efficient QAT</h3>
+<p>Standard QAT is expensive. Fake quantizing every activation and weight and then training with STE is compute heavy and slows down training.</p>
+<p>Efficient QAT techniques include:</p>
+<ol>
+<li><strong>Selective fake quantization</strong>: Only quantizing the most sensitive layers (like attention projections or specific linear layers) that account for the bulk of the quantization error, while leaving other layers in higher precision.</li>
+<li><strong>Delayed activation quantization</strong>: Starting the training process with standard floating point activations and introducing fake quantization only in the later epochs.</li>
+<li><strong>Range calibration</strong>: Statically calibrating the ranges before starting QAT to stabilize the scales.</li>
+</ol>
+<p>The core technique is the same; you are just being smart about where and when you apply it.</p>
+<h2 id="block_wise_training_of_all_parameters_block_ap">Block Wise Training of All Parameters (Block AP)</h2>
+<p>Instead of quantizing the entire model at once, the model is split into blocks (like individual transformer layers). </p>
+<p>For each block:</p>
+<ol>
+<li>We freeze all other blocks.</li>
+<li>In the active block, we replace the floating point weights <span class="math-inline">$W$</span> with fake quantized weights <span class="math-inline">$\widetilde{W}$</span> during the forward pass.</li>
+<li>During training, we update the weights using STE and also update the quantization parameters (like the scale <span class="math-inline">$s$</span> and zero point).</li>
+<li>The scale and other parameters are updated during each training cycle to optimize the quantization range.</li>
+<li>After a set number of steps, we freeze the current block&#39;s weights and move to the next block.</li>
+</ol>
+<p>The loss function used is:
+<span class="math-display">$$\mathcal{L} = \mathcal{L}_{\text{task}}(f(\widetilde{W})) + \lambda \mathcal{R}(W,s)$$</span>
+where:</p>
+<ul>
+<li><span class="math-inline">$\mathcal{L}_{\text{task}}$</span> is the task loss (like cross entropy or MSE).</li>
+<li><span class="math-inline">$\mathcal{R}(W,s) = \|W - \widetilde{W}\|_2^2$</span> is the reconstruction loss (regularizer) that measures the distance between the unquantized weights <span class="math-inline">$W$</span> and the quantized weights <span class="math-inline">$\widetilde{W}$</span>.</li>
+<li><span class="math-inline">$\lambda$</span> is a hyperparameter that controls how strongly we force the floating point weights to stay close to their quantized representations.</li>
+</ul>
+<h3 id="end_to_end_quantization_parameter_tuning">End to End Quantization Parameter Tuning</h3>
+<p>After all blocks have been trained individually, we freeze the weights. We then run a final tuning pass over a small validation dataset, training only the quantization parameters (like scales) for the entire model. We do this to ensure global consistency across all blocks, finding a global scale configuration that will be used during inference.</p>
+<h2 id="inference_vs_training">Inference vs Training</h2>
+<h3 id="training">Training</h3>
+<p>During training, we need high precision floating point representations. Gradients and weight updates require tiny, precise adjustments that integer math cannot represent. To prepare the model for inference, we use fake quantization (quantizing and dequantizing) during training so the model learns to tolerate the rounding errors. After training is complete, we convert and store the weights as integers.</p>
+<h3 id="inference">Inference</h3>
+<p>During inference, we run matrix multiplications using the stored integers because integer math is much faster and more memory efficient. The scale is applied after the dot products are calculated. </p>
+<p>We convert the results back to the floating point domain after heavy matrix multiplications because succeeding operations (like bias addition, softmax, LayerNorm, and residual connections) still require floating point precision.</p>
+<p>Specifically:</p>
+<ol>
+<li>Store weights as integers after training.</li>
+<li>Store the scales and zero points (obtained after end to end tuning).</li>
+<li>Perform integer matrix multiplication.</li>
+<li>Multiply the result by the scale to convert back to the floating point domain for operations like softmax, LayerNorm, and residual connections.</li>
+</ol>
+<h3 id="learned_step_size_quantization_lsq">Learned Step Size Quantization (LSQ)</h3>
+<p>Learned Step Size Quantization is a method where the scale (step size) that maps floating point values to integers is not computed statically from minimum/maximum values. Instead, it becomes a learnable parameter trained directly via backpropagation.</p>
+<p>In standard quantization, we use a fixed scale:
+<span class="math-display">$$\hat{x} = s \cdot \text{clip}\left( \left\lfloor \frac{x}{s} \right\rceil, q_{\min}, q_{\max} \right)$$</span>
+In LSQ, the scale <span class="math-inline">$s$</span> is treated as a learnable parameter with its own gradients. This allows the quantization grid to adapt to the weight distribution instead of using rigid minimum/maximum rules.</p>
+<p>The step by step calculation is:</p>
+<ol>
+<li>Scale the value:
+<span class="math-display">$$v = \frac{x}{s}$$</span></li>
+<li>Round:
+<span class="math-display">$$q = \lfloor v \rceil$$</span></li>
+<li>Clip:
+<span class="math-display">$$a = \text{clip}(q, q_{\min}, q_{\max})$$</span></li>
+<li>Dequantize:
+<span class="math-display">$$\hat{x} = s \cdot a$$</span></li>
+</ol>
+<p>This lets the quantization grid shift to where the weights actually lie, handling outliers much better than standard minimum/maximum quantization and yielding higher accuracy.</p>
+<h3 id="lsq_gradient_computation">LSQ Gradient Computation</h3>
+<p>To update the scale parameter via backpropagation, we compute the gradient of the dequantized output <span class="math-inline">$\hat{x}$</span> with respect to the scale <span class="math-inline">$s$</span>:
+<span class="math-display">$$\frac{\partial \hat{x}}{\partial s} = \begin{cases} 
+   q_{\min} & \text{if } x/s &lt; q_{\min} \\ 
+   q_{\max} & \text{if } x/s &gt; q_{\max} \\ 
+   \lfloor x/s \rceil - \frac{x}{s} & \text{otherwise} 
+   \end{cases}$$</span>
+In the unclipped region, this is the quantization error (<span class="math-inline">$q - x/s$</span>). The scale parameter adjusts itself to minimize this difference, reducing overall quantization error.</p>
+<p>To stabilize training, LSQ normalizes the gradient of the scale parameter:
+<span class="math-display">$$g_s = \frac{1}{\sqrt{N \cdot q_{\max}}}$$</span>
+where <span class="math-inline">$N$</span> is the number of elements in the tensor being quantized, and <span class="math-inline">$q_{\max}$</span> is the upper integer bound of the quantization range. Normalization prevents the scale gradients from exploding when dealing with large tensors.</p>
+<p>The scale is optimized indirectly through the standard training objective. Using the chain rule:
+<span class="math-display">$$\frac{\partial \mathcal{L}}{\partial s} = \frac{\partial \mathcal{L}}{\partial \hat{x}} \frac{\partial \hat{x}}{\partial s}$$</span>
+In the unclipped region:
+<span class="math-display">$$\frac{\partial \mathcal{L}}{\partial s} = \frac{\partial \mathcal{L}}{\partial \hat{x}} \left( q - \frac{x}{s} \right)$$</span>
+This means the scale learns to minimize the task loss rather than just the raw quantization error.</p>
+<h3 id="lsq">LSQ+</h3>
+<p>While standard LSQ only learns the scale, LSQ+ learns both the scale and the zero point.</p>
+<p>The quantized value is computed as:
+<span class="math-display">$$q = \text{clip}\left( \left\lfloor \frac{x}{s} + z \right\rceil, q_{\min}, q_{\max} \right)$$</span>
+and the dequantized value is:
+<span class="math-display">$$\hat{x} = s \cdot (q - z)$$</span>
+<p>The zero point shifts the quantization grid to fit the data distribution. The derivative of the dequantized output with respect to the zero point <span class="math-inline">$z$</span> is:
+<span class="math-display">$$\frac{\partial \hat{x}}{\partial z} = \begin{cases} 
+   -s & \text{if } x/s + z &lt; q_{\min} \\ 
+   0 & \text{if } q_{\min} \le x/s + z \le q_{\max} \\ 
+   -s & \text{if } x/s + z &gt; q_{\max} 
+   \end{cases}$$</span>
+<p>Inside the clipping bounds, the zero point does not affect the output error directly, so the gradient is 0. Outside the bounds where values get clipped, the gradient is <span class="math-inline">$-s$</span>.</p>
+<p>The zero point affects <strong>where the clipping window sits</strong>:</p>
+<ul>
+<li>A positive gradient pushes the zero point to the right.</li>
+<li>A negative gradient pushes the zero point to the left.</li>
+</ul>
+<p>This allows all the activations to &quot;vote&quot; on where the clipping window should sit:</p>
+<ul>
+<li>If many values are clipped on the left, the zero point moves left.</li>
+<li>If many values are clipped on the right, the zero point moves right.</li>
+<li>If values are well centered within the bounds, the gradient is 0.</li>
+</ul>
+<p>LSQ+ also improves on the initialization of the scale parameter. While LSQ uses a simple initialization, LSQ+ initializes it using:
+<span class="math-display">$$s = \frac{\text{mean}(|x|)}{\sqrt{q_{\max}}}$$</span>
+This reduces the training warmup time and aligns the quantization grid properly with the weight distribution.</p>
+<h2 id="gptq">GPTQ</h2>
+<p>GPTQ (Generalized Post Training Quantization) is a post training weight only quantization algorithm. It is a second order algorithm that performs block wise quantization and applies error compensation to the remaining unquantized weights after each weight is quantized. It achieves less than 1% accuracy loss, which makes it a widely used technique for LLM inference.</p>
+<p>GPTQ uses a Hessian based metric. When we quantize a weight matrix <span class="math-inline">$W$</span> to <span class="math-inline">$\widetilde{W}$</span>, the goal is to minimize the output difference over a dataset of input activations <span class="math-inline">$X$</span>:
+<span class="math-display">$$\|WX - \widetilde{W}X\|_2^2$$</span>
+This is the difference in output activations, not the raw weight difference.</p>
+<p>We can optimize each row of <span class="math-inline">$W$</span> independently. For a single row <span class="math-inline">$w$</span>, the change from <span class="math-inline">$w$</span> to the quantized row <span class="math-inline">$\widetilde{w}$</span> is <span class="math-inline">$\Delta w = \widetilde{w} - w$</span>. The change in loss is approximated using a second order Taylor expansion:
+<span class="math-display">$$\delta \mathcal{L} \approx \frac{1}{2} \Delta w^T H \Delta w$$</span>
+where <span class="math-inline">$H$</span> is the Hessian matrix of the squared error loss. GPTQ approximates the Hessian as twice the empirical covariance of the input activations:
+<span class="math-display">$$H = 2 X X^T$$</span>
+(or <span class="math-inline">$2 X^T X$</span> depending on whether inputs are columns or rows).
+Solving the discrete optimization problem directly is computationally hard, so we use this quadratic approximation to find a cheap estimate of how the loss changes when we quantize weights.</p>
+<p>This helps us figure out: if we quantize a weight <span class="math-inline">$w_k$</span>, what is the optimal way to adjust the remaining unquantized weights so that the overall output error stays as small as possible? The Taylor expansion tells us how the loss changes with respect to the weights via the Hessian matrix.</p>
+<h3 id="the_hessian">The Hessian</h3>
+<p>The Hessian matrix with respect to a row of <span class="math-inline">$W$</span> is:
+<span class="math-display">$$H = 2 \mathbb{E}[x x^T]$$</span>
+which is twice the empirical covariance of the input activations. This covariance matrix shows how the different input dimensions are correlated, helping us identify which weight directions matter more for the output error.</p>
+<h3 id="the_residual">The Residual</h3>
+<p>The residual vector <span class="math-inline">$r$</span> represents the difference between the original weights <span class="math-inline">$w$</span> and the quantized weights <span class="math-inline">$q$</span>:
+<span class="math-display">$$r = w - q$$</span>
+The quantity we want to minimize is the output error:
+<span class="math-display">$$\mathcal{L}(q) = \|X(w-q)\|_2^2 = r^T H r$$</span>
+Here, <span class="math-inline">$r$</span> measures the quantization error in the weight space, while <span class="math-inline">$H$</span> scales it to reflect the impact on the final output.</p>
+<h3 id="error_compensation">Error Compensation</h3>
+<p>When we quantize a single weight <span class="math-inline">$w_k$</span>, we want to adjust the remaining unquantized weights to compensate for the error and minimize the output difference. </p>
+<p>To do this, we partition the residual vector <span class="math-inline">$r$</span> and the Hessian matrix <span class="math-inline">$H$</span> to isolate the <span class="math-inline">$k$</span>-th weight:
+<span class="math-display">$$r = \begin{bmatrix} r_k \\ r_{-k} \end{bmatrix}, \qquad H = \begin{bmatrix} H_{kk} & H_{k,-k} \\ H_{-k,k} & H_{-k,-k} \end{bmatrix}$$</span>
+where <span class="math-inline">$r_k$</span> is the residual of the weight we are currently quantizing, and <span class="math-inline">$r_{-k}$</span> represents the residuals of the remaining unquantized weights.</p>
+<p>We can expand the quadratic loss as:
+<span class="math-display">$$\mathcal{L} = r^T H r = H_{kk} r_k^2 + 2 r_k H_{k,-k} r_{-k} + r_{-k}^T H_{-k,-k} r_{-k}$$</span>
+Since we have already quantized weight <span class="math-inline">$k$</span>, its residual <span class="math-inline">$r_k$</span> is fixed. To find the optimal compensation for the remaining weights, we take the gradient of the loss with respect to <span class="math-inline">$r_{-k}$</span> and set it to zero:
+<span class="math-display">$$\frac{\partial \mathcal{L}}{\partial r_{-k}} = 2 H_{-k,-k} r_{-k} + 2 H_{-k,k} r_k = 0$$</span>
+Solving for <span class="math-inline">$r_{-k}$</span> gives:
+<span class="math-display">$$r_{-k} = -H_{-k,-k}^{-1} H_{-k,k} r_k$$</span>
+<h3 id="efficient_computation_of_the_hessian_inverse">Efficient Computation of the Hessian Inverse</h3>
+<p>Recomputing the inverse of the submatrix <span class="math-inline">$H_{-k,-k}$</span> for every single weight we quantize is extremely expensive. Instead, we compute the full Hessian inverse <span class="math-inline">$G = H^{-1}$</span> once at the start. Using block matrix inversion properties, we can write the term <span class="math-inline">$H_{-k,-k}^{-1} H_{-k,k}$</span> directly using the elements of <span class="math-inline">$G$</span>:
+<span class="math-display">$$H_{-k,-k}^{-1} H_{-k,k} = \frac{G_{-k,k}}{G_{kk}}$$</span>
+This simplifies the compensation update for the remaining weights to:
+<span class="math-display">$$\boxed{w_{-k} \leftarrow w_{-k} - \frac{G_{-k,k}}{G_{kk}} r_k}$$</span>
+where <span class="math-inline">$G_{-k,k}$</span> is the <span class="math-inline">$k$</span>-th column of <span class="math-inline">$G$</span> (excluding the <span class="math-inline">$k$</span>-th row) and <span class="math-inline">$G_{kk}$</span> is the <span class="math-inline">$k$</span>-th diagonal element.</p>
+<p>After quantizing weight <span class="math-inline">$k$</span>, we must update the inverse Hessian matrix <span class="math-inline">$G$</span> to reflect the removal of the <span class="math-inline">$k$</span>-th weight. We do this efficiently using a step of Gaussian elimination on the inverse matrix:
+<span class="math-display">$$\boxed{G \leftarrow G_{-k,-k} - \frac{G_{-k,k} G_{k,-k}}{G_{kk}}}$$</span>
+<h3 id="the_complete_gptq_workflow">The Complete GPTQ Workflow</h3>
+<p>For each block or layer in the model:</p>
+<ol>
+<li>Compute the Hessian matrix <span class="math-inline">$H = 2 X X^T$</span> and its inverse <span class="math-inline">$G = H^{-1}$</span>.</li>
+<li>Loop through the weights one by one (or in columns):
+a. Quantize the current weight <span class="math-inline">$w_k$</span> to get <span class="math-inline">$q_k$</span>.
+b. Compute the residual: <span class="math-inline">$r_k = w_k - q_k$</span>.
+c. Read the column <span class="math-inline">$G_{-k,k}$</span> and the diagonal element <span class="math-inline">$G_{kk}$</span> from <span class="math-inline">$G$</span>.
+d. Compute the compensation for the remaining unquantized weights:
+   <span class="math-display">$$\Delta w_{-k} = -\frac{G_{-k,k}}{G_{kk}} r_k$$</span>
+e. Update the remaining floating point weights:
+   <span class="math-display">$$w_{-k} \leftarrow w_{-k} + \Delta w_{-k}$$</span>
+f. Update the Hessian inverse matrix <span class="math-inline">$G$</span> to remove the <span class="math-inline">$k$</span>-th coordinate:
+   <span class="math-display">$$G \leftarrow G_{-k,-k} - \frac{G_{-k,k} G_{k,-k}}{G_{kk}}$$</span></li>
+<li>Record the final quantized weights and repeat for all layers.</li>
+</ol>
+<p>By doing this channel by channel or block by block, GPTQ lets us squeeze massive models down to 4 bit weights with almost zero loss in accuracy. It is a neat trick that makes running local LLMs actually feasible on consumer hardware. Next up, we will look at how this compares to other activation aware quantization methods.</p>
+
+      </div>
+
+      <nav class="note-nav-bottom">
+        <a href="peft.html" class="nav-prev"><span class="nav-label">Previous</span><span class="nav-title">← PEFT</span></a>
+        <a href="rope.html" class="nav-next"><span class="nav-label">Next</span><span class="nav-title">RoPE →</span></a>
+      </nav>
+    </article>
+  </main>
+</div>
+
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"
+  onload="renderMathInElement(document.getElementById('note-content'), {
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '$', right: '$', display: false}
+    ],
+    throwOnError: false,
+    trust: true,
+    strict: false
+  });"></script>
+<script>
+(function initAmbientBackground() {
+  const canvas = document.getElementById('ambient-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  
+  let width = canvas.width = window.innerWidth;
+  let height = canvas.height = window.innerHeight;
+  
+  window.addEventListener('resize', () => {
+    width = canvas.width = window.innerWidth;
+    height = canvas.height = window.innerHeight;
+  });
+  
+  const particles = [];
+  const particleCount = Math.min(60, Math.floor((width * height) / 20000));
+  const connectionDistance = 120;
+  
+  class Particle {
+    constructor() {
+      this.x = Math.random() * width;
+      this.y = Math.random() * height;
+      this.vx = (Math.random() - 0.5) * 0.25;
+      this.vy = (Math.random() - 0.5) * 0.25;
+      this.radius = Math.random() * 1.2 + 0.6;
+    }
+    
+    update() {
+      this.x += this.vx;
+      this.y += this.vy;
+      
+      if (this.x < 0 || this.x > width) this.vx *= -1;
+      if (this.y < 0 || this.y > height) this.vy *= -1;
+    }
+    
+    draw() {
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(126, 247, 201, 0.4)';
+      ctx.fill();
+    }
+  }
+  
+  for (let i = 0; i < particleCount; i++) {
+    particles.push(new Particle());
+  }
+  
+  function animate() {
+    ctx.clearRect(0, 0, width, height);
+    particles.forEach(p => {
+      p.update();
+      p.draw();
+    });
+    
+    for (let i = 0; i < particles.length; i++) {
+      for (let j = i + 1; j < particles.length; j++) {
+        const dx = particles[i].x - particles[j].x;
+        const dy = particles[i].y - particles[j].y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        
+        if (dist < connectionDistance) {
+          const alpha = (1 - (dist / connectionDistance)) * 0.08;
+          ctx.beginPath();
+          ctx.moveTo(particles[i].x, particles[i].y);
+          ctx.lineTo(particles[j].x, particles[j].y);
+          ctx.strokeStyle = "rgba(126, 247, 201, " + alpha + ")";
+          ctx.lineWidth = 0.8;
+          ctx.stroke();
+        }
+      }
+    }
+    requestAnimationFrame(animate);
+  }
+  animate();
+})();
+</script>
+</body>
+</html>

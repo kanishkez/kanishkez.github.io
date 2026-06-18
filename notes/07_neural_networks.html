@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Neural Networks — kanishk's notes</title>
+  <meta name="description" content="Neural Networks — Deep Learning Foundations notes by kanishk" />
+  <link rel="icon" type="image/png" href="../assets/favicon.png" />
+  <link rel="stylesheet" href="../css/style.css" />
+  <link rel="stylesheet" href="../css/notes.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous" />
+</head>
+<body>
+<canvas id="ambient-canvas"></canvas>
+
+<!-- Top Floating Navigation Bar -->
+<header class="navbar">
+  <div class="nav-container">
+    <a href="../index.html" class="nav-logo">kanishk</a>
+    <nav class="nav-links">
+      <a href="../index.html#home">Home</a>
+      <a href="../index.html#projects">Projects</a>
+      <a href="../index.html#blogs">Blogs</a>
+      <a href="../index.html#notes" class="active">Notes</a>
+    </nav>
+    <div class="nav-socials">
+      <a href="https://github.com/kanishkez" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://huggingface.co/kanishkez" target="_blank" rel="noopener">HuggingFace</a>
+    </div>
+  </div>
+</header>
+
+<div class="container">
+  <main class="main-content">
+    <article class="note-page">
+      <div class="note-breadcrumb">
+        <a href="../index.html#notes">Notes</a>
+        <span class="breadcrumb-sep">›</span>
+        <a href="../index.html#notes">Deep Learning Foundations</a>
+        <span class="breadcrumb-sep">›</span>
+        <span>Neural Networks</span>
+      </div>
+
+      <header class="note-header">
+        <div class="note-category-tag">Deep Learning Foundations</div>
+        <h1>Neural Networks</h1>
+      </header>
+
+      <nav class="note-toc" id="note-toc">
+        <div class="toc-title">Contents</div>
+        <div class="toc-items">
+          <a href="#neuron" class="toc-item toc-h3">Neuron</a>
+          <a href="#perceptron" class="toc-item toc-h3">Perceptron</a>
+          <a href="#layers" class="toc-item toc-h3">Layers</a>
+          <a href="#neural_network_multi_layer_perceptron" class="toc-item toc-h3">Neural Network (Multi layer Perceptron)</a>
+          <a href="#neural_networks_for_regression_vs_classification" class="toc-item toc-h3">Neural Networks for Regression vs Classification</a>
+          <a href="#working" class="toc-item toc-h3">working:</a>
+        </div>
+      </nav>
+
+      <div class="note-content" id="note-content">
+        <p>Neural networks are a class of models inspired by how the human brain works. They are built from small units called <strong>neurons</strong>, which are connected together in layers.</p>
+<h3 id="neuron"><strong>Neuron</strong></h3>
+<p>A <strong>neuron</strong> is the basic building block of a neural network.
+It takes inputs, applies weights, adds a bias, and passes the result through an activation function. 
+Mathematically:
+<span class="math-inline">$z = \sum_{i=1}^n w_i x_i + b$</span>
+<p><span class="math-inline">$a = \phi(z)$</span>
+<p>where:</p>
+<ul>
+<li>x_i = input features</li>
+<li>w_i = weights (learnable parameters)</li>
+<li>b = bias (learnable shift term)</li>
+<li><span class="math-inline">$\phi$</span> = activation function (e.g., sigmoid, ReLU, tanh)</li>
+<li>a = output of the neuron</li>
+</ul>
+<p>So a neuron learns <strong>how important each input is</strong> (via weights) and produces a transformed output.</p>
+<h3 id="perceptron"><strong>Perceptron</strong></h3>
+<p>The <strong>perceptron</strong> is the simplest kind of neuron.
+It takes inputs, multiplies them by weights, sums them, and applies a step function:
+<span class="math-inline">$y = \begin{cases} 1 & \text{if } \sum_i w_i x_i + b &gt; 0 \\ 0 & \text{otherwise} \end{cases}$</span>
+<p>Limitation: perceptrons can only solve <strong>linearly separable problems</strong> (e.g., OR, AND) but fail on XOR.
+This led to the development of multi layer networks with nonlinear activations.</p>
+<h3 id="layers"><strong>Layers</strong></h3>
+<p><strong>One layer</strong> consists of multiple neurons working in parallel.
+Each neuron in a layer receives the same input vector, computes its own weighted sum, and outputs a value.
+The outputs of all neurons in a layer are collected into an <strong>output vector</strong>.
+If a layer has m neurons, then for an input vector <span class="math-inline">$x \in \mathbb{R}^n$</span>:
+<span class="math-inline">$z = Wx + b$</span>
+<span class="math-inline">$a = \phi(z)$</span>
+where:</p>
+<ul>
+<li>W = weight matrix of size m \times n</li>
+<li>b = bias vector of size m</li>
+<li>a = output vector of size m</li>
+</ul>
+<h3 id="neural_network_multi_layer_perceptron"><strong>Neural Network (Multi layer Perceptron)</strong></h3>
+<p>A <strong>neural network</strong> is formed by stacking layers of neurons.</p>
+<ul>
+<li><strong>Input layer</strong>: takes raw data (features).</li>
+<li><strong>Hidden layers</strong>: one or more layers of neurons that learn intermediate representations.</li>
+<li><strong>Output layer</strong>: produces final predictions (e.g., classification probabilities).
+So the structure looks like:</li>
+</ul>
+<p><strong>Input → [Hidden Layer 1] → [Hidden Layer 2] → … → [Output Layer]</strong>
+Mathematically, for L layers:</p>
+<p><span class="math-inline">$a^{(0)} = x$</span>
+<p><span class="math-inline">$z^{(l)} = W^{(l)} a^{(l-1)} + b^{(l)}$</span>
+<p><span class="math-inline">$a^{(l)} = \phi(z^{(l)})$</span>
+<p>for each layer l = 1, 2, …, L.</p>
+<p>The final output <span class="math-inline">$a^{(L)}$</span> is the prediction of the network.</p>
+<h3 id="neural_networks_for_regression_vs_classification"><strong>Neural Networks for Regression vs Classification</strong></h3>
+<p>Neural networks can be used for <strong>both regression and classification</strong> tasks.</p>
+<p>The <strong>architecture (layers, neurons, activations)</strong> can look very similar.</p>
+<p>The <strong>main difference lies in the output layer + loss function</strong>:</p>
+<h4 id="regression"><strong>Regression</strong></h4>
+<p><strong>Output</strong>: usually a single neuron with no activation (linear output).
+<strong>Goal</strong>: predict a continuous value.
+<strong>Loss function</strong>: Mean Squared Error (MSE).</p>
+<p><span class="math-inline">$\mathcal{L}{\text{regression}} = \frac{1}{N} \sum{i=1}^N (y_i - \hat{y}_i)^2$</span>
+<h4 id="classification"><strong>Classification</strong></h4>
+<p><strong>Output</strong>:
+For binary classification: 1 neuron with <strong>sigmoid</strong> activation.
+For multi class classification: K neurons with <strong>softmax</strong> activation. 
+<strong>Goal</strong>: predict probabilities for classes, assign highest probability to the true class.<br><strong>Loss function</strong>: cross entropy Loss: </p>
+<p><span class="math-inline">$\mathcal{L}{\text{classification}} = - \sum{k=1}^K y_k \log p_k$</span>
+<p>A neural network:
+<figure><img src="images/Pasted%20image%2020250906135927.png" alt="image" loading="lazy"><figcaption>image</figcaption></figure>
+<h3 id="working">working:</h3>
+<ol>
+<li>input layers take inputs and send them to hidden layers</li>
+<li>you can define the number of layers + neurons (pytorch for example you can put as many linear layers as you want and you decide the number of neurons by deciding the number of output layers)</li>
+<li>inside each hidden layer the same wx+b processing happens where we use many layers so that the model learns as many features as possible and gives us the best prediction possible </li>
+<li>for a classification problem we might add softmaxx just before the output layer so that it gives us probabilities</li>
+<li>for a regression problem we might make it such that the output is just a single number ( if its just predicting a single number) and so on </li>
+<li>obviously before doing all of this there&#39;s a lot of preprocessing that has to take place.</li>
+</ol>
+
+      </div>
+
+      <nav class="note-nav-bottom">
+        <span></span>
+        <a href="08_non_linearity_and_activation_functions.html" class="nav-next"><span class="nav-label">Next</span><span class="nav-title">Non Linearity and Activation Functions →</span></a>
+      </nav>
+    </article>
+  </main>
+</div>
+
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"
+  onload="renderMathInElement(document.getElementById('note-content'), {
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '$', right: '$', display: false}
+    ],
+    throwOnError: false,
+    trust: true,
+    strict: false
+  });"></script>
+<script>
+(function initAmbientBackground() {
+  const canvas = document.getElementById('ambient-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  
+  let width = canvas.width = window.innerWidth;
+  let height = canvas.height = window.innerHeight;
+  
+  window.addEventListener('resize', () => {
+    width = canvas.width = window.innerWidth;
+    height = canvas.height = window.innerHeight;
+  });
+  
+  const particles = [];
+  const particleCount = Math.min(60, Math.floor((width * height) / 20000));
+  const connectionDistance = 120;
+  
+  class Particle {
+    constructor() {
+      this.x = Math.random() * width;
+      this.y = Math.random() * height;
+      this.vx = (Math.random() - 0.5) * 0.25;
+      this.vy = (Math.random() - 0.5) * 0.25;
+      this.radius = Math.random() * 1.2 + 0.6;
+    }
+    
+    update() {
+      this.x += this.vx;
+      this.y += this.vy;
+      
+      if (this.x < 0 || this.x > width) this.vx *= -1;
+      if (this.y < 0 || this.y > height) this.vy *= -1;
+    }
+    
+    draw() {
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(126, 247, 201, 0.4)';
+      ctx.fill();
+    }
+  }
+  
+  for (let i = 0; i < particleCount; i++) {
+    particles.push(new Particle());
+  }
+  
+  function animate() {
+    ctx.clearRect(0, 0, width, height);
+    particles.forEach(p => {
+      p.update();
+      p.draw();
+    });
+    
+    for (let i = 0; i < particles.length; i++) {
+      for (let j = i + 1; j < particles.length; j++) {
+        const dx = particles[i].x - particles[j].x;
+        const dy = particles[i].y - particles[j].y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        
+        if (dist < connectionDistance) {
+          const alpha = (1 - (dist / connectionDistance)) * 0.08;
+          ctx.beginPath();
+          ctx.moveTo(particles[i].x, particles[i].y);
+          ctx.lineTo(particles[j].x, particles[j].y);
+          ctx.strokeStyle = "rgba(126, 247, 201, " + alpha + ")";
+          ctx.lineWidth = 0.8;
+          ctx.stroke();
+        }
+      }
+    }
+    requestAnimationFrame(animate);
+  }
+  animate();
+})();
+</script>
+</body>
+</html>

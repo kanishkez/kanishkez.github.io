@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Decoding and Sampling Algorithms — kanishk's notes</title>
+  <meta name="description" content="Decoding and Sampling Algorithms — Transformers & LLMs notes by kanishk" />
+  <link rel="icon" type="image/png" href="../assets/favicon.png" />
+  <link rel="stylesheet" href="../css/style.css" />
+  <link rel="stylesheet" href="../css/notes.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous" />
+</head>
+<body>
+<canvas id="ambient-canvas"></canvas>
+
+<!-- Top Floating Navigation Bar -->
+<header class="navbar">
+  <div class="nav-container">
+    <a href="../index.html" class="nav-logo">kanishk</a>
+    <nav class="nav-links">
+      <a href="../index.html#home">Home</a>
+      <a href="../index.html#projects">Projects</a>
+      <a href="../index.html#blogs">Blogs</a>
+      <a href="../index.html#notes" class="active">Notes</a>
+    </nav>
+    <div class="nav-socials">
+      <a href="https://github.com/kanishkez" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://huggingface.co/kanishkez" target="_blank" rel="noopener">HuggingFace</a>
+    </div>
+  </div>
+</header>
+
+<div class="container">
+  <main class="main-content">
+    <article class="note-page">
+      <div class="note-breadcrumb">
+        <a href="../index.html#notes">Notes</a>
+        <span class="breadcrumb-sep">›</span>
+        <a href="../index.html#notes">Transformers & LLMs</a>
+        <span class="breadcrumb-sep">›</span>
+        <span>Decoding and Sampling Algorithms</span>
+      </div>
+
+      <header class="note-header">
+        <div class="note-category-tag">Transformers & LLMs</div>
+        <h1>Decoding and Sampling Algorithms</h1>
+      </header>
+
+      <nav class="note-toc" id="note-toc">
+        <div class="toc-title">Contents</div>
+        <div class="toc-items">
+          <a href="#decoding_and_sampling_algorithms" class="toc-item toc-h1">Decoding and Sampling Algorithms</a>
+          <a href="#greedy_decoding" class="toc-item toc-h2">Greedy Decoding</a>
+          <a href="#beam_search" class="toc-item toc-h2">Beam Search</a>
+          <a href="#sampling" class="toc-item toc-h2">Sampling</a>
+          <a href="#top_k_sampling" class="toc-item toc-h3">Top K Sampling</a>
+          <a href="#top_p_nucleus_sampling" class="toc-item toc-h3">Top p (Nucleus) Sampling</a>
+          <a href="#temperature_sampling" class="toc-item toc-h3">Temperature Sampling</a>
+          <a href="#penalties" class="toc-item toc-h2">Penalties</a>
+          <a href="#repetition_penalty" class="toc-item toc-h3">Repetition Penalty</a>
+          <a href="#length_penalty" class="toc-item toc-h3">Length Penalty</a>
+          <a href="#typical_sampling" class="toc-item toc-h2">Typical Sampling</a>
+          <a href="#typical_sampling_algorithm_steps" class="toc-item toc-h3">Typical Sampling Algorithm Steps</a>
+        </div>
+      </nav>
+
+      <div class="note-content" id="note-content">
+        <h1 id="decoding_and_sampling_algorithms">Decoding and Sampling Algorithms</h1>
+<p>When generating text from a language model, the goal of decoding is to find the most likely or appropriate sequence of tokens given a prompt. Because enumerating all possible sequences is computationally impossible, we rely on various decoding and sampling algorithms to make this task manageable. Let&#39;s look at how these different methods work, starting from basic greedy search and moving to more advanced sampling strategies.</p>
+<h2 id="greedy_decoding">Greedy Decoding</h2>
+<p>At each step, pick the token with the highest probability:</p>
+<span class="math-display">$$x_t = \arg\max_{x_t} P(x_t \mid x_{1:t-1})$$</span>
+<p>Example:</p>
+<ul>
+<li>Prompt: &quot;Once upon a&quot;</li>
+<li>Model: <code class="inline-code">{"time": 0.7, "dream": 0.2, "moon": 0.1}</code></li>
+<li>Choose: &quot;time&quot;</li>
+</ul>
+<figure><img src="https://miro.medium.com/v2/resize:fit:700/1*cgSWBYFgevbFzK0rmQ-3pw.png" alt="" loading="lazy"></figure>
+<p>The problem: As you can see, the word &quot;fox&quot; has the highest probability but it&#39;s hiding behind a lower probability word &quot;red&quot;. This algorithm can&#39;t identify words like that and will simply take the token with the highest probability in that instant.</p>
+<h2 id="beam_search">Beam Search</h2>
+<p>Keep track of the top k partial beams based on cumulative log probability.</p>
+<ol>
+<li>Start with the prompt.</li>
+<li>Expand each beam with all possible next tokens.</li>
+<li>Keep the top k by total log probability.</li>
+<li>Repeat until all beams hit the end of sequence token.</li>
+</ol>
+<figure><img src="https://miro.medium.com/v2/resize:fit:700/1*VnV13xf0A0q0nnPBJt1ysw.png" alt="" loading="lazy"></figure>
+<p>It takes in beams and then chooses a beam depending on their total probability.</p>
+<p>The problem: Results are more fluent compared to greedy search, but the output often includes repetitions of the same word sequences.</p>
+<h2 id="sampling">Sampling</h2>
+<p>Basically, what we do in sampling is we take a subset distribution of tokens and then choose a word in that sample.</p>
+<h3 id="top_k_sampling">Top K Sampling</h3>
+<p>The K most likely words are filtered and then the next predicted word will be chosen from these words only.</p>
+<p>The produced text is often more human sounding than the text produced with the other methods.</p>
+<p>One concern though with Top K sampling is that it does not dynamically adapt the number of words that are filtered from the next word probability distribution, as K is fixed. As a consequence, very unlikely words may be selected among these K words if the next word probability distribution is very sharp.</p>
+<h3 id="top_p_nucleus_sampling">Top p (Nucleus) Sampling</h3>
+<p>Top p sampling (or nucleus sampling) chooses from the smallest possible set of words whose cumulative probability exceeds the probability p. This way, the number of words in the set can dynamically increase and decrease according to the next word probability distribution.</p>
+<p>While Top p sampling seems more elegant than Top K sampling, both methods work well in practice.</p>
+<p>Instead of a fixed K, it dynamically chooses the smallest set of tokens whose cumulative probability <span class="math-inline">$\ge p$</span> (e.g., 0.9).</p>
+<h3 id="temperature_sampling">Temperature Sampling</h3>
+<p>The temperature is used to scale the logits (pre softmax activations):</p>
+<span class="math-display">$$\text{Scaled logits} = \frac{\text{Original logits}}{T}$$</span>
+<p>After scaling, they are passed to the softmax function.</p>
+<p>Here is what happens when you adjust the temperature:</p>
+<ol>
+<li>High Temperature (<span class="math-inline">$T &gt; 1$</span>): The scaling effectively &quot;flattens&quot; the distribution, making less probable tokens more likely to be sampled. This results in more &quot;random&quot; or &quot;creative&quot; outputs.</li>
+<li>Low Temperature (<span class="math-inline">$0 &lt; T &lt; 1$</span>): The distribution becomes &quot;sharper,&quot; concentrating the probability mass on the most likely tokens. This results in more &quot;deterministic&quot; outputs, where the language model is more likely to pick the most probable word according to its training data.</li>
+<li><span class="math-inline">$T = 1$</span>: The logits remain unchanged, and the original probabilities are used for sampling.</li>
+</ol>
+<h2 id="penalties">Penalties</h2>
+<p>Some penalties are also added to enforce certain conditions on the next token.</p>
+<h3 id="repetition_penalty">Repetition Penalty</h3>
+<p>Reduce the probability of tokens that have already been generated.</p>
+<span class="math-display">$$p'(x_t) = \frac{p(x_t)}{(\text{repetition count})^\alpha}$$</span>
+<h3 id="length_penalty">Length Penalty</h3>
+<p>In beam search or scoring:</p>
+<span class="math-display">$$\text{score}(x_{1:t}) = \frac{1}{t^\alpha} \sum_i \log P(x_i \mid x_{1:i-1})$$</span>
+<h2 id="typical_sampling">Typical Sampling</h2>
+<p>Every token has a <strong>self information value</strong> (also called <em>surprisal</em>):</p>
+<span class="math-display">$$I(x_t) = -\log p(x_t)$$</span>
+<p>This measures how surprising that token is:</p>
+<ul>
+<li>A very probable token <span class="math-inline">$\rightarrow$</span> low surprisal (e.g., &quot;the&quot;).</li>
+<li>A rare token <span class="math-inline">$\rightarrow$</span> high surprisal (e.g., &quot;xenolith&quot;).</li>
+</ul>
+<p>Now, the <strong>expected surprisal</strong> over the whole distribution is the <strong>entropy</strong>:</p>
+<span class="math-display">$$H(p_t) = \mathbb{E}_{x_t \sim p_t}[-\log p(x_t)] = -\sum_i p(x_i) \log p(x_i)$$</span>
+<p>Entropy represents how uncertain the model is about the next token.</p>
+<p>A <em>typical</em> token is one whose surprisal <span class="math-inline">$I(x_t)$</span> is <strong>close to the expected entropy</strong> <span class="math-inline">$H(p_t)$</span>.</p>
+<p>Typical sampling states that we should only sample tokens whose information content is near the average, meaning they are neither too predictable nor too unlikely.</p>
+<p>This eliminates:</p>
+<ul>
+<li><strong>Too predictable</strong> <span class="math-inline">$\rightarrow$</span> repetitive text like &quot;the the the&quot;</li>
+<li><strong>Too unlikely</strong> <span class="math-inline">$\rightarrow$</span> incoherent words like &quot;dinosaur quantum blizzard&quot;</li>
+</ul>
+<p>Typical sampling keeps tokens where the absolute difference between surprisal and entropy is below a threshold <span class="math-inline">$\tau$</span>:</p>
+<span class="math-display">$$\left| -\log p(x_t) - H(p_t) \right| \le \tau$$</span>
+<p>The threshold <span class="math-inline">$\tau$</span> controls diversity:</p>
+<ul>
+<li>Small <span class="math-inline">$\tau$</span>: strict typicality <span class="math-inline">$\rightarrow$</span> deterministic, coherent</li>
+<li>Large <span class="math-inline">$\tau$</span>: allows more randomness</li>
+</ul>
+<p>After filtering, the probabilities are renormalized and one token is sampled from that subset.</p>
+<h3 id="typical_sampling_algorithm_steps">Typical Sampling Algorithm Steps</h3>
+<p>Given model logits <span class="math-inline">$z_t$</span>:</p>
+<ol>
+<li>Compute probabilities:
+<span class="math-display">$$p_t = \text{softmax}(z_t)$$</span></li>
+<li>Compute <strong>self information</strong> for each token:
+<span class="math-display">$$I_i = -\log(p_t[i])$$</span></li>
+<li>Compute <strong>entropy</strong>:
+<span class="math-display">$$H = \sum_i p_t[i] \, I_{i}$$</span></li>
+<li>Compute the <strong>difference from entropy</strong>:
+<span class="math-display">$$d_i = |I_i - H|$$</span></li>
+<li>Sort tokens by <span class="math-inline">$d_i$</span> (how typical they are).</li>
+<li>Keep the smallest subset of tokens such that their <strong>cumulative probability <span class="math-inline">$\ge \text{typical } p$</span></strong> (analogous to top p, often 0.9 to 0.95).</li>
+<li>Renormalize and sample.</li>
+</ol>
+<p>Modern large language models like ChatGPT and Claude typically combine these techniques, using temperature along with top p or typical sampling depending on the task. In practice, finding the right balance between coherence and creativity comes down to tweaking these settings for the specific application.</p>
+
+      </div>
+
+      <nav class="note-nav-bottom">
+        <a href="05_llm_scaling_laws.html" class="nav-prev"><span class="nav-label">Previous</span><span class="nav-title">← LLM Scaling Laws</span></a>
+        <a href="gpu_optimization.html" class="nav-next"><span class="nav-label">Next</span><span class="nav-title">GPU Optimization →</span></a>
+      </nav>
+    </article>
+  </main>
+</div>
+
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"
+  onload="renderMathInElement(document.getElementById('note-content'), {
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '$', right: '$', display: false}
+    ],
+    throwOnError: false,
+    trust: true,
+    strict: false
+  });"></script>
+<script>
+(function initAmbientBackground() {
+  const canvas = document.getElementById('ambient-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  
+  let width = canvas.width = window.innerWidth;
+  let height = canvas.height = window.innerHeight;
+  
+  window.addEventListener('resize', () => {
+    width = canvas.width = window.innerWidth;
+    height = canvas.height = window.innerHeight;
+  });
+  
+  const particles = [];
+  const particleCount = Math.min(60, Math.floor((width * height) / 20000));
+  const connectionDistance = 120;
+  
+  class Particle {
+    constructor() {
+      this.x = Math.random() * width;
+      this.y = Math.random() * height;
+      this.vx = (Math.random() - 0.5) * 0.25;
+      this.vy = (Math.random() - 0.5) * 0.25;
+      this.radius = Math.random() * 1.2 + 0.6;
+    }
+    
+    update() {
+      this.x += this.vx;
+      this.y += this.vy;
+      
+      if (this.x < 0 || this.x > width) this.vx *= -1;
+      if (this.y < 0 || this.y > height) this.vy *= -1;
+    }
+    
+    draw() {
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(126, 247, 201, 0.4)';
+      ctx.fill();
+    }
+  }
+  
+  for (let i = 0; i < particleCount; i++) {
+    particles.push(new Particle());
+  }
+  
+  function animate() {
+    ctx.clearRect(0, 0, width, height);
+    particles.forEach(p => {
+      p.update();
+      p.draw();
+    });
+    
+    for (let i = 0; i < particles.length; i++) {
+      for (let j = i + 1; j < particles.length; j++) {
+        const dx = particles[i].x - particles[j].x;
+        const dy = particles[i].y - particles[j].y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        
+        if (dist < connectionDistance) {
+          const alpha = (1 - (dist / connectionDistance)) * 0.08;
+          ctx.beginPath();
+          ctx.moveTo(particles[i].x, particles[i].y);
+          ctx.lineTo(particles[j].x, particles[j].y);
+          ctx.strokeStyle = "rgba(126, 247, 201, " + alpha + ")";
+          ctx.lineWidth = 0.8;
+          ctx.stroke();
+        }
+      }
+    }
+    requestAnimationFrame(animate);
+  }
+  animate();
+})();
+</script>
+</body>
+</html>

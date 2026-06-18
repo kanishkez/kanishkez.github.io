@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Convolutional Neural Networks — kanishk's notes</title>
+  <meta name="description" content="Convolutional Neural Networks — Computer Vision notes by kanishk" />
+  <link rel="icon" type="image/png" href="../assets/favicon.png" />
+  <link rel="stylesheet" href="../css/style.css" />
+  <link rel="stylesheet" href="../css/notes.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous" />
+</head>
+<body>
+<canvas id="ambient-canvas"></canvas>
+
+<!-- Top Floating Navigation Bar -->
+<header class="navbar">
+  <div class="nav-container">
+    <a href="../index.html" class="nav-logo">kanishk</a>
+    <nav class="nav-links">
+      <a href="../index.html#home">Home</a>
+      <a href="../index.html#projects">Projects</a>
+      <a href="../index.html#blogs">Blogs</a>
+      <a href="../index.html#notes" class="active">Notes</a>
+    </nav>
+    <div class="nav-socials">
+      <a href="https://github.com/kanishkez" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://huggingface.co/kanishkez" target="_blank" rel="noopener">HuggingFace</a>
+    </div>
+  </div>
+</header>
+
+<div class="container">
+  <main class="main-content">
+    <article class="note-page">
+      <div class="note-breadcrumb">
+        <a href="../index.html#notes">Notes</a>
+        <span class="breadcrumb-sep">›</span>
+        <a href="../index.html#notes">Computer Vision</a>
+        <span class="breadcrumb-sep">›</span>
+        <span>Convolutional Neural Networks</span>
+      </div>
+
+      <header class="note-header">
+        <div class="note-category-tag">Computer Vision</div>
+        <h1>Convolutional Neural Networks</h1>
+      </header>
+
+      <nav class="note-toc" id="note-toc">
+        <div class="toc-title">Contents</div>
+        <div class="toc-items">
+          <a href="#input_images" class="toc-item toc-h2">Input Images:</a>
+          <a href="#convolution" class="toc-item toc-h2">Convolution</a>
+          <a href="#filters" class="toc-item toc-h2">Filters</a>
+          <a href="#feature_maps" class="toc-item toc-h2">Feature Maps</a>
+          <a href="#pooling" class="toc-item toc-h2">Pooling</a>
+          <a href="#max_pooling" class="toc-item toc-h2">Max Pooling:</a>
+          <a href="#flatten" class="toc-item toc-h2">Flatten</a>
+          <a href="#dense_layers_fully_connected_layers" class="toc-item toc-h2">Dense Layers/ Fully connected Layers</a>
+          <a href="#stride" class="toc-item toc-h2">Stride</a>
+          <a href="#padding" class="toc-item toc-h2">Padding</a>
+          <a href="#receptive_field" class="toc-item toc-h2">Receptive Field</a>
+          <a href="#parameter_sharing" class="toc-item toc-h2">Parameter Sharing</a>
+          <a href="#translation_invariance" class="toc-item toc-h2">Translation Invariance</a>
+          <a href="#architectures" class="toc-item toc-h2">Architectures</a>
+          <a href="#connections_to_machine_learning" class="toc-item toc-h2">Connections to Machine Learning</a>
+        </div>
+      </nav>
+
+      <div class="note-content" id="note-content">
+        <p>Convolutional Neural Networks (CNNs) are designed to process data with a grid like topology, such as images, audio spectrograms, or even time series. They are the backbone of modern computer vision and have revolutionized how machines perceive spatial data.</p>
+<p><strong>Why are CNNs so powerful?</strong></p>
+<ul>
+<li>They automatically learn to extract hierarchical features from raw data.</li>
+<li>They exploit spatial structure, enabling translation invariance and parameter sharing.</li>
+<li>They reduce the number of parameters compared to fully connected networks, making deep models feasible.</li>
+</ul>
+<h2 id="input_images">Input Images:</h2>
+<p>An image is typically represented as a 3D tensor of shape:</p>
+<span class="math-display">$$\text{Shape} = (\text{Channels}, \text{Height}, \text{Width})$$</span>For a standard RGB image:</p>
+<ul>
+<li>Channels = 3 (Red, Green, Blue)</li>
+<li>Height, Width = image dimensions in pixels
+For grayscale: Channels = 1</li>
+</ul>
+<h2 id="convolution">Convolution</h2>
+<p>(see: <a href="https://betterexplained.com/articles/intuitive-convolution/">https://betterexplained.com/articles/intuitive-convolution/</a>)
+Convolution is a mathematical operation that combines two functions to produce a third function expressing how the shape of one is modified by the other. In the context of CNNs, convolution is applied between an input (such as an image) and a filter (kernel) to extract features. The discrete convolution operation is defined as <span class="math-inline">$(f * g)[n] = \sum_m f[m]g[n-m]$</span>.</p>
+<p>A convolution is a similarity measure that tells us how the first function is related/is similar to the 2nd function
+Normally in a convolution we take the second function, flip it and run it through the first function to get another function that tells us about how similar the first function is to the 2nd function</p>
+<p>It is just another mathematical operation that involes taking the dot product of two functions/vectors.</p>
+<p>But in CNNS, we rarely use convolution and instead use Cross Correlation which is also the same concept(measuring similarity).
+Let:</p>
+<ul>
+<li>I: Input image </li>
+<li>K: Kernel (filter)</li>
+<li>O(i, j): Output at position (i, j)
+The <strong>cross correlation</strong> at position (i, j) is:</li>
+</ul>
+<span class="math-display">$$O(i, j) = \sum_{m=0}^{k_H - 1} \sum_{n=0}^{k_W - 1} I(i + m, j + n) \cdot K(m, n)$$</span>
+(i+j is where we start at the first image and then iterate through m and n)
+The core operation is still the dot product which tells us about the similarity between the two vectors.
+In ML, convolution enables the extraction of local patterns and hierarchical features from data. It is the core operation in CNNs, providing the foundation for state of the art performance in image, audio, and signal processing tasks. (See Deep Learning and Signal Processing chapters for more details)</p>
+<h2 id="filters">Filters</h2>
+<p>Filters, or kernels, are small matrices of weights that are convolved with the input to detect specific patterns, such as edges or textures. Each filter learns to respond to a particular feature, and multiple filters are used in each layer to capture diverse patterns.
+Filters are convolved with the input images so as to capture the similarity of the input images and the filters
+We start with random weights and optimize them to understand our input image better using Loss</p>
+<ul>
+<li><strong>Initially</strong>, filter weights are random → output is random → loss is high</li>
+<li>Over time, filters specialize to <strong>respond to useful patterns</strong> that help reduce loss</li>
+<li>Loss goes down as filters get better at capturing features that distinguish classes</li>
+</ul>
+<h4 id="layer_1"><strong>Layer 1:</strong></h4>
+<h4 id="low_level_features"><strong>Low level Features</strong></h4>
+<ul>
+<li>Detects simple edges, lines, and corners</li>
+<li>Filters often resemble Sobel or Gabor filters</li>
+</ul>
+<h4 id="layer_2"><strong>Layer 2:</strong></h4>
+<h4 id="mid_level_features"><strong>Mid level Features</strong></h4>
+<ul>
+<li>Combines edges into textures or motifs (e.g., circles, stripes, patterns)</li>
+</ul>
+<h4 id="layer_3"><strong>Layer 3+:</strong></h4>
+<h4 id="high_level_features"><strong>High level Features</strong></h4>
+<ul>
+<li>Detects <strong>object parts</strong> or <strong>entire objects</strong> (eyes, wheels, faces, etc.)</li>
+<li>These are combinations of mid level features</li>
+</ul>
+<p>In ML, the design and learning of filters are central to the success of CNNs. Filters enable the network to build complex, hierarchical representations of data, supporting tasks such as object recognition and segmentation.</p>
+<p>The main concept here is that filters learn edges first same as the human eye that learns to differentiate objects through edges</p>
+<h2 id="feature_maps">Feature Maps</h2>
+<p>A feature map is the output of applying a filter to the input via convolution. Each feature map highlights the presence of a specific pattern at different spatial locations. Stacking multiple feature maps forms the input to subsequent layers, enabling the network to learn increasingly abstract representations.</p>
+<p>In ML, feature maps provide insight into the internal workings of CNNs, revealing which patterns are detected and how information is transformed through the network. Visualization of feature maps aids in model interpretation and debugging.</p>
+<h2 id="pooling">Pooling</h2>
+<p>Pooling is a downsampling operation that reduces the spatial dimensions of feature maps, typically by taking the maximum or average value in a local region. Pooling introduces invariance to small translations and reduces the computational burden of subsequent layers. (See Deep Learning and Computer Vision chapters for more details)</p>
+<p>In ML, pooling is used to control overfitting, improve generalization, and enable the construction of deep, hierarchical models. Common pooling methods include max pooling and average pooling.</p>
+<p>There are two types of pooling:</p>
+<h2 id="max_pooling">Max Pooling:</h2>
+<figure><img src="images/Pasted%20image%2020250707074940.png" alt="image" loading="lazy"><figcaption>image</figcaption></figure>
+<p>Average Pooling:
+<figure><img src="images/Pasted%20image%2020250707074958.png" alt="image" loading="lazy"><figcaption>image</figcaption></figure>
+<h2 id="flatten">Flatten</h2>
+<p>Squishing the dimensions of the output from all the Convolutions and activation functions to 1D so that we send it to Dense Layers.</p>
+<h2 id="dense_layers_fully_connected_layers">Dense Layers/ Fully connected Layers</h2>
+<p>It is a standard classification layer that takes flattened input after all the convolutions are over
+Since it is a classification (nn.Layer) layer it needs 1D input
+It also has weights that learn during training.
+This layer is basically used to classify every image into the correct category using softmax used at the end.</p>
+<h2 id="stride">Stride</h2>
+<p>Stride is the step size with which the filter moves across the input during convolution. A larger stride reduces the spatial resolution of the output, while a smaller stride preserves more detail. The choice of stride affects the receptive field, computational cost, and information flow in the network.</p>
+<p>In ML, tuning the stride is important for balancing model capacity, efficiency, and the preservation of spatial information. Stride interacts with pooling and padding to determine the overall architecture of the network.</p>
+<h2 id="padding">Padding</h2>
+<p>Padding involves adding extra values (typically zeros) around the input to control the spatial dimensions of the output after convolution. Padding can preserve the size of the input, prevent information loss at the borders, and enable the use of deeper architectures.</p>
+<p>In ML, padding is used to design flexible and scalable CNN architectures, to improve edge detection, and to facilitate the stacking of multiple convolutional layers.</p>
+<h2 id="receptive_field">Receptive Field</h2>
+<p>The receptive field of a neuron in a CNN is the region of the input that influences its output. The size of the receptive field increases with depth, enabling the network to capture larger and more complex patterns.</p>
+<p>In ML, understanding the receptive field is essential for designing architectures that capture relevant context, for interpreting model behavior, and for diagnosing issues such as information bottlenecks.</p>
+<h2 id="parameter_sharing">Parameter Sharing</h2>
+<p>Parameter sharing refers to the use of the same filter weights across different spatial locations in the input. This reduces the number of parameters, improves generalization, and enables the detection of patterns regardless of their position.</p>
+<p>In ML, parameter sharing is a key advantage of CNNs, enabling efficient learning and scalability to large inputs. It supports the development of deep, expressive models with manageable computational and memory requirements.</p>
+<h2 id="translation_invariance">Translation Invariance</h2>
+<p>Translation invariance is the property that the output of the network is insensitive to small translations of the input. This is achieved through convolution, pooling, and parameter sharing, enabling robust recognition of patterns regardless of their location.</p>
+<p>In ML, translation invariance is critical for tasks such as image classification, where objects may appear in different positions. It enhances the robustness and generalization of CNNs in real world applications.</p>
+<h2 id="architectures">Architectures</h2>
+<p>CNN architectures specify the arrangement of convolutional, pooling, and fully connected layers, as well as the choice of activation functions and normalization techniques. Popular architectures include LeNet, AlexNet, VGG, ResNet, and EfficientNet, each with unique design principles and performance characteristics. (See Deep Learning and Computer Vision chapters for more details)</p>
+<p>In ML, advances in CNN architecture design have driven progress in computer vision, natural language processing, and other domains. Understanding architectural choices is essential for building effective and efficient models.</p>
+<h2 id="connections_to_machine_learning">Connections to Machine Learning</h2>
+<p>CNNs are a cornerstone of modern ML, enabling breakthroughs in image, audio, and signal processing. Their principles extend to graph, sequence, and structured data, supporting a wide range of applications.</p>
+<p>Mastery of CNNs provides insight into the design of advanced models, the interpretation of learned representations, and the development of new algorithms for challenging ML problems.</p>
+
+      </div>
+
+      <nav class="note-nav-bottom">
+        <span></span>
+        <a href="14_residual_networks.html" class="nav-next"><span class="nav-label">Next</span><span class="nav-title">Residual Networks →</span></a>
+      </nav>
+    </article>
+  </main>
+</div>
+
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"
+  onload="renderMathInElement(document.getElementById('note-content'), {
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '$', right: '$', display: false}
+    ],
+    throwOnError: false,
+    trust: true,
+    strict: false
+  });"></script>
+<script>
+(function initAmbientBackground() {
+  const canvas = document.getElementById('ambient-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  
+  let width = canvas.width = window.innerWidth;
+  let height = canvas.height = window.innerHeight;
+  
+  window.addEventListener('resize', () => {
+    width = canvas.width = window.innerWidth;
+    height = canvas.height = window.innerHeight;
+  });
+  
+  const particles = [];
+  const particleCount = Math.min(60, Math.floor((width * height) / 20000));
+  const connectionDistance = 120;
+  
+  class Particle {
+    constructor() {
+      this.x = Math.random() * width;
+      this.y = Math.random() * height;
+      this.vx = (Math.random() - 0.5) * 0.25;
+      this.vy = (Math.random() - 0.5) * 0.25;
+      this.radius = Math.random() * 1.2 + 0.6;
+    }
+    
+    update() {
+      this.x += this.vx;
+      this.y += this.vy;
+      
+      if (this.x < 0 || this.x > width) this.vx *= -1;
+      if (this.y < 0 || this.y > height) this.vy *= -1;
+    }
+    
+    draw() {
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(126, 247, 201, 0.4)';
+      ctx.fill();
+    }
+  }
+  
+  for (let i = 0; i < particleCount; i++) {
+    particles.push(new Particle());
+  }
+  
+  function animate() {
+    ctx.clearRect(0, 0, width, height);
+    particles.forEach(p => {
+      p.update();
+      p.draw();
+    });
+    
+    for (let i = 0; i < particles.length; i++) {
+      for (let j = i + 1; j < particles.length; j++) {
+        const dx = particles[i].x - particles[j].x;
+        const dy = particles[i].y - particles[j].y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        
+        if (dist < connectionDistance) {
+          const alpha = (1 - (dist / connectionDistance)) * 0.08;
+          ctx.beginPath();
+          ctx.moveTo(particles[i].x, particles[i].y);
+          ctx.lineTo(particles[j].x, particles[j].y);
+          ctx.strokeStyle = "rgba(126, 247, 201, " + alpha + ")";
+          ctx.lineWidth = 0.8;
+          ctx.stroke();
+        }
+      }
+    }
+    requestAnimationFrame(animate);
+  }
+  animate();
+})();
+</script>
+</body>
+</html>

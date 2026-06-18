@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Residual Networks — kanishk's notes</title>
+  <meta name="description" content="Residual Networks — Computer Vision notes by kanishk" />
+  <link rel="icon" type="image/png" href="../assets/favicon.png" />
+  <link rel="stylesheet" href="../css/style.css" />
+  <link rel="stylesheet" href="../css/notes.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous" />
+</head>
+<body>
+<canvas id="ambient-canvas"></canvas>
+
+<!-- Top Floating Navigation Bar -->
+<header class="navbar">
+  <div class="nav-container">
+    <a href="../index.html" class="nav-logo">kanishk</a>
+    <nav class="nav-links">
+      <a href="../index.html#home">Home</a>
+      <a href="../index.html#projects">Projects</a>
+      <a href="../index.html#blogs">Blogs</a>
+      <a href="../index.html#notes" class="active">Notes</a>
+    </nav>
+    <div class="nav-socials">
+      <a href="https://github.com/kanishkez" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://huggingface.co/kanishkez" target="_blank" rel="noopener">HuggingFace</a>
+    </div>
+  </div>
+</header>
+
+<div class="container">
+  <main class="main-content">
+    <article class="note-page">
+      <div class="note-breadcrumb">
+        <a href="../index.html#notes">Notes</a>
+        <span class="breadcrumb-sep">›</span>
+        <a href="../index.html#notes">Computer Vision</a>
+        <span class="breadcrumb-sep">›</span>
+        <span>Residual Networks</span>
+      </div>
+
+      <header class="note-header">
+        <div class="note-category-tag">Computer Vision</div>
+        <h1>Residual Networks</h1>
+      </header>
+
+      <nav class="note-toc" id="note-toc">
+        <div class="toc-title">Contents</div>
+        <div class="toc-items">
+          <a href="#the_problem_vanishingexploding_gradients" class="toc-item toc-h2">The Problem: Vanishing/Exploding Gradients</a>
+          <a href="#skip_connections_residual_connections" class="toc-item toc-h2">Skip Connections (Residual Connections)</a>
+          <a href="#residual_block" class="toc-item toc-h2">Residual Block</a>
+          <a href="#skip_connection" class="toc-item toc-h2">Skip Connection</a>
+          <a href="#identity_mapping" class="toc-item toc-h2">Identity Mapping</a>
+          <a href="#vanishing_gradients" class="toc-item toc-h2">Vanishing Gradients</a>
+          <a href="#deep_architectures" class="toc-item toc-h2">Deep Architectures</a>
+          <a href="#resnet_architectures" class="toc-item toc-h2">ResNet Architectures</a>
+        </div>
+      </nav>
+
+      <div class="note-content" id="note-content">
+        <p>ResNets are a type of deep neural network that use skip (residual) connections to enable training of very deep architectures.</p>
+<p><strong>How do ResNets affect the model?</strong></p>
+<ul>
+<li>Allow gradients to flow more easily through deep networks</li>
+<li>Enable training of much deeper models without vanishing/exploding gradients</li>
+<li>Improve accuracy and generalization</li>
+</ul>
+<h2 id="the_problem_vanishingexploding_gradients">The Problem: Vanishing/Exploding Gradients</h2>
+<p>As networks get deeper, gradients can vanish or explode, making training difficult. (See Backpropagation and Deep Learning chapters for more details)</p>
+<p><strong>Effect on the model:</strong></p>
+<ul>
+<li>In forward pass: deeper layers may not learn useful features</li>
+<li>In backprop: gradients may become too small or too large to update weights effectively</li>
+</ul>
+<h2 id="skip_connections_residual_connections">Skip Connections (Residual Connections)</h2>
+<p>ResNets introduce shortcut connections that skip one or more layers:
+<span class="math-display">$$\mathbf{y} = \mathcal{F}(\mathbf{x}, \{W_i\}) + \mathbf{x}$$</span>
+where <span class="math-inline">$\mathcal{F}$</span> is the residual function (e.g., a stack of layers).</p>
+<p><strong>Effect on the model:</strong></p>
+<ul>
+<li>In forward pass: allows information to bypass certain layers, preserving input features</li>
+<li>In backprop: gradients can flow directly through skip connections, reducing vanishing gradient problem</li>
+<li>Lets through: both learned transformation and original input</li>
+<li>Blocks: nothing; adds, rather than blocks, information</li>
+</ul>
+<h2 id="residual_block">Residual Block</h2>
+<p>A residual block is a building block of ResNet architectures, consisting of a series of layers with a skip connection that adds the input to the output of the block. Mathematically, the output is <span class="math-inline">$\mathbf{y} = \mathcal{F}(\mathbf{x}, \{W_i\}) + \mathbf{x}$</span>, where <span class="math-inline">$\mathcal{F}$</span> is the residual function and <span class="math-inline">$\mathbf{x}$</span> is the input.</p>
+<p>Residual blocks enable the training of very deep networks by facilitating the flow of gradients and information. They address the degradation problem, where adding more layers leads to higher training error, by allowing the network to learn identity mappings.</p>
+<h2 id="skip_connection">Skip Connection</h2>
+<p>Skip connections, or shortcut connections, bypass one or more layers by directly connecting the input to the output. This allows gradients to flow more easily during backpropagation, mitigating the vanishing gradient problem and enabling the training of deeper networks.</p>
+<p>In ML, skip connections are used in a variety of architectures, including ResNets, DenseNets, and U Nets. They improve convergence, stability, and generalization, and have become a standard design element in deep learning.</p>
+<h2 id="identity_mapping">Identity Mapping</h2>
+<p>Identity mapping refers to the ability of a residual block to learn the identity function, passing the input unchanged to the output. This is achieved when the residual function <span class="math-inline">$\mathcal{F}$</span> outputs zero, making the block act as an identity.</p>
+<p>Identity mapping is critical for the success of deep architectures, as it allows the network to preserve information and avoid degradation. It provides a safety net, ensuring that adding more layers does not harm performance.</p>
+<h2 id="vanishing_gradients">Vanishing Gradients</h2>
+<p>The vanishing gradient problem occurs when gradients become very small during backpropagation, preventing effective learning in deep networks. Residual connections alleviate this problem by providing direct paths for gradients to flow, enabling the training of very deep architectures.</p>
+<p>In ML, addressing vanishing gradients is essential for scaling models and achieving state of the art performance. Residual networks have enabled the development of networks with hundreds or thousands of layers.</p>
+<h2 id="deep_architectures">Deep Architectures</h2>
+<p>Deep architectures are neural networks with many layers, enabling the modeling of complex, hierarchical representations. Residual networks make it possible to train very deep architectures by addressing optimization challenges and improving gradient flow.</p>
+<h2 id="resnet_architectures">ResNet Architectures</h2>
+<p>ResNet architectures are deep neural networks built from stacks of residual blocks. Variants include ResNet 18, ResNet 34, ResNet 50, and deeper models, each with different numbers of layers and block designs. ResNets have set benchmarks in image recognition and other tasks.</p>
+
+      </div>
+
+      <nav class="note-nav-bottom">
+        <a href="13_convolutional_neural_networks.html" class="nav-prev"><span class="nav-label">Previous</span><span class="nav-title">← Convolutional Neural Networks</span></a>
+        <a href="crnns_and_advanced_computer_vision.html" class="nav-next"><span class="nav-label">Next</span><span class="nav-title">CRNNs and Advanced Computer Vision →</span></a>
+      </nav>
+    </article>
+  </main>
+</div>
+
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"
+  onload="renderMathInElement(document.getElementById('note-content'), {
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '$', right: '$', display: false}
+    ],
+    throwOnError: false,
+    trust: true,
+    strict: false
+  });"></script>
+<script>
+(function initAmbientBackground() {
+  const canvas = document.getElementById('ambient-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  
+  let width = canvas.width = window.innerWidth;
+  let height = canvas.height = window.innerHeight;
+  
+  window.addEventListener('resize', () => {
+    width = canvas.width = window.innerWidth;
+    height = canvas.height = window.innerHeight;
+  });
+  
+  const particles = [];
+  const particleCount = Math.min(60, Math.floor((width * height) / 20000));
+  const connectionDistance = 120;
+  
+  class Particle {
+    constructor() {
+      this.x = Math.random() * width;
+      this.y = Math.random() * height;
+      this.vx = (Math.random() - 0.5) * 0.25;
+      this.vy = (Math.random() - 0.5) * 0.25;
+      this.radius = Math.random() * 1.2 + 0.6;
+    }
+    
+    update() {
+      this.x += this.vx;
+      this.y += this.vy;
+      
+      if (this.x < 0 || this.x > width) this.vx *= -1;
+      if (this.y < 0 || this.y > height) this.vy *= -1;
+    }
+    
+    draw() {
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(126, 247, 201, 0.4)';
+      ctx.fill();
+    }
+  }
+  
+  for (let i = 0; i < particleCount; i++) {
+    particles.push(new Particle());
+  }
+  
+  function animate() {
+    ctx.clearRect(0, 0, width, height);
+    particles.forEach(p => {
+      p.update();
+      p.draw();
+    });
+    
+    for (let i = 0; i < particles.length; i++) {
+      for (let j = i + 1; j < particles.length; j++) {
+        const dx = particles[i].x - particles[j].x;
+        const dy = particles[i].y - particles[j].y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        
+        if (dist < connectionDistance) {
+          const alpha = (1 - (dist / connectionDistance)) * 0.08;
+          ctx.beginPath();
+          ctx.moveTo(particles[i].x, particles[i].y);
+          ctx.lineTo(particles[j].x, particles[j].y);
+          ctx.strokeStyle = "rgba(126, 247, 201, " + alpha + ")";
+          ctx.lineWidth = 0.8;
+          ctx.stroke();
+        }
+      }
+    }
+    requestAnimationFrame(animate);
+  }
+  animate();
+})();
+</script>
+</body>
+</html>

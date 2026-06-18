@@ -1,0 +1,380 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PEFT — kanishk's notes</title>
+  <meta name="description" content="PEFT — Transformers & LLMs notes by kanishk" />
+  <link rel="icon" type="image/png" href="../assets/favicon.png" />
+  <link rel="stylesheet" href="../css/style.css" />
+  <link rel="stylesheet" href="../css/notes.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous" />
+</head>
+<body>
+<canvas id="ambient-canvas"></canvas>
+
+<!-- Top Floating Navigation Bar -->
+<header class="navbar">
+  <div class="nav-container">
+    <a href="../index.html" class="nav-logo">kanishk</a>
+    <nav class="nav-links">
+      <a href="../index.html#home">Home</a>
+      <a href="../index.html#projects">Projects</a>
+      <a href="../index.html#blogs">Blogs</a>
+      <a href="../index.html#notes" class="active">Notes</a>
+    </nav>
+    <div class="nav-socials">
+      <a href="https://github.com/kanishkez" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://huggingface.co/kanishkez" target="_blank" rel="noopener">HuggingFace</a>
+    </div>
+  </div>
+</header>
+
+<div class="container">
+  <main class="main-content">
+    <article class="note-page">
+      <div class="note-breadcrumb">
+        <a href="../index.html#notes">Notes</a>
+        <span class="breadcrumb-sep">›</span>
+        <a href="../index.html#notes">Transformers & LLMs</a>
+        <span class="breadcrumb-sep">›</span>
+        <span>PEFT</span>
+      </div>
+
+      <header class="note-header">
+        <div class="note-category-tag">Transformers & LLMs</div>
+        <h1>PEFT</h1>
+      </header>
+
+      <nav class="note-toc" id="note-toc">
+        <div class="toc-title">Contents</div>
+        <div class="toc-items">
+          <a href="#peft" class="toc-item toc-h1">PEFT</a>
+          <a href="#intrinsic_dimensionality" class="toc-item toc-h3">Intrinsic Dimensionality </a>
+          <a href="#the_projection_matrix" class="toc-item toc-h3">The Projection Matrix</a>
+          <a href="#structure_aware_intrinsic_dimension" class="toc-item toc-h2">Structure Aware Intrinsic Dimension</a>
+          <a href="#why_is_this_important" class="toc-item toc-h2">Why is this important?</a>
+          <a href="#bitfit" class="toc-item toc-h2">BitFit</a>
+          <a href="#adapter_tuning" class="toc-item toc-h2">Adapter Tuning</a>
+          <a href="#adapters" class="toc-item toc-h3">Adapters</a>
+          <a href="#structure" class="toc-item toc-h3">Structure</a>
+          <a href="#during_inference" class="toc-item toc-h3">During Inference</a>
+          <a href="#prompt_tuning" class="toc-item toc-h2">Prompt Tuning</a>
+          <a href="#prefix_tuning" class="toc-item toc-h2">Prefix Tuning</a>
+          <a href="#how_it_works" class="toc-item toc-h3">How it works:</a>
+          <a href="#p_tuning" class="toc-item toc-h2">P Tuning</a>
+          <a href="#architecture" class="toc-item toc-h3">Architecture</a>
+          <a href="#p_tuning_v2" class="toc-item toc-h3">P Tuning V2</a>
+          <a href="#architecture" class="toc-item toc-h3">Architecture</a>
+          <a href="#low_rank_adaptation_lora" class="toc-item toc-h1">Low Rank Adaptation (LoRA)</a>
+          <a href="#formulation" class="toc-item toc-h3">Formulation</a>
+          <a href="#why_low_rank" class="toc-item toc-h3">Why Low Rank?</a>
+          <a href="#initialization" class="toc-item toc-h3">Initialization</a>
+          <a href="#scaling" class="toc-item toc-h3">Scaling</a>
+          <a href="#inference_modes" class="toc-item toc-h3">Inference Modes</a>
+          <a href="#qlora" class="toc-item toc-h2">QLoRA</a>
+          <a href="#paged_optimizers" class="toc-item toc-h2">Paged Optimizers</a>
+          <a href="#what_paged_optimizers_do" class="toc-item toc-h3">What Paged Optimizers Do</a>
+          <a href="#how_it_works" class="toc-item toc-h3">How it works</a>
+        </div>
+      </nav>
+
+      <div class="note-content" id="note-content">
+        <h1 id="peft">PEFT</h1>
+<p>Parameter Efficient Fine Tuning is a method used for fine tuning large language models by updating a small subset of the model&#39;s parameters while keeping the majority of the pretrained weights frozen.</p>
+<p>This is preferred due to:</p>
+<ol>
+<li>Less computational cost </li>
+<li>Less training time </li>
+<li>Less storage</li>
+</ol>
+<h3 id="intrinsic_dimensionality">Intrinsic Dimensionality</h3>
+<p><a href="https://arxiv.org/pdf/2012.13255">paper</a></p>
+<p>Intrinsic dimensionality of any model is the minimum number of dimensions required to fine tune a pretrained model on downstream NLP tasks.</p>
+<p>According to this paper and concept, pretrained models are good enough that they already can perform whatever NLP task we want to throw at them. Fine tuning is only done to lead or direct the model into doing that task for specific queries or instructions.</p>
+<p>This minimum dimensionality of fine tuning that is required to fine tune a model on a task is called intrinsic dimensionality. The paper shows that common NLP tasks within the context of pretrained representations have an intrinsic dimension several orders of magnitude less than the full parameterization.</p>
+<p>Instead of optimizing the empirical loss in the original parameterization (<span class="math-inline">$\theta^D$</span>), the subspace method fine tunes the model via the following reparametrization in the lower dimensional <span class="math-inline">$d$</span> dimensions:
+<span class="math-display">$$\theta^D = \theta^D_0 + P(\theta^d)$$</span>
+where <span class="math-inline">$P : \mathbb{R}^d \to \mathbb{R}^D$</span> projects a parameter from a lower dimensional <span class="math-inline">$d$</span> to the higher dimensional <span class="math-inline">$D$</span>.</p>
+<p>Specifically, we can write:
+<span class="math-display">$$\theta^D = \theta^D_0 + M \theta^d$$</span>
+Here, we are showing that the full parameter update is represented by the pretrained weights plus the lower dimensional vector multiplied by the projection matrix. <span class="math-inline">$M \in \mathbb{R}^{D \times d}$</span> is a projection matrix which projects the <span class="math-inline">$d$</span> dimensions of fine tuning updates to the <span class="math-inline">$D$</span> space. This matrix takes the <span class="math-inline">$d$</span> dimensional fine tuning vector and expands it to the <span class="math-inline">$D$</span> dimensional model. Projection means mapping a space to another space, in this case mapping something linearly from a smaller space to a larger space.</p>
+<h3 id="the_projection_matrix">The Projection Matrix</h3>
+<p>In practice, storing a dense <span class="math-inline">$D \times d$</span> matrix is too expensive. Instead, <span class="math-inline">$M$</span> is structured using a fast projection method like the Fastfood transform, which avoids explicitly storing the full matrix. It is constructed from four matrices:</p>
+<p><strong>Permutation Matrix <span class="math-inline">$\Pi$</span></strong>
+It randomly shuffles coordinates and prevents updates from affecting only a specific region of weights. It ensures that the subspace is uniformly mixed throughout the full parameter space.</p>
+<p><strong>Random Sign Diagonal Matrix <span class="math-inline">$D_1$</span></strong>
+Each diagonal entry is randomly chosen as <span class="math-inline">$+1$</span> or <span class="math-inline">$-1$</span>. This random sign flip helps avoid structured correlations and spreads updates across dimensions.</p>
+<p><strong>Random Gaussian Diagonal Matrix <span class="math-inline">$D_2$</span></strong>
+It scales each coordinate randomly using a Gaussian distribution, making the subspace projection random.</p>
+<p><strong>Hadamard Matrix <span class="math-inline">$H$</span></strong>
+This is a symmetric orthogonal matrix with entries <span class="math-inline">$+1$</span> or <span class="math-inline">$-1$</span>. It enables the Fast Walsh Hadamard Transform, which reduces the matrix multiplication complexity from <span class="math-inline">$O(D^2)$</span> to <span class="math-inline">$O(D \log D)$</span>. This allows fast multiplication.</p>
+<h2 id="structure_aware_intrinsic_dimension">Structure Aware Intrinsic Dimension</h2>
+<p>The basic projection method ignores the fact that some transformer layers are more important than others. Ideally, projection should happen in a way that gives more important weights a larger impact.</p>
+<p>To fix this, we use Structure Aware Intrinsic Dimension (SAID), which modifies the formula:
+<span class="math-display">$$\theta_{D, i} = \theta_{D_0, i} + \lambda_i \cdot P(\theta_{d-m})_i$$</span>
+Here, <span class="math-inline">$\lambda_i$</span> is a learned scalar parameter for each layer or parameter group <span class="math-inline">$i$</span> that scales its update. Out of our total budget of <span class="math-inline">$d$</span> dimensions, we reserve <span class="math-inline">$m$</span> dimensions to learn these scale factors, leaving <span class="math-inline">$d - m$</span> dimensions for the subspace parameter vector <span class="math-inline">$\theta_{d-m}$</span>. This lets the model automatically decide which layers need bigger updates.</p>
+<h2 id="why_is_this_important">Why is this important?</h2>
+<p>Intrinsic dimensionality is the theoretical foundation of parameter efficient fine tuning. Most of these methods rely on low rank matrices or low rank linear projections.</p>
+<p>Because pretrained models already understand language and contain latent knowledge for most tasks, fine tuning is not about teaching the model new concepts from scratch. Instead, it is just directing the model to format and apply its existing knowledge to specific instructions. This is why updating a tiny fraction of the parameters works so well.</p>
+<h2 id="bitfit">BitFit</h2>
+<p>Bias Term Fine Tuning does exactly what it says: it freezes all weight matrices and only fine tunes the bias terms.</p>
+<p>In a typical model, bias parameters make up only about 0.05% to 0.09% of the total parameter count. For example, in the attention queries, keys, and values:
+<span class="math-display">$$Q^{m,l}(x) = W_{q}^{m,l} x + b_{q}^{m,l}$$</span>
+<span class="math-display">$$K^{m,l}(x) = W_{k}^{m,l} x + b_{k}^{m,l}$$</span>
+<span class="math-display">$$V^{m,l}(x) = W_{v}^{m,l} x + b_{v}^{m,l}$$</span>
+<p>Because of this, BitFit is an incredibly cheap alternative to full fine tuning.</p>
+<h4 id="what_bitfit_does">What BitFit does:</h4>
+<ol>
+<li>Freeze all weight matrices.</li>
+<li>Keep biases trainable.</li>
+<li>Fine tune on a downstream task using standard gradient based updates on the bias terms.</li>
+</ol>
+<p>Results show that on standard NLP tasks, BitFit achieves performance comparable to full fine tuning despite updating next to nothing. This supports the idea that pretrained models already contain the necessary representations, and we just need to shift the activations slightly via the biases to expose the right behavior.</p>
+<h2 id="adapter_tuning">Adapter Tuning</h2>
+<h3 id="adapters">Adapters</h3>
+<p>Adapters are small trainable neural networks inserted into each transformer block while keeping the original pretrained model weights frozen.</p>
+<p>While BitFit only updates about 0.05% to 0.1% of the parameters (which is sometimes not enough for complex tasks), adapters usually update 1% to 5% of the parameters. They do not edit the existing weights directly, but instead introduce new trainable layers.</p>
+<h3 id="structure">Structure</h3>
+<p>An adapter block consists of a bottleneck structure with a down projection and an up projection linear layer. It is typically inserted after the multi head attention layer and after the feed forward layer.</p>
+<p><strong>Down Projection</strong>
+Let <span class="math-inline">$h'$</span> be the input hidden state to the adapter block. The down projection is defined as:
+<span class="math-display">$$h_{\text{down}} = W_{\text{down}} h' + b_{\text{down}}$$</span>
+Here, <span class="math-inline">$W_{\text{down}} \in \mathbb{R}^{r \times d}$</span> projects the hidden state from the model dimension <span class="math-inline">$d$</span> down to a bottleneck dimension <span class="math-inline">$r$</span> (where <span class="math-inline">$r \ll d$</span>).</p>
+<p><strong>Activation</strong>
+We apply a nonlinear activation function <span class="math-inline">$\sigma$</span> (such as ReLU or GeLU) to learn complex features:
+<span class="math-display">$$h_{\text{mid}} = \sigma(h_{\text{down}})$$</span>
+<p><strong>Up Projection</strong>
+The up projection maps the hidden state back to the original model dimension <span class="math-inline">$d$</span>:
+<span class="math-display">$$h_{\text{up}} = W_{\text{up}} h_{\text{mid}} + b_{\text{up}}$$</span>
+where <span class="math-inline">$W_{\text{up}} \in \mathbb{R}^{d \times r}$</span>.</p>
+<p>Finally, the adapter output is added back to the original input via a residual connection:
+<span class="math-display">$$h_{\text{out}} = h' + h_{\text{up}}$$</span>
+<p>Often, a scaling factor <span class="math-inline">$\alpha$</span> is used to control the influence of the adapter:
+<span class="math-display">$$h_{\text{next}} = h_{\text{residual}} + \alpha \cdot W_{\text{up}} \sigma(W_{\text{down}} h' + b_{\text{down}}) + b_{\text{up}}$$</span>
+<h3 id="during_inference">During Inference</h3>
+<p>The adapter layers are computed during the forward pass. The correction they apply is small but precisely tuned for the downstream task, acting as a subtle steering force.</p>
+<h2 id="prompt_tuning">Prompt Tuning</h2>
+<p>Prompt tuning is a technique that involves modifying the input to a pretrained language model rather than altering the model parameters. Instead of manually designing discrete text prompts, we prepend a small set of trainable continuous parameters called soft prompts to the input sequence.</p>
+<p>The training process is similar to a normal neural network, but the gradients only update these soft prompt embeddings.</p>
+<p>The soft prompt embeddings are prepended to the input sequence:
+<span class="math-display">$$[\underbrace{v_1, v_2, \dots, v_k}_{\text{trainable prompt tokens}},\, x_1, x_2, \dots, x_n]$$</span>
+<p>Specifically, prompt tuning introduces a parameter matrix:
+<span class="math-display">$$P \in \mathbb{R}^{k \times d}$$</span>
+where <span class="math-inline">$k$</span> is the prompt length and <span class="math-inline">$d$</span> is the model embedding dimension.</p>
+<p>If <span class="math-inline">$H \in \mathbb{R}^{n \times d}$</span> is the embedding matrix of the original input tokens, the final input sequence given to the model is:
+<span class="math-display">$$\tilde{H} = \begin{bmatrix} P \\ H \end{bmatrix} \in \mathbb{R}^{(k + n) \times d}$$</span>
+<p>Large language models (typically larger than 10 billion parameters, as prompt tuning does not perform as well on smaller models) already have a variety of latent behaviors like text classification, translation, and information extraction. Prompt tuning coaxes out these behaviors by learning soft instructions that adjust how the self attention layers process the input. Think of it as teaching the model to think differently before producing an answer. The key is that transformers are extremely sensitive to changes in input embeddings.</p>
+<h2 id="prefix_tuning">Prefix Tuning</h2>
+<p>While prompt tuning only appends trainable embeddings at the input layer, their steering effect can diminish as we go deeper into the network. Prefix tuning solves this by prepending trainable prefix key and value vectors directly to the keys and values in the self attention mechanism at every single layer.</p>
+<p>For each layer <span class="math-inline">$l$</span>, we introduce trainable prefix key and value matrices:
+<span class="math-display">$$P_K^{(l)} \in \mathbb{R}^{m \times d_k}, \quad P_V^{(l)} \in \mathbb{R}^{m \times d_v}$$</span>
+where <span class="math-inline">$m$</span> is the prefix length and <span class="math-inline">$d_k, d_v$</span> are the key and value dimensions.</p>
+<p>These prefix matrices are concatenated to the original key and value matrices <span class="math-inline">$K, V \in \mathbb{R}^{n \times d_k}$</span> (where <span class="math-inline">$n$</span> is the sequence length):
+<span class="math-display">$$K' = \begin{bmatrix} P_K^{(l)} \\ K \end{bmatrix} \in \mathbb{R}^{(m + n) \times d_k}, \qquad V' = \begin{bmatrix} P_V^{(l)} \\ V \end{bmatrix} \in \mathbb{R}^{(m + n) \times d_v}$$</span>
+<p>The attention calculation then proceeds normally, but uses these extended key and value matrices:
+<span class="math-display">$$\text{Attn}(Q, K', V') = \text{softmax}\left(\frac{Q {K'}^\top}{\sqrt{d_k}}\right) V'$$</span>
+This allows the prefix keys and values to act as virtual context tokens at every layer.</p>
+<p>To stabilize training, the prefix vectors are not optimized directly as raw parameters. Instead, they are generated by a Multi Layer Perceptron (MLP) prefix encoder:
+<span class="math-display">$$p_i = \text{MLP}(z_i)$$</span>
+where <span class="math-inline">$z_i$</span> is a trainable virtual vector. The MLP outputs a vector of size <span class="math-inline">$d_{\text{prefix}} = d_k + d_v$</span>, which is then split:
+<span class="math-display">$$p_i[1:d_k] \rightarrow P_{K,i}$$</span>
+<span class="math-display">$$p_i[d_k : d_k + d_v] \rightarrow P_{V,i}$$</span>
+<p>Once training is complete, the MLP weights can be discarded, and we only need to keep the computed <span class="math-inline">$P_K^{(l)}$</span> and <span class="math-inline">$P_V^{(l)}$</span> for inference.</p>
+<h3 id="how_it_works">How it works:</h3>
+<ol>
+<li>Initialize a set of trainable prefix vectors <span class="math-inline">$z_i$</span>.</li>
+<li>Feed them through the MLP encoder during training.</li>
+<li>Split the MLP outputs into prefix key and value vectors.</li>
+<li>Concatenate these prefix keys and values to the original keys and values of the transformer at each layer.</li>
+<li>Train only the prefix vectors <span class="math-inline">$z_i$</span> and the MLP encoder weights while keeping the rest of the model frozen.</li>
+</ol>
+<h2 id="p_tuning">P Tuning</h2>
+<p>While prompt tuning learns prompt embeddings directly, they can be unstructured and unstable, especially during training on smaller models. P Tuning fixes this by using a prompt encoder (a small neural network consisting of a BiLSTM and an MLP) to generate context aware, structured prompt embeddings.</p>
+<h3 id="architecture">Architecture</h3>
+<p>We define virtual prompt tokens that act as index placeholders:
+<span class="math-display">$$[P_1, P_2, \dots, P_m]$$</span>
+<p><strong>Prompt Encoder</strong>
+Each virtual token is passed through the prompt encoder to produce the prompt embedding:
+<span class="math-display">$$E_p = f_\theta(P_1, \dots, P_m)$$</span>
+where <span class="math-inline">$E_p \in \mathbb{R}^{m \times d}$</span> and <span class="math-inline">$d$</span> is the hidden size of the language model. The encoder <span class="math-inline">$f_\theta$</span> typically consists of an embedding layer, a BiLSTM, and an MLP. Passing the tokens through a BiLSTM ensures that the generated prompt embeddings are sequentially dependent and structured rather than completely independent vectors.</p>
+<p>Once the input text tokens are converted to embeddings:
+<span class="math-display">$$E_x = E(X)$$</span>
+The final input sequence <span class="math-inline">$\tilde{E}$</span> given to the transformer is a combination of the generated prompt embeddings <span class="math-inline">$E_p$</span> and the input embeddings <span class="math-inline">$E_x$</span> (either concatenated or interleaved based on the template):
+<span class="math-display">$$\tilde{E} = \text{concat}(E_p, E_x)$$</span>
+<p>During training, only the prompt encoder parameters are updated, while the entire language model remains frozen. The prompt encoder learns to shape the input embeddings in a way that guides the frozen model to produce the target output.</p>
+<h3 id="p_tuning_v2">P Tuning V2</h3>
+<p>In P Tuning v1, the prompt embeddings are only introduced at the input layer. In deep transformer models, their influence can fade by the time the activations reach the output layer. </p>
+<p>P Tuning V2 solves this by adding trainable prompt embeddings at every single transformer layer.</p>
+<h3 id="architecture">Architecture</h3>
+<p>For each transformer layer <span class="math-inline">$l \in \{1, \dots, L\}$</span>, we define trainable prompt parameters:
+<span class="math-display">$$P^l \in \mathbb{R}^{m \times d}$$</span>
+<p>Unlike P Tuning v1 or prefix tuning, P Tuning V2 discards the MLP or BiLSTM prompt encoder entirely. The authors found that when prompts are added to every layer, such reparameterization is no longer necessary. Instead, the prompt parameters <span class="math-inline">$P^l$</span> are optimized directly.</p>
+<p>These prompt parameters are concatenated directly to the keys and values of the self attention layers, exactly like prefix tuning. This allows the model to maintain task steering capacity across all layers without the computational overhead of a prompt encoder.</p>
+<h1 id="low_rank_adaptation_lora">Low Rank Adaptation (LoRA)</h1>
+<p>Fine tuning a model normally means updating all parameters, which involves billions of weights. However, we do not need to change most of these weights independently. Pretrained models already have the general capability; we just need to shift their activation directions to guide them.</p>
+<p>LoRA does this by freezing the original weights and adding a pair of low rank trainable matrices.</p>
+<h3 id="formulation">Formulation</h3>
+<p>Let the original weight matrix be <span class="math-inline">$W \in \mathbb{R}^{d \times k}$</span>, where <span class="math-inline">$d$</span> is the output dimension and <span class="math-inline">$k$</span> is the input dimension. We introduce two low rank matrices <span class="math-inline">$A$</span> and <span class="math-inline">$B$</span>:
+<span class="math-display">$$A \in \mathbb{R}^{r \times k} \quad (\text{down projection})$$</span>
+<span class="math-display">$$B \in \mathbb{R}^{d \times r} \quad (\text{up projection})$$</span>
+where <span class="math-inline">$r \ll \min(d, k)$</span> is the rank.</p>
+<p>The total weight update <span class="math-inline">$\Delta W$</span> is parameterized as:
+<span class="math-display">$$\Delta W = B A \in \mathbb{R}^{d \times k}$$</span>
+<p>The modified forward pass for an input <span class="math-inline">$x$</span> is:
+<span class="math-display">$$h = W' x = (W + \Delta W) x = W x + B(A x)$$</span>
+<p>During training, the base weight matrix <span class="math-inline">$W$</span> is kept frozen, and gradients only flow into the low rank matrices <span class="math-inline">$A$</span> and <span class="math-inline">$B$</span>.</p>
+<h3 id="why_low_rank">Why Low Rank?</h3>
+<p>During fine tuning, the weight update matrix <span class="math-inline">$\Delta W$</span> has a very low intrinsic rank. By factoring <span class="math-inline">$\Delta W$</span> into the product of two smaller matrices <span class="math-inline">$B$</span> and <span class="math-inline">$A$</span>, we drastically reduce the number of parameters we need to train.</p>
+<h3 id="initialization">Initialization</h3>
+<p>To ensure that training starts with the exact behavior of the base model, we initialize:</p>
+<ul>
+<li><span class="math-inline">$A$</span> using a random Gaussian distribution.</li>
+<li><span class="math-inline">$B$</span> to all zeros.</li>
+</ul>
+<p>This ensures that initially, <span class="math-inline">$\Delta W = B A = 0$</span>, meaning the model&#39;s behavior is unchanged at step zero.</p>
+<h3 id="scaling">Scaling</h3>
+<p>LoRA scales the low rank update by a constant factor:
+<span class="math-display">$$\Delta W = \frac{\alpha}{r} B A$$</span>
+where <span class="math-inline">$\alpha$</span> is a constant scaling hyperparameter. Using <span class="math-inline">$\frac{\alpha}{r}$</span> helps stabilize training because when we change the rank <span class="math-inline">$r$</span>, we do not need to re tune the learning rate or other hyperparameters.</p>
+<p>LoRA is typically applied to the attention projection matrices, such as the query matrix <span class="math-inline">$W_Q$</span> and the value matrix <span class="math-inline">$W_V$</span>, though it can also be used in feed forward layers. Updating the query and value projections usually yields the best performance.</p>
+<h3 id="inference_modes">Inference Modes</h3>
+<p>LoRA supports two different ways of handling inference:</p>
+<p><strong>Merged Inference</strong>
+Before deploying, we compute the combined weights:
+<span class="math-display">$$W_{\text{final}} = W + \frac{\alpha}{r} B A$$</span>
+We can then discard the matrices <span class="math-inline">$A$</span> and <span class="math-inline">$B$</span> and use <span class="math-inline">$W_{\text{final}}$</span> directly. This adds zero latency during inference.</p>
+<p><strong>Unmerged Inference</strong>
+We keep the base weights and LoRA matrices separate:
+<span class="math-display">$$h = W x + \frac{\alpha}{r} B(A x)$$</span>
+This adds a tiny bit of latency, but it allows us to hot swap different LoRA weights on the fly (e.g., swapping between a summarization LoRA, a Q&amp;A LoRA, and a coding LoRA) using the same frozen base model.</p>
+<h2 id="qlora">QLoRA</h2>
+<p>QLoRA reduces the VRAM footprint of fine tuning by keeping the base model weights in a 4 bit quantized form (specifically using a format called NormalFloat 4, or NF4) while still allowing high quality fine tuning using LoRA.</p>
+<p>Instead of storing pretrained weights in 16 bit form, QLoRA quantizes the base model:
+<span class="math-display">$$W_{\text{4bit}} = \text{quantize}(W)$$</span>
+<p>To squeeze out even more memory, QLoRA uses double quantization, which quantizes the quantization constants themselves (e.g., from 32 bit floats to 8 bit floats), saving about 0.37 bits per parameter.</p>
+<p>During the forward and backward passes, the 4 bit weights are dynamically dequantized back to 16 bit (BF16 or FP16) to perform the matrix multiplication:
+<span class="math-display">$$h = \text{dequantize}(W_{\text{4bit}}) x + \frac{\alpha}{r} B(A x)$$</span>
+<p>The base weights stay in 4 bit in memory, while only the trainable LoRA parameters <span class="math-inline">$A$</span> and <span class="math-inline">$B$</span> and their gradients are stored and updated in 16 bit or 32 bit format.</p>
+<h2 id="paged_optimizers">Paged Optimizers</h2>
+<p>Optimizers like Adam or AdamW need to track the first moment <span class="math-inline">$m$</span> and second moment <span class="math-inline">$v$</span> for every trainable parameter. When fine tuning, these optimizer states can consume multiple times the memory of the trainable parameters themselves. Even with LoRA, training can cause sudden memory spikes due to activation memory, gradients, and temporary buffers during backpropagation.</p>
+<p>When the GPU VRAM is completely full, even a small memory request will fail and throw an out of memory error.</p>
+<h3 id="what_paged_optimizers_do">What Paged Optimizers Do</h3>
+<p>Paged optimizers solve this by utilizing CUDA Unified Memory to perform page to page transfers between the GPU VRAM and CPU system RAM. </p>
+<p>During training, when the GPU experiences memory spikes, CUDA automatically pages inactive optimizer states to the CPU RAM. </p>
+<p>Once the backward pass is complete and the optimizer needs to perform the weight update, those states are paged back to the GPU VRAM.</p>
+<h3 id="how_it_works">How it works</h3>
+<p>Instead of allocating a single contiguous block of GPU memory for optimizer states like <span class="math-inline">$m$</span> and <span class="math-inline">$v$</span>:</p>
+<pre><code class="language-python"># Standard allocation (can easily fail on VRAM spikes)
+m = tensor(size=[10000000], device="cuda")
+v = tensor(size=[10000000], device="cuda")</code></pre>
+<p>Paged optimizers allocate them as paged tensors that can swap chunks (pages) to CPU memory when needed:</p>
+<pre><code class="language-python"># Paged allocation utilizing CUDA Unified Memory
+m = PagedTensor([
+    page1: pointer to GPU (4KB)
+    page2: paged to CPU RAM (4KB)
+    page3: pointer to GPU (4KB)
+    ...
+])</code></pre>
+<p>QLoRA uses paged optimizers because even if we squeeze the base weights down to 4 bit, the gradients and optimizer states still take up standard floating point space. Offloading these optimizer states to CPU RAM is a lifesaver when VRAM is tight.</p>
+<p>Overall, these parameter efficient fine tuning methods show that we do not need to rewrite the entire brain of a model just to get it to follow new instructions. By steering it with adapters, prompts, or low rank updates, we get the same performance with a fraction of the hardware headache. Next, we will check out how these methods behave under extreme scaling.</p>
+
+      </div>
+
+      <nav class="note-nav-bottom">
+        <a href="mixture_of_experts.html" class="nav-prev"><span class="nav-label">Previous</span><span class="nav-title">← Mixture of Experts</span></a>
+        <a href="quantization.html" class="nav-next"><span class="nav-label">Next</span><span class="nav-title">Quantization →</span></a>
+      </nav>
+    </article>
+  </main>
+</div>
+
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"
+  onload="renderMathInElement(document.getElementById('note-content'), {
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '$', right: '$', display: false}
+    ],
+    throwOnError: false,
+    trust: true,
+    strict: false
+  });"></script>
+<script>
+(function initAmbientBackground() {
+  const canvas = document.getElementById('ambient-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  
+  let width = canvas.width = window.innerWidth;
+  let height = canvas.height = window.innerHeight;
+  
+  window.addEventListener('resize', () => {
+    width = canvas.width = window.innerWidth;
+    height = canvas.height = window.innerHeight;
+  });
+  
+  const particles = [];
+  const particleCount = Math.min(60, Math.floor((width * height) / 20000));
+  const connectionDistance = 120;
+  
+  class Particle {
+    constructor() {
+      this.x = Math.random() * width;
+      this.y = Math.random() * height;
+      this.vx = (Math.random() - 0.5) * 0.25;
+      this.vy = (Math.random() - 0.5) * 0.25;
+      this.radius = Math.random() * 1.2 + 0.6;
+    }
+    
+    update() {
+      this.x += this.vx;
+      this.y += this.vy;
+      
+      if (this.x < 0 || this.x > width) this.vx *= -1;
+      if (this.y < 0 || this.y > height) this.vy *= -1;
+    }
+    
+    draw() {
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(126, 247, 201, 0.4)';
+      ctx.fill();
+    }
+  }
+  
+  for (let i = 0; i < particleCount; i++) {
+    particles.push(new Particle());
+  }
+  
+  function animate() {
+    ctx.clearRect(0, 0, width, height);
+    particles.forEach(p => {
+      p.update();
+      p.draw();
+    });
+    
+    for (let i = 0; i < particles.length; i++) {
+      for (let j = i + 1; j < particles.length; j++) {
+        const dx = particles[i].x - particles[j].x;
+        const dy = particles[i].y - particles[j].y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        
+        if (dist < connectionDistance) {
+          const alpha = (1 - (dist / connectionDistance)) * 0.08;
+          ctx.beginPath();
+          ctx.moveTo(particles[i].x, particles[i].y);
+          ctx.lineTo(particles[j].x, particles[j].y);
+          ctx.strokeStyle = "rgba(126, 247, 201, " + alpha + ")";
+          ctx.lineWidth = 0.8;
+          ctx.stroke();
+        }
+      }
+    }
+    requestAnimationFrame(animate);
+  }
+  animate();
+})();
+</script>
+</body>
+</html>

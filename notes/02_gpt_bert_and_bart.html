@@ -1,0 +1,317 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>GPT BERT and BART — kanishk's notes</title>
+  <meta name="description" content="GPT BERT and BART — Transformers & LLMs notes by kanishk" />
+  <link rel="icon" type="image/png" href="../assets/favicon.png" />
+  <link rel="stylesheet" href="../css/style.css" />
+  <link rel="stylesheet" href="../css/notes.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous" />
+</head>
+<body>
+<canvas id="ambient-canvas"></canvas>
+
+<!-- Top Floating Navigation Bar -->
+<header class="navbar">
+  <div class="nav-container">
+    <a href="../index.html" class="nav-logo">kanishk</a>
+    <nav class="nav-links">
+      <a href="../index.html#home">Home</a>
+      <a href="../index.html#projects">Projects</a>
+      <a href="../index.html#blogs">Blogs</a>
+      <a href="../index.html#notes" class="active">Notes</a>
+    </nav>
+    <div class="nav-socials">
+      <a href="https://github.com/kanishkez" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://huggingface.co/kanishkez" target="_blank" rel="noopener">HuggingFace</a>
+    </div>
+  </div>
+</header>
+
+<div class="container">
+  <main class="main-content">
+    <article class="note-page">
+      <div class="note-breadcrumb">
+        <a href="../index.html#notes">Notes</a>
+        <span class="breadcrumb-sep">›</span>
+        <a href="../index.html#notes">Transformers & LLMs</a>
+        <span class="breadcrumb-sep">›</span>
+        <span>GPT BERT and BART</span>
+      </div>
+
+      <header class="note-header">
+        <div class="note-category-tag">Transformers & LLMs</div>
+        <h1>GPT BERT and BART</h1>
+      </header>
+
+      <nav class="note-toc" id="note-toc">
+        <div class="toc-title">Contents</div>
+        <div class="toc-items">
+          <a href="#gpt_bert_and_bart" class="toc-item toc-h1">GPT BERT and BART</a>
+          <a href="#timeline" class="toc-item toc-h2">Timeline</a>
+          <a href="#gpt" class="toc-item toc-h3">GPT</a>
+          <a href="#stages" class="toc-item toc-h3">Stages</a>
+          <a href="#decoder_architecture" class="toc-item toc-h1">Decoder Architecture</a>
+          <a href="#pre_training_and_fine_tuning" class="toc-item toc-h1">Pre training and Fine Tuning</a>
+          <a href="#pre_training" class="toc-item toc-h3">Pre training </a>
+          <a href="#supervised_fine_tuning" class="toc-item toc-h3">Supervised Fine Tuning</a>
+          <a href="#auxiliary_loss" class="toc-item toc-h3">Auxiliary Loss</a>
+          <a href="#token_prediction" class="toc-item toc-h1">Token Prediction</a>
+          <a href="#why_this_works" class="toc-item toc-h1">Why This Works</a>
+          <a href="#bert" class="toc-item toc-h2">BERT</a>
+          <a href="#masked_language_modeling" class="toc-item toc-h3">Masked Language Modeling</a>
+          <a href="#next_sentence_prediction" class="toc-item toc-h3">Next Sentence Prediction</a>
+          <a href="#bart" class="toc-item toc-h2">BART</a>
+        </div>
+      </nav>
+
+      <div class="note-content" id="note-content">
+        <h1 id="gpt_bert_and_bart">GPT BERT and BART</h1>
+<p>This note covers the evolution of three foundational Transformer architectures: GPT, BERT, and BART. We will look at how they differ in their attention mechanisms, training objectives, and whether they use encoder, decoder, or full sequence to sequence structures. Let&#39;s break down the details of pre training, fine tuning, and why each architecture is suited for specific tasks.</p>
+<h2 id="timeline">Timeline</h2>
+<figure><img src="images/Pasted%20image%2020251006115548.png" alt="image" loading="lazy"><figcaption>image</figcaption></figure>
+<h3 id="gpt">GPT</h3>
+<p>Generative Pre trained Transformer (see paper: <a href="https://cdn.openai.com/research-covers/language-unsupervised/language_understanding_paper.pdf">https://cdn.openai.com/research-covers/language-unsupervised/language_understanding_paper.pdf</a>)</p>
+<p>GPT is a <strong>decoder only transformer</strong> that is <strong>autoregressive</strong>. It predicts the next token in a sequence given all previous tokens. The key idea is to leverage <strong>unsupervised pre training</strong> on large corpora and then perform <strong>supervised fine tuning (SFT)</strong> on specific tasks such as question answering.</p>
+<p>GPT uses <strong>masked self attention</strong> to predict tokens <strong>autoregressively</strong>. Each token can only attend to <strong>previous tokens</strong>. This allows the model to build context from what has already been generated while <strong>preventing future token leakage</strong>.</p>
+<h3 id="stages"><strong>Stages</strong></h3>
+<figure><img src="https://miro.medium.com/1*y9mXfWfxvqHk55TNrP2CXg.png" alt="Fine Tune LLMs: Between Full & Partial Fine Tuning — An End to End Python Example to Fine Tune with PEFT/LoRA on the SST Dataset | by Ouarda FENEK | Python in Plain English" loading="lazy"><figcaption>Fine Tune LLMs: Between Full & Partial Fine Tuning — An End to End Python Example to Fine Tune with PEFT/LoRA on the SST Dataset | by Ouarda FENEK | Python in Plain English</figcaption></figure>
+<p><strong>Pre training (Unsupervised)</strong>:</p>
+<ol>
+<li>Input tokens → embeddings + positional encodings</li>
+<li>Multiple decoder blocks (masked self attention + feedforward networks)</li>
+<li>Linear projection → softmax → next token probabilities</li>
+<li>Teacher forcing: at each timestep, the <strong>correct token is provided as input</strong> for predicting the next token</li>
+<li>Loss: cross entropy between predicted probabilities and true tokens</li>
+</ol>
+<p><strong>Supervised Fine Tuning (SFT)</strong>:</p>
+<ol>
+<li>Input sequence: task specific text (e.g., question)</li>
+<li>Target: desired output (e.g., answer)</li>
+<li>The <strong>same embedding and decoder weights</strong> are used</li>
+<li>Each token in the input sequence is converted to embeddings</li>
+<li>Teacher forcing continues: at each step, the <strong>correct target token</strong> is provided to predict the next</li>
+<li>Fine tuning updates weights to align pre training knowledge with the task</li>
+</ol>
+<h1 id="decoder_architecture"><strong>Decoder Architecture</strong></h1>
+<p>Since it is built on the same decoder as the transformer, it uses the Masked Multi Head Self Attention architecture, here is a quick recap of the Decoder.</p>
+<p>The decoder only architecture consists of stacked blocks:</p>
+<ol>
+<li>Masked Multi Head Self Attention</li>
+<li>Residual connection + LayerNorm</li>
+<li>Feedforward network</li>
+<li>Residual connection + LayerNorm</li>
+<li>Linear projection + Softmax</li>
+</ol>
+<h1 id="pre_training_and_fine_tuning"><strong>Pre training and Fine Tuning</strong></h1>
+<h3 id="pre_training">Pre training</h3>
+<p>Any GPT is first trained on a huge corpus of text containing sentences.
+Its training objective is to predict the next token. 
+Pre training is done to build up context about the language for the transformer.
+By training on a huge corpus of data to predict the next token, the model understands when to generate tokens given a piece of context.</p>
+<p><strong>Pre training Objective:</strong></p>
+<p>The objective is to maximize the following likelihood:
+<span class="math-display">$$L_1(U) = \sum_{i} \log P(u_i \mid u_{i-k}, \dots, u_{i-1}; \Theta)$$</span>
+where <span class="math-inline">$k$</span> is the size of the context window, and the conditional probability <span class="math-inline">$P$</span> is modeled using a neural network with parameters <span class="math-inline">$\Theta$</span>. These parameters are trained using stochastic gradient descent.</p>
+<p>The training objective is to predict a token given a set of tokens (predicting a sentence/token given a certain context).</p>
+<p>For Example:
+Given the sentence &quot;The capital of France is&quot;, the model would predict the token &quot;Paris&quot;.</p>
+<figure><img src="https://substackcdn.com/image/fetch/$s_!aFv8!,f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2F0cad60e3-cec7-4bfa-9ad1-356b6d181f7c_1640x862.png" alt="Decoder Only Transformers: The Workhorse of Generative LLMs" loading="lazy"><figcaption>Decoder Only Transformers: The Workhorse of Generative LLMs</figcaption></figure>
+<h3 id="supervised_fine_tuning">Supervised Fine Tuning</h3>
+<p>After building an understanding of the language using pre training, we fine tune the model so that it can perform specific tasks. The most commonly used task is Q and A where you prompt an LLM with a question and it answers.</p>
+<p>Fine tuning is done by training the already trained weights/embeddings on specific use case data. In the case of Q and A, you give it Question Answer pairs so that it can learn to answer the questions from the facts and language built up in the pre training stage.</p>
+<p>Suppose we have a labeled dataset <span class="math-inline">$C$</span>, where each instance consists of an input sequence of tokens <span class="math-inline">$x^1, \dots, x^m$</span> and a target label <span class="math-inline">$y$</span>. The learning objective is to maximize:
+<span class="math-display">$$L_2(C) = \sum_{(x, y)} \log P(y \mid x^1, \dots, x^m; \Theta)$$</span>
+Given an input sequence, the model should give high probability to the correct output <span class="math-inline">$y$</span>.</p>
+<h3 id="auxiliary_loss">Auxiliary Loss</h3>
+<p>During fine tuning, we use an auxiliary loss function along with the task specific loss function. This is so that the model retains what it has learned during the pre training stage and to avoid overfitting.</p>
+<p>An auxiliary loss function ensures that the model does not forget the language model it has built in the pre training stage and instead uses this to learn the task it is being trained for.</p>
+<p>So during fine tuning we use a task specific loss:
+<span class="math-display">$$\mathcal{L}_{\text{task}} = - \sum_{t=1}^{T} \log p_\theta(y_t \mid y_{&lt;t}, x)$$</span>
+And an auxiliary loss (which is the same as the loss we used in pre training):
+<span class="math-display">$$\mathcal{L}_{\text{LM}} = - \sum_{t=1}^{T} \log p_\theta(x_t \mid x_{&lt;t})$$</span>
+<p>The total loss that we train for is:
+<span class="math-display">$$\boxed{\mathcal{L}_{\text{total}} = \mathcal{L}_{\text{task}} + \lambda \, \mathcal{L}_{\text{LM}}}$$</span>
+where <span class="math-inline">$\lambda$</span> is the balance weight that controls how much of the auxiliary loss we want the model to be influenced by.</p>
+<h1 id="token_prediction"><strong>Token Prediction</strong></h1>
+<ul>
+<li><p>Context vector from final decoder block:
+<span class="math-display">$$h \in \mathbb{R}^{T \times d_{\text{model}}}$$</span>
+</li>
+<li><p>Linear projection:
+<span class="math-display">$$\text{Logits} = h W^T + b$$</span>
+</li>
+<li><p>Softmax → probabilities over vocabulary:
+<span class="math-display">$$P(y_t = w_i \mid \text{context}) = \frac{\exp(\text{logit}_i)}{\sum_{j=1}^{V} \exp(\text{logit}_j)}$$</span>
+</li>
+<li><p>The <strong>most probable token</strong> is selected (greedy, sampling, or beam search)</p>
+</li>
+</ul>
+<h1 id="why_this_works"><strong>Why This Works</strong></h1>
+<ol>
+<li><strong>Pre training</strong>:<ul>
+<li>Learns <strong>general language patterns</strong>, syntax, semantics, and world knowledge</li>
+<li>Each token attends to relevant context → <strong>rich contextual embeddings</strong></li>
+</ul>
+</li>
+<li><strong>Fine tuning</strong>:<ul>
+<li>Updates weights to <strong>adapt general knowledge</strong> to specific tasks</li>
+<li>Input/output sequences mapped to <strong>pre trained embeddings</strong>, allowing <strong>transfer learning</strong></li>
+</ul>
+</li>
+<li><strong>Autoregression + Teacher Forcing</strong>:<ul>
+<li>Gradually builds sequence understanding </li>
+<li>Prevents the model from &quot;cheating&quot; by seeing future tokens</li>
+<li>Enables robust next token prediction and Q/A generation</li>
+</ul>
+</li>
+</ol>
+<h4 id="intuitive_understanding">Intuitive Understanding:</h4>
+<p>Pre training is like training a child on the vocabulary of a language where the model tries to replicate how certain words are used in certain contexts.</p>
+<p>Fine tuning is like teaching the child to form full fledged sentences and answer questions based on the language learned.</p>
+<h2 id="bert">BERT</h2>
+<p>Bidirectional Encoder Representations from Transformers uses the transformer architecture specifically to understand language and build up an understanding of the input data.</p>
+<p>Since it is an encoder only architecture, its purpose is to specifically build up an understanding of the input corpus. Traditionally, transformers process text sequentially from left to right. </p>
+<p>However, this often limits the model&#39;s ability to achieve true language understanding. So, BERT uses a bidirectional approach considering both the left and right context of words in a sentence. Instead of analyzing the text sequentially, BERT looks at all the words in a sentence simultaneously.
+It uses a bidirectional self attention mechanism.</p>
+<p>To make BERT look at tokens in both directions in a sentence, we remove the traditional no look mask training objective and introduce 2 pre training objectives:</p>
+<h3 id="masked_language_modeling">Masked Language Modeling</h3>
+<p>Randomly mask some fraction of input tokens with a special <code class="inline-code">[MASK]</code> token. The token chosen can be either replaced with <code class="inline-code">[MASK]</code>, replaced with a random token, or kept unchanged. 
+At any point, 15% of the tokens are selected. Out of these, 80% are replaced with <code class="inline-code">[MASK]</code>, 10% with a random token, and 10% are kept unchanged. The training objective is to predict the correct original token for these selected positions using both left and right context.</p>
+<span class="math-display">$$P(x_{\text{masked}} \mid x_{\text{left}}, x_{\text{right}})$$</span>
+<h3 id="next_sentence_prediction">Next Sentence Prediction</h3>
+<p>MLM gives token level bidirectionality, but BERT also needs <strong>sentence level coherence</strong> for tasks like QA and entailment.</p>
+<p>BERT is given sentence pairs. 50% of the time the actual sentence B that follows A is given, and the other 50% of the time it is a random sentence from the corpus. BERT must predict a binary label saying whether B is the correct sentence that follows A.</p>
+<p>MLM helps the model understand tokens on the basis of both past and future (left and right) context, whereas NSP uses that understanding of tokens and applies it to understanding relations between entire sentences.</p>
+<p>The final pre training loss is the sum of MLM and NSP loss.</p>
+<span class="math-display">$$\mathcal{L}_{\text{BERT}} = \mathcal{L}_{\text{MLM}} + \mathcal{L}_{\text{NSP}}$$</span>
+<h2 id="bart">BART</h2>
+<p>Bidirectional Autoregressive Transformer is an autoencoder which takes in a corrupted version of a text sequence into its encoder, maps it to a latent space, and then uses the decoder to generate the corrected version of the text.</p>
+<p>The encoder takes in a sequence of tokens which are corrupted. 
+Many types of corruptions are applied like:</p>
+<ul>
+<li>Token masking (like BERT MLM)</li>
+<li>Token deletion</li>
+<li>Token permutation / shuffling</li>
+<li>Text infilling (span masking)</li>
+<li>Sentence permutation</li>
+</ul>
+<p>The encoder then produces contextual embeddings for each corrupted token which contain the semantic meaning of tokens and the relationships between tokens. It uses self attention.</p>
+<p>The decoder is then trained to generate the correct text sequence using teacher forcing (by shifting tokens one step to the right).
+It uses masked self attention and cross attention to decode the outputs and generate a token.</p>
+<p>This architecture is very similar to the original Transformer architecture, but instead of being trained for machine translation, it is pre trained to take in a corrupted/noisy text sequence and reconstruct the original text.</p>
+<p>For example:</p>
+<p>Corrupted input:
+&quot;The [MASK] brown [MASK] jumps over the lazy&quot;</p>
+<p>Original text to be trained on:
+&quot;The quick brown fox jumps over the lazy dog&quot;</p>
+<h4 id="why_this_objective_works">Why this objective works:</h4>
+<ul>
+<li>Bidirectional encoder learns contextual representations even with missing/shuffled tokens</li>
+<li>Decoder learns to generate coherent text based on the encoder context.</li>
+</ul>
+<p>This forces the model to understand structure and semantics even better than just generating the next token.</p>
+<p>BART can be seen as kind of a mixture of BERT and GPT wherein we make use of the bidirectional encoder and generative decoder to build BART.</p>
+<p>Overall, GPT&#39;s autoregressive nature makes it the go to for generation, BERT&#39;s bidirectional context makes it king for comprehension and classification, and BART&#39;s denoising seq2seq design strikes a balance for tasks like summarization and translation. Choosing the right model really just comes down to whether you need to understand text, generate text, or do a mix of both. Next up, we will dive into more advanced architecture details and scaling laws.</p>
+
+      </div>
+
+      <nav class="note-nav-bottom">
+        <a href="01_transformers.html" class="nav-prev"><span class="nav-label">Previous</span><span class="nav-title">← Transformers</span></a>
+        <a href="03_kv_caching.html" class="nav-next"><span class="nav-label">Next</span><span class="nav-title">KV Caching →</span></a>
+      </nav>
+    </article>
+  </main>
+</div>
+
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"
+  onload="renderMathInElement(document.getElementById('note-content'), {
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '$', right: '$', display: false}
+    ],
+    throwOnError: false,
+    trust: true,
+    strict: false
+  });"></script>
+<script>
+(function initAmbientBackground() {
+  const canvas = document.getElementById('ambient-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  
+  let width = canvas.width = window.innerWidth;
+  let height = canvas.height = window.innerHeight;
+  
+  window.addEventListener('resize', () => {
+    width = canvas.width = window.innerWidth;
+    height = canvas.height = window.innerHeight;
+  });
+  
+  const particles = [];
+  const particleCount = Math.min(60, Math.floor((width * height) / 20000));
+  const connectionDistance = 120;
+  
+  class Particle {
+    constructor() {
+      this.x = Math.random() * width;
+      this.y = Math.random() * height;
+      this.vx = (Math.random() - 0.5) * 0.25;
+      this.vy = (Math.random() - 0.5) * 0.25;
+      this.radius = Math.random() * 1.2 + 0.6;
+    }
+    
+    update() {
+      this.x += this.vx;
+      this.y += this.vy;
+      
+      if (this.x < 0 || this.x > width) this.vx *= -1;
+      if (this.y < 0 || this.y > height) this.vy *= -1;
+    }
+    
+    draw() {
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(126, 247, 201, 0.4)';
+      ctx.fill();
+    }
+  }
+  
+  for (let i = 0; i < particleCount; i++) {
+    particles.push(new Particle());
+  }
+  
+  function animate() {
+    ctx.clearRect(0, 0, width, height);
+    particles.forEach(p => {
+      p.update();
+      p.draw();
+    });
+    
+    for (let i = 0; i < particles.length; i++) {
+      for (let j = i + 1; j < particles.length; j++) {
+        const dx = particles[i].x - particles[j].x;
+        const dy = particles[i].y - particles[j].y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        
+        if (dist < connectionDistance) {
+          const alpha = (1 - (dist / connectionDistance)) * 0.08;
+          ctx.beginPath();
+          ctx.moveTo(particles[i].x, particles[i].y);
+          ctx.lineTo(particles[j].x, particles[j].y);
+          ctx.strokeStyle = "rgba(126, 247, 201, " + alpha + ")";
+          ctx.lineWidth = 0.8;
+          ctx.stroke();
+        }
+      }
+    }
+    requestAnimationFrame(animate);
+  }
+  animate();
+})();
+</script>
+</body>
+</html>

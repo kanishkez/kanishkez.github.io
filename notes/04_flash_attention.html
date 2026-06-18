@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Flash Attention — kanishk's notes</title>
+  <meta name="description" content="Flash Attention — Transformers & LLMs notes by kanishk" />
+  <link rel="icon" type="image/png" href="../assets/favicon.png" />
+  <link rel="stylesheet" href="../css/style.css" />
+  <link rel="stylesheet" href="../css/notes.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous" />
+</head>
+<body>
+<canvas id="ambient-canvas"></canvas>
+
+<!-- Top Floating Navigation Bar -->
+<header class="navbar">
+  <div class="nav-container">
+    <a href="../index.html" class="nav-logo">kanishk</a>
+    <nav class="nav-links">
+      <a href="../index.html#home">Home</a>
+      <a href="../index.html#projects">Projects</a>
+      <a href="../index.html#blogs">Blogs</a>
+      <a href="../index.html#notes" class="active">Notes</a>
+    </nav>
+    <div class="nav-socials">
+      <a href="https://github.com/kanishkez" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://huggingface.co/kanishkez" target="_blank" rel="noopener">HuggingFace</a>
+    </div>
+  </div>
+</header>
+
+<div class="container">
+  <main class="main-content">
+    <article class="note-page">
+      <div class="note-breadcrumb">
+        <a href="../index.html#notes">Notes</a>
+        <span class="breadcrumb-sep">›</span>
+        <a href="../index.html#notes">Transformers & LLMs</a>
+        <span class="breadcrumb-sep">›</span>
+        <span>Flash Attention</span>
+      </div>
+
+      <header class="note-header">
+        <div class="note-category-tag">Transformers & LLMs</div>
+        <h1>Flash Attention</h1>
+      </header>
+
+      
+
+      <div class="note-content" id="note-content">
+        <h1 id="flash_attention">Flash Attention</h1>
+<p>Standard attention gets incredibly slow as sequence length grows, mostly because we keep shuffling huge matrices back and forth between GPU memory types. Flash Attention fixes this. It isn&#39;t a new attention architecture per se, but rather a way of utilizing GPU RAM and resources efficiently so as to make the attention process faster and more efficient.</p>
+<p>In standard self attention:
+<span class="math-display">$$\text{Attention}(Q, K, V) = \text{softmax}\left( \frac{QK^T}{\sqrt{d}} \right) V$$</span>
+The intermediate matrix <span class="math-inline">$QK^T$</span> has a shape of <span class="math-inline">$N \times N$</span>.
+For a sequence of let&#39;s say 4000 tokens, that is 16 million elements to compute.
+On modern GPUs, this is obviously very expensive.</p>
+<h3 id="modern_gpus">Modern GPUs</h3>
+<p>The GPU memory hierarchy comprises memory of different sizes and speeds, with smaller memory being faster.</p>
+<p>In an A100 GPU with 80 GB of memory, its on chip memory SRAM is only 192 KB per each of the 108 streaming multiprocessors. On chip memory SRAM is always faster than the off chip HBM memory but it is smaller in size. So what happens is that each kernel loads inputs from HBM to registers and SRAM, computes the operation (matrix multiplication in this case), and then stores it back on HBM.</p>
+<p>This process of constantly moving data from HBM to SRAM is very inefficient.
+So, it is important to exploit SRAM more and not make the moving memory process a bottleneck.</p>
+<p>How normal attention works:</p>
+<ol>
+<li>Loads Q and K from HBM to registers/SRAM.</li>
+<li>Computes <span class="math-inline">$QK^T$</span> (using cuBLAS GEMM) and writes the entire matrix back to HBM.</li>
+<li>Loads that big matrix again to apply softmax.</li>
+<li>Writes the softmaxed attention weights back to HBM.</li>
+<li>Loads those weights again and multiplies by V.</li>
+</ol>
+<p>This means that we need 3 memory round trips for one attention head.</p>
+<p>Here is how Flash Attention changes this memory fetching logic and uses SRAM efficiently:</p>
+<p>It breaks the key and value sequences into blocks called tiles (say 128 tokens at a time):
+<span class="math-display">$$K = [K_1, K_2, K_3, \dots], \quad V = [V_1, V_2, V_3, \dots]$$</span>
+Each of these tiles fits into SRAM.</p>
+<p>So, for each query vector <span class="math-inline">$q_i$</span>, we process one K/V tile at a time:</p>
+<p>We load tile <span class="math-inline">$K_j, V_j$</span> from HBM to SRAM.</p>
+<p>Compute scores:
+<span class="math-display">$$S_{ij} = q_i K_j^T$$</span>
+(stays in registers/SRAM)</p>
+<p>Compute tile wise max and sum of exponentials:
+<span class="math-display">$$m_{ij} = \max(S_{ij}), \quad l_{ij} = \sum e^{S_{ij} - m_{ij}}$$</span>
+<p>For the next tile, we update the running max and sum of exponentials:
+<span class="math-display">$$m_i^{\text{new}} = \max(m_i^{\text{old}}, m_{ij}), \quad l_i^{\text{new}} = e^{m_i^{\text{old}}-m_i^{\text{new}}} l_i^{\text{old}} + e^{m_{ij}-m_i^{\text{new}}} l_{ij}$$</span>
+where <span class="math-inline">$l_i$</span> is the denominator in the softmax function.</p>
+<p>Compute partial attention output for the tile:
+<span class="math-display">$$O_i^{(j)} = \sum e^{S_{ij} - m_{ij}} V_j$$</span>
+<p>Accumulate this into the running output vector <span class="math-inline">$O_i$</span>:
+<span class="math-display">$$O_i^{\text{new}} = \frac{l_i^{\text{old}} e^{m_i^{\text{old}} - m_i^{\text{new}}} O_i^{\text{old}} + e^{m_{ij} - m_i^{\text{new}}} O_i^{(j)}}{l_i^{\text{new}}}$$</span>
+<p>Once the tile finishes, the kernel loads the next tile from HBM into SRAM.</p>
+<p>It keeps:</p>
+<ul>
+<li><span class="math-inline">$q_i$</span></li>
+<li>running <span class="math-inline">$m_i, l_i$</span></li>
+<li>running <span class="math-inline">$O_i$</span>
+inside on chip memory.</li>
+</ul>
+<p>So we only need to read/write the running output <span class="math-inline">$O_i$</span> (which is <span class="math-inline">$N \times d$</span>) and load the current tile keys and values from HBM. We never write the massive <span class="math-inline">$N \times N$</span> matrix to HBM.</p>
+<p>We save time and memory by operating on shared memory and registers most of the time. Avoiding building <span class="math-inline">$N \times N$</span> attention maps means there is way less time spent waiting for memory, so Flash Attention is way faster and more efficient.</p>
+<p>Total traffic in naive attention is quadratic (<span class="math-inline">$O(N^2)$</span>) since it computes <span class="math-inline">$QK^T$</span> and then writes it into HBM, then applies softmax, then multiplies it by V.</p>
+<p>So total traffic kinda becomes <span class="math-inline">$5 N^2$</span>.</p>
+<p>In Flash Attention:</p>
+<p>We just load tiles of size say <span class="math-inline">$B \times d$</span> and compute attention locally in SRAM.</p>
+<p>We never write all of the attention matrix into HBM at once.</p>
+<p>So total traffic becomes <span class="math-inline">$O(N)$</span> (or more specifically <span class="math-inline">$O(Nd + N^2 / M)$</span> where <span class="math-inline">$M$</span> is the SRAM size, which is practically linear for typical sequence lengths).</p>
+<p>So basically, making attention IO aware—which is the entire premise of Flash Attention—means we make the computation on GPUs efficient and fast by using the memory hierarchy correctly.</p>
+<p>By keeping the most critical intermediate steps inside fast on chip SRAM and updating the softmax normalization factors on the fly, we bypass the huge memory bandwidth bottleneck. This IO aware design makes long context training and inference actually feasible instead of hitting a wall. Next up, we should look at how this generalizes to FlashAttention 2 and other hardware specific optimizations.</p>
+
+      </div>
+
+      <nav class="note-nav-bottom">
+        <a href="03_kv_caching.html" class="nav-prev"><span class="nav-label">Previous</span><span class="nav-title">← KV Caching</span></a>
+        <a href="05_llm_scaling_laws.html" class="nav-next"><span class="nav-label">Next</span><span class="nav-title">LLM Scaling Laws →</span></a>
+      </nav>
+    </article>
+  </main>
+</div>
+
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"
+  onload="renderMathInElement(document.getElementById('note-content'), {
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '$', right: '$', display: false}
+    ],
+    throwOnError: false,
+    trust: true,
+    strict: false
+  });"></script>
+<script>
+(function initAmbientBackground() {
+  const canvas = document.getElementById('ambient-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  
+  let width = canvas.width = window.innerWidth;
+  let height = canvas.height = window.innerHeight;
+  
+  window.addEventListener('resize', () => {
+    width = canvas.width = window.innerWidth;
+    height = canvas.height = window.innerHeight;
+  });
+  
+  const particles = [];
+  const particleCount = Math.min(60, Math.floor((width * height) / 20000));
+  const connectionDistance = 120;
+  
+  class Particle {
+    constructor() {
+      this.x = Math.random() * width;
+      this.y = Math.random() * height;
+      this.vx = (Math.random() - 0.5) * 0.25;
+      this.vy = (Math.random() - 0.5) * 0.25;
+      this.radius = Math.random() * 1.2 + 0.6;
+    }
+    
+    update() {
+      this.x += this.vx;
+      this.y += this.vy;
+      
+      if (this.x < 0 || this.x > width) this.vx *= -1;
+      if (this.y < 0 || this.y > height) this.vy *= -1;
+    }
+    
+    draw() {
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(126, 247, 201, 0.4)';
+      ctx.fill();
+    }
+  }
+  
+  for (let i = 0; i < particleCount; i++) {
+    particles.push(new Particle());
+  }
+  
+  function animate() {
+    ctx.clearRect(0, 0, width, height);
+    particles.forEach(p => {
+      p.update();
+      p.draw();
+    });
+    
+    for (let i = 0; i < particles.length; i++) {
+      for (let j = i + 1; j < particles.length; j++) {
+        const dx = particles[i].x - particles[j].x;
+        const dy = particles[i].y - particles[j].y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        
+        if (dist < connectionDistance) {
+          const alpha = (1 - (dist / connectionDistance)) * 0.08;
+          ctx.beginPath();
+          ctx.moveTo(particles[i].x, particles[i].y);
+          ctx.lineTo(particles[j].x, particles[j].y);
+          ctx.strokeStyle = "rgba(126, 247, 201, " + alpha + ")";
+          ctx.lineWidth = 0.8;
+          ctx.stroke();
+        }
+      }
+    }
+    requestAnimationFrame(animate);
+  }
+  animate();
+})();
+</script>
+</body>
+</html>

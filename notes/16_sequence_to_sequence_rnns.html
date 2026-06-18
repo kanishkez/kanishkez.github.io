@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sequence to Sequence RNNs — kanishk's notes</title>
+  <meta name="description" content="Sequence to Sequence RNNs — Sequence & Recurrent Models notes by kanishk" />
+  <link rel="icon" type="image/png" href="../assets/favicon.png" />
+  <link rel="stylesheet" href="../css/style.css" />
+  <link rel="stylesheet" href="../css/notes.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous" />
+</head>
+<body>
+<canvas id="ambient-canvas"></canvas>
+
+<!-- Top Floating Navigation Bar -->
+<header class="navbar">
+  <div class="nav-container">
+    <a href="../index.html" class="nav-logo">kanishk</a>
+    <nav class="nav-links">
+      <a href="../index.html#home">Home</a>
+      <a href="../index.html#projects">Projects</a>
+      <a href="../index.html#blogs">Blogs</a>
+      <a href="../index.html#notes" class="active">Notes</a>
+    </nav>
+    <div class="nav-socials">
+      <a href="https://github.com/kanishkez" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://huggingface.co/kanishkez" target="_blank" rel="noopener">HuggingFace</a>
+    </div>
+  </div>
+</header>
+
+<div class="container">
+  <main class="main-content">
+    <article class="note-page">
+      <div class="note-breadcrumb">
+        <a href="../index.html#notes">Notes</a>
+        <span class="breadcrumb-sep">›</span>
+        <a href="../index.html#notes">Sequence & Recurrent Models</a>
+        <span class="breadcrumb-sep">›</span>
+        <span>Sequence to Sequence RNNs</span>
+      </div>
+
+      <header class="note-header">
+        <div class="note-category-tag">Sequence & Recurrent Models</div>
+        <h1>Sequence to Sequence RNNs</h1>
+      </header>
+
+      <nav class="note-toc" id="note-toc">
+        <div class="toc-title">Contents</div>
+        <div class="toc-items">
+          <a href="#encoder" class="toc-item toc-h2">Encoder:</a>
+          <a href="#decoder" class="toc-item toc-h2">Decoder:</a>
+          <a href="#note" class="toc-item toc-h2">Note:</a>
+          <a href="#training" class="toc-item toc-h2">Training:</a>
+        </div>
+      </nav>
+
+      <div class="note-content" id="note-content">
+        <p>Sequence 2 Sequence architecture is used in RNNS in tasks such as translating data in one form to another, summarization and so on</p>
+<p>It takes an input sequence processes it and generates an output sequence
+It has mainly 2 components:</p>
+<ol>
+<li>Encoder: Processes the data and encodes it into a vector after the processing</li>
+<li>Decoder: Takes the encoded information as input and generates an output sequence</li>
+</ol>
+<h2 id="encoder">Encoder:</h2>
+<p>It takes in the pre processed data in the form of vectors (after embedding is done).
+Since Encoders and Decoders are both RNNS essentially, it takes in data one token at a time and builds up context just like an RNN would 
+It consists of hidden states, timestamps and multiple layers to build up the memory/context of what the input is and give a final hidden state.</p>
+<h2 id="decoder">Decoder:</h2>
+<p>Decoders take this final hidden state as input applies RNN operations on it and then it applies a linear layer to the output.
+<strong>RNN Step</strong>
+<span class="math-inline">$h_t$</span> = RNN(embedding(prev_token), h_{t - 1})
+<strong>Linear Layer</strong>:
+logits = W_out @ <span class="math-inline">$h_t$</span> + b</p>
+<p><strong>Softmax and prediction</strong>
+next_token=argmax(softmax(logits))</p>
+<p>This next token is again taken as input for in the next RNN cycle in the decoder</p>
+<p>This cycle is repeated till we reach the End of the Sequence token </p>
+<h2 id="note">Note:</h2>
+<ol>
+<li>Encoder and Decoder might either have the same set of embeddings or a different set depending on what we&#39;re using the model for</li>
+<li>If its for translation, obviously the encoder will have an English embedding matrix and the decoder will have a french embedding matrix</li>
+</ol>
+<h2 id="training">Training:</h2>
+<p>The main strategy that is used in training is something called <strong>Teacher forcing</strong>
+In this strategy, instead of feeding the prediction it did in each decoder step as the input to the next decoder step, we feed it the actual correct prediction.</p>
+<p>So for every decoder step:
+decoder_input is the true token (the actual correct answer)</p>
+<p>This makes training a lot easier because we&#39;re essentially telling the model that for &#39;this context&#39; the answer should be &#39;this&#39;
+For example for the context &#39;how are you?&#39; we&#39;re forcing it to learn that the answer is &#39;im good&#39;</p>
+<p><strong>Example:</strong> </p>
+<p>Suppose the input given is : &quot;hello, how are you?&quot; 
+the expected output is &quot;im good&quot;</p>
+<p>After encoding is done and the context is built up, we get a final context vector from the encoder.
+So,
+<strong>At time step</strong>
+hidden_1=RNN(embedding(BOS),h_enc) 
+(where BOS is the start token of any decoder which stands for beginning of sequence)
+logits_1=W_out*hidden_1 +b</p>
+<p>logits gives us the prediction of the first word
+ideally, the answer should be &#39;im&#39; (token id= 101)
+loss is computed:
+loss_1=CrossEntropy(logits_1,101)</p>
+<p><strong>At time step 2</strong></p>
+<p>Here is where teacher forcing comes in
+Instead of giving logits_1 as the next input (because most of the time it is wrong and so obviously the next prediction would also be wrong), we give it the correct answer that is &#39;im&#39; as input instead</p>
+<p>hidden_2=RNN(embedding(&quot;im&quot;),hidden_1)
+logits_2=W_out * hidden_2 +b</p>
+<p>Ideally, the answer that it should give out is &#39;good&#39; (token id=275)</p>
+<p>So the loss is computed:
+loss_2=CrossEntropy(logits_2,275)</p>
+<p>total_loss =loss1 +loss 2</p>
+<p>total_loss.backward() is used to call backprop and backpropagation takes place using gradient descent or whatever and the weights are updated to match the correct answers</p>
+<p><strong>How the code part would look like:</strong>
+target_seq = [&quot;BOS&quot;, &quot;i&quot;, &quot;am&quot;, &quot;good&quot;]
+target_y   = [&quot;i&quot;, &quot;am&quot;, &quot;good&quot;, &quot;EOS&quot;]
+decoder_input = embedding(&quot;BOS&quot;)
+hidden = encoder_hidden_state  # from encoder output
+loss = 0
+for t in range(len(target_y)):
+    output, hidden = decoder_rnn(decoder_input, hidden)      # Forward pass
+    logits = output_layer(output)<br>    loss += CrossEntropyLoss(logits, target_y[t])<br>    decoder_input=embedding(target_seq[t +1])</p>
+<p>loss.backward()
+optimizer.step()
+optimizer.zero_grad()</p>
+<p>loss is called so that optimization happens </p>
+<p>Gradients flow through:</p>
+<ol>
+<li>Decoder output layer (logits-&gt;vocab)</li>
+<li>Decoder RNN</li>
+<li>Decoder input embeddings</li>
+<li>Encoder RNN</li>
+<li>Encoder embeddings</li>
+</ol>
+
+      </div>
+
+      <nav class="note-nav-bottom">
+        <a href="15_rnns.html" class="nav-prev"><span class="nav-label">Previous</span><span class="nav-title">← RNNs</span></a>
+        <a href="17_lstm_and_gru.html" class="nav-next"><span class="nav-label">Next</span><span class="nav-title">LSTM and GRU →</span></a>
+      </nav>
+    </article>
+  </main>
+</div>
+
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"
+  onload="renderMathInElement(document.getElementById('note-content'), {
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '$', right: '$', display: false}
+    ],
+    throwOnError: false,
+    trust: true,
+    strict: false
+  });"></script>
+<script>
+(function initAmbientBackground() {
+  const canvas = document.getElementById('ambient-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  
+  let width = canvas.width = window.innerWidth;
+  let height = canvas.height = window.innerHeight;
+  
+  window.addEventListener('resize', () => {
+    width = canvas.width = window.innerWidth;
+    height = canvas.height = window.innerHeight;
+  });
+  
+  const particles = [];
+  const particleCount = Math.min(60, Math.floor((width * height) / 20000));
+  const connectionDistance = 120;
+  
+  class Particle {
+    constructor() {
+      this.x = Math.random() * width;
+      this.y = Math.random() * height;
+      this.vx = (Math.random() - 0.5) * 0.25;
+      this.vy = (Math.random() - 0.5) * 0.25;
+      this.radius = Math.random() * 1.2 + 0.6;
+    }
+    
+    update() {
+      this.x += this.vx;
+      this.y += this.vy;
+      
+      if (this.x < 0 || this.x > width) this.vx *= -1;
+      if (this.y < 0 || this.y > height) this.vy *= -1;
+    }
+    
+    draw() {
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(126, 247, 201, 0.4)';
+      ctx.fill();
+    }
+  }
+  
+  for (let i = 0; i < particleCount; i++) {
+    particles.push(new Particle());
+  }
+  
+  function animate() {
+    ctx.clearRect(0, 0, width, height);
+    particles.forEach(p => {
+      p.update();
+      p.draw();
+    });
+    
+    for (let i = 0; i < particles.length; i++) {
+      for (let j = i + 1; j < particles.length; j++) {
+        const dx = particles[i].x - particles[j].x;
+        const dy = particles[i].y - particles[j].y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        
+        if (dist < connectionDistance) {
+          const alpha = (1 - (dist / connectionDistance)) * 0.08;
+          ctx.beginPath();
+          ctx.moveTo(particles[i].x, particles[i].y);
+          ctx.lineTo(particles[j].x, particles[j].y);
+          ctx.strokeStyle = "rgba(126, 247, 201, " + alpha + ")";
+          ctx.lineWidth = 0.8;
+          ctx.stroke();
+        }
+      }
+    }
+    requestAnimationFrame(animate);
+  }
+  animate();
+})();
+</script>
+</body>
+</html>

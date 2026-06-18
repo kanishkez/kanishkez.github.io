@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Bidirectional RNNs — kanishk's notes</title>
+  <meta name="description" content="Bidirectional RNNs — Sequence & Recurrent Models notes by kanishk" />
+  <link rel="icon" type="image/png" href="../assets/favicon.png" />
+  <link rel="stylesheet" href="../css/style.css" />
+  <link rel="stylesheet" href="../css/notes.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous" />
+</head>
+<body>
+<canvas id="ambient-canvas"></canvas>
+
+<!-- Top Floating Navigation Bar -->
+<header class="navbar">
+  <div class="nav-container">
+    <a href="../index.html" class="nav-logo">kanishk</a>
+    <nav class="nav-links">
+      <a href="../index.html#home">Home</a>
+      <a href="../index.html#projects">Projects</a>
+      <a href="../index.html#blogs">Blogs</a>
+      <a href="../index.html#notes" class="active">Notes</a>
+    </nav>
+    <div class="nav-socials">
+      <a href="https://github.com/kanishkez" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://huggingface.co/kanishkez" target="_blank" rel="noopener">HuggingFace</a>
+    </div>
+  </div>
+</header>
+
+<div class="container">
+  <main class="main-content">
+    <article class="note-page">
+      <div class="note-breadcrumb">
+        <a href="../index.html#notes">Notes</a>
+        <span class="breadcrumb-sep">›</span>
+        <a href="../index.html#notes">Sequence & Recurrent Models</a>
+        <span class="breadcrumb-sep">›</span>
+        <span>Bidirectional RNNs</span>
+      </div>
+
+      <header class="note-header">
+        <div class="note-category-tag">Sequence & Recurrent Models</div>
+        <h1>Bidirectional RNNs</h1>
+      </header>
+
+      <nav class="note-toc" id="note-toc">
+        <div class="toc-title">Contents</div>
+        <div class="toc-items">
+          <a href="#forward_and_backward_states" class="toc-item toc-h2">Forward and Backward States</a>
+          <a href="#forwad_pass" class="toc-item toc-h3">Forwad pass:</a>
+          <a href="#backward_pass" class="toc-item toc-h3">Backward pass:</a>
+          <a href="#combining_the_hidden_states" class="toc-item toc-h3">Combining the hidden states:</a>
+          <a href="#context" class="toc-item toc-h3">Context:</a>
+          <a href="#only_encoder_is_bidirectional_the_decoder_is_unidirectional" class="toc-item toc-h3">Only Encoder is bidirectional the decoder is unidirectional</a>
+          <a href="#at_each_timestep" class="toc-item toc-h3">At each timestep:</a>
+        </div>
+      </nav>
+
+      <div class="note-content" id="note-content">
+        <p>Bidirectional RNNS are traditional RNNS with two passes: forward and backward.
+So there are two sets of hidden states for every timestep (forward and backward).
+This is so that the context is equally about both the start of the sentence/sequence and the end
+For example: Kanishk started by reading Metamorphosis, he then read crime and punishment. What book did he read first? In such a question where the model probably learns to connect the word &#39;read&#39; with books, it might answer crime and punishment instead of Metamorphosis
+So by using two hidden states where one goes from the start of the sequence to the left and the other from right to left we can sort of solve this problem.</p>
+<h2 id="forward_and_backward_states">Forward and Backward States</h2>
+<p>Suppor we take the example of &#39;I love pizza&#39;
+The forward state is the same as a regular RNN where it takes 3 tokens at 3 seperate time steps</p>
+<p>But in the backward pass it starts from &#39;pizza&#39; at time step 3 and goes to &#39;I&#39; at time step 1</p>
+<p>After both the passes are done, the two hidden states at timestep 1 with both forward and backward pass are combined to produce an output.</p>
+<h3 id="forwad_pass">Forwad pass:</h3>
+<p>Hidden state:
+<span class="math-display">$$\overrightarrow{\mathbf{h}_t} = \tanh(\mathbf{W}^{(f)}_h \mathbf{x}_t + \mathbf{U}^{(f)} \overrightarrow{\mathbf{h}({t-1}}) + \mathbf{b}^{(f)}_h)$$</span>
+<p>Output:
+<span class="math-display">$$y^t=W_{y}h^t+b_{y}$$</span>
+here the previous hidden state is used obviously </p>
+<h3 id="backward_pass">Backward pass:</h3>
+<p>Hidden state</p>
+<span class="math-display">$$\overleftarrow{\mathbf{h}_t} = \tanh(\mathbf{W}^{(b)}_h \mathbf{x}_t + \mathbf{U}^{(b)} \overleftarrow{\mathbf{h}({t+1}} )+ \mathbf{b}^{(b)}_h)$$</span>The forward hidden state that was calculated before itself, is used here.</p>
+<p>Output:
+<span class="math-display">$$y^t=W_{y}h^t+b_{y}$$</span>
+An important thing about the backward pass is that the tokens are sent reversed.
+So &#39;kanishk is a retard&#39; would become &#39;retard a is kanishk&#39;</p>
+<h3 id="combining_the_hidden_states">Combining the hidden states:</h3>
+<p>Normally we concantenate both the states/outputs in a bidirectional rnn
+So we&#39;re just stacking both of the context vectors into a single bigger context vector
+Forward pass contains information from the past
+Backward pass contains information from the future 
+So concatinating these two, the model can learn how to use both directions through different weights of course (<strong>since both the passes have completely different weights</strong>)</p>
+<h3 id="context">Context:</h3>
+<span class="math-display">$$h_{t} = \vec{h}_t^{\rightarrow} \,\|\, \vec{h}_t^{\leftarrow}$$</span>
+<ul>
+<li>Knows <strong>what came before</strong> and <strong>what came after</strong></li>
+<li>Example: in the sentence “He <strong>went</strong> to the store”, the word “went” can be better understood with future context (“to the store”).
+This <strong>full context</strong> enables the model to <strong>disambiguate</strong> meanings, handle long dependencies, and improve performance in translation, speech, etc.</li>
+</ul>
+<h3 id="only_encoder_is_bidirectional_the_decoder_is_unidirectional">Only Encoder is bidirectional the decoder is unidirectional</h3>
+<p>You can&#39;t use future words to regenerate the words you have generated so during inference decoder generates tokens on eat a time from left to right</p>
+<h3 id="at_each_timestep">At each timestep:</h3>
+<p>Both the forward and backward hidden states are used as both are simultaneously calculated and just concatenated at every timestep theres no sense of direction or the fact that theyre concatenated at a specific timestep.
+Nothing like that, they are just concatenated.</p>
+
+      </div>
+
+      <nav class="note-nav-bottom">
+        <a href="17_lstm_and_gru.html" class="nav-prev"><span class="nav-label">Previous</span><span class="nav-title">← LSTM and GRU</span></a>
+        <a href="19_attention_in_rnns.html" class="nav-next"><span class="nav-label">Next</span><span class="nav-title">Attention in RNNs →</span></a>
+      </nav>
+    </article>
+  </main>
+</div>
+
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"
+  onload="renderMathInElement(document.getElementById('note-content'), {
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '$', right: '$', display: false}
+    ],
+    throwOnError: false,
+    trust: true,
+    strict: false
+  });"></script>
+<script>
+(function initAmbientBackground() {
+  const canvas = document.getElementById('ambient-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  
+  let width = canvas.width = window.innerWidth;
+  let height = canvas.height = window.innerHeight;
+  
+  window.addEventListener('resize', () => {
+    width = canvas.width = window.innerWidth;
+    height = canvas.height = window.innerHeight;
+  });
+  
+  const particles = [];
+  const particleCount = Math.min(60, Math.floor((width * height) / 20000));
+  const connectionDistance = 120;
+  
+  class Particle {
+    constructor() {
+      this.x = Math.random() * width;
+      this.y = Math.random() * height;
+      this.vx = (Math.random() - 0.5) * 0.25;
+      this.vy = (Math.random() - 0.5) * 0.25;
+      this.radius = Math.random() * 1.2 + 0.6;
+    }
+    
+    update() {
+      this.x += this.vx;
+      this.y += this.vy;
+      
+      if (this.x < 0 || this.x > width) this.vx *= -1;
+      if (this.y < 0 || this.y > height) this.vy *= -1;
+    }
+    
+    draw() {
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(126, 247, 201, 0.4)';
+      ctx.fill();
+    }
+  }
+  
+  for (let i = 0; i < particleCount; i++) {
+    particles.push(new Particle());
+  }
+  
+  function animate() {
+    ctx.clearRect(0, 0, width, height);
+    particles.forEach(p => {
+      p.update();
+      p.draw();
+    });
+    
+    for (let i = 0; i < particles.length; i++) {
+      for (let j = i + 1; j < particles.length; j++) {
+        const dx = particles[i].x - particles[j].x;
+        const dy = particles[i].y - particles[j].y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        
+        if (dist < connectionDistance) {
+          const alpha = (1 - (dist / connectionDistance)) * 0.08;
+          ctx.beginPath();
+          ctx.moveTo(particles[i].x, particles[i].y);
+          ctx.lineTo(particles[j].x, particles[j].y);
+          ctx.strokeStyle = "rgba(126, 247, 201, " + alpha + ")";
+          ctx.lineWidth = 0.8;
+          ctx.stroke();
+        }
+      }
+    }
+    requestAnimationFrame(animate);
+  }
+  animate();
+})();
+</script>
+</body>
+</html>

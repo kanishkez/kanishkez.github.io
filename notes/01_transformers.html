@@ -1,0 +1,405 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Transformers — kanishk's notes</title>
+  <meta name="description" content="Transformers — Transformers & LLMs notes by kanishk" />
+  <link rel="icon" type="image/png" href="../assets/favicon.png" />
+  <link rel="stylesheet" href="../css/style.css" />
+  <link rel="stylesheet" href="../css/notes.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous" />
+</head>
+<body>
+<canvas id="ambient-canvas"></canvas>
+
+<!-- Top Floating Navigation Bar -->
+<header class="navbar">
+  <div class="nav-container">
+    <a href="../index.html" class="nav-logo">kanishk</a>
+    <nav class="nav-links">
+      <a href="../index.html#home">Home</a>
+      <a href="../index.html#projects">Projects</a>
+      <a href="../index.html#blogs">Blogs</a>
+      <a href="../index.html#notes" class="active">Notes</a>
+    </nav>
+    <div class="nav-socials">
+      <a href="https://github.com/kanishkez" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://huggingface.co/kanishkez" target="_blank" rel="noopener">HuggingFace</a>
+    </div>
+  </div>
+</header>
+
+<div class="container">
+  <main class="main-content">
+    <article class="note-page">
+      <div class="note-breadcrumb">
+        <a href="../index.html#notes">Notes</a>
+        <span class="breadcrumb-sep">›</span>
+        <a href="../index.html#notes">Transformers & LLMs</a>
+        <span class="breadcrumb-sep">›</span>
+        <span>Transformers</span>
+      </div>
+
+      <header class="note-header">
+        <div class="note-category-tag">Transformers & LLMs</div>
+        <h1>Transformers</h1>
+      </header>
+
+      <nav class="note-toc" id="note-toc">
+        <div class="toc-title">Contents</div>
+        <div class="toc-items">
+          <a href="#transformers" class="toc-item toc-h1">Transformers</a>
+          <a href="#stages" class="toc-item toc-h2">Stages:</a>
+          <a href="#encoder" class="toc-item toc-h2">Encoder</a>
+          <a href="#embeddings" class="toc-item toc-h3">Embeddings</a>
+          <a href="#positional_encoding" class="toc-item toc-h3">Positional Encoding</a>
+          <a href="#self_attention" class="toc-item toc-h2">Self Attention</a>
+          <a href="#attention" class="toc-item toc-h3">Attention</a>
+          <a href="#multi_head_attention" class="toc-item toc-h2">Multi Head Attention</a>
+          <a href="#combining_the_heads" class="toc-item toc-h3">Combining the heads</a>
+          <a href="#after_multi_head_attention" class="toc-item toc-h3">After Multi Head Attention</a>
+          <a href="#feed_forward_networks" class="toc-item toc-h3">Feed Forward Networks</a>
+          <a href="#decoder" class="toc-item toc-h2">Decoder</a>
+          <a href="#masked_multi_head_attention" class="toc-item toc-h3">Masked Multi Head Attention</a>
+          <a href="#masked_attention" class="toc-item toc-h3">Masked Attention</a>
+          <a href="#whats_happening_at_this_stage" class="toc-item toc-h3">What's happening at this stage?</a>
+          <a href="#encoder_decoder_multi_head_attention" class="toc-item toc-h3">Encoder Decoder Multi Head Attention</a>
+          <a href="#feed_forward_network" class="toc-item toc-h3">Feed Forward Network</a>
+          <a href="#residual_connection_and_layernorm" class="toc-item toc-h3">Residual Connection and LayerNorm</a>
+          <a href="#context_vector" class="toc-item toc-h3">Context Vector</a>
+          <a href="#prediction_of_tokens" class="toc-item toc-h3">Prediction of Tokens</a>
+        </div>
+      </nav>
+
+      <div class="note-content" id="note-content">
+        <h1 id="transformers">Transformers</h1>
+<p>Honestly, transformers are the backbone of modern deep learning, completely replacing recurrent networks by processing everything in parallel. Instead of going step by step, they rely on self attention to figure out which tokens actually matter to each other. Here is my breakdown of how the whole encoder decoder setup actually works under the hood.</p>
+<p>The main concept of transformers is self attention which chooses relevant important tokens when inputting a token.</p>
+<h2 id="stages">Stages:</h2>
+<p><strong>Encoder</strong>:</p>
+<ol>
+<li>Conversion of input to embedding and positional encoding</li>
+<li>Multi head attention while inputting tokens </li>
+<li>Add &amp; Norm</li>
+<li>Fully connected layers</li>
+<li>Add &amp; Norm 
+<strong>Decoder</strong>:</li>
+<li>Self Masked Multi Head attention</li>
+<li>Add &amp; Norm</li>
+<li>Multi head attention with encoder output</li>
+<li>Add &amp; Norm</li>
+<li>Feed forward layer</li>
+<li>Linear layer</li>
+<li>Softmax probabilities</li>
+</ol>
+<figure><img src="https://aiml.com/wp-content/uploads/2023/09/Annotated-Transformers-Architecture.png" alt="Explain the Transformer Architecture (with Examples and Videos) from AIML.com" loading="lazy"><figcaption>Explain the Transformer Architecture (with Examples and Videos) from AIML.com</figcaption></figure>
+<h2 id="encoder">Encoder</h2>
+<h3 id="embeddings">Embeddings</h3>
+<p>An embedding is a learned numerical representation of a word or a token. Instead of just writing &#39;how&#39; as 101, we write it as <span class="math-inline">$[0.25, -0.19, 0.56, 0.04, \dots]$</span> so that <strong>similar words have similar values</strong>.</p>
+<h3 id="positional_encoding">Positional Encoding</h3>
+<p>Transformers have no inherent notion of sequence order. To provide this information, <strong>positional encoding</strong> is introduced.</p>
+<p>Transformers process input tokens in parallel, unlike RNNs or CNNs. Hence, they have <strong>no built in idea of token order</strong>. So positional encodings are used for the model to understand how certain words come after other words and to form actual sentences in which the positioning of words matters.</p>
+<h4 id="why_not_use_scalars_for_each_position">Why not use scalars for each position?</h4>
+<p>Although in the sentence &#39;I love machines&#39;, &#39;I&#39; comes first and so on, in another sentence &#39;I&#39; may actually be used somewhere else. Scalars do not do justice when the model has to understand the positioning of tokens in high dimensions. Scalars would only lead to a linear understanding of positioning.</p>
+<h4 id="why_sinusoidal_functions">Why Sinusoidal Functions?</h4>
+<p>Sinusoidal functions are <strong>continuous</strong>, <strong>periodic</strong>, and allow for <strong>unique vector representations</strong>. They encode both <strong>absolute</strong> and <strong>relative position</strong> information. Using multiple frequencies allows different dimensions to capture different positional granularities.</p>
+<p>We define:</p>
+<ul>
+<li><strong>Wavelength (<span class="math-inline">$\lambda$</span>)</strong>: Distance between two peaks. Frequency <span class="math-inline">$f = \frac{1}{\lambda}$</span>.</li>
+<li><strong>Frequency</strong>: How many oscillations a function completes in unit time.</li>
+<li>Even though time is not explicit here, the sequence index acts as a surrogate for it.</li>
+</ul>
+<h4 id="positional_encoding_formula">Positional Encoding Formula</h4>
+<p>Let <span class="math-inline">$d_{\text{model}}$</span> be the model&#39;s embedding size. For a given position <span class="math-inline">$pos$</span> and dimension <span class="math-inline">$i$</span>:</p>
+<span class="math-display">$$PE_{(pos, \, 2i)} = \sin\left(\frac{pos}{10000^{\frac{2i}{d_{\text{model}}}}}\right)$$</span>
+<span class="math-display">$$PE_{(pos, \, 2i+1)} = \cos\left(\frac{pos}{10000^{\frac{2i}{d_{\text{model}}}}}\right)$$</span>
+where
+<span class="math-display">$$w_{i} = \frac{1}{10000^{\frac{2i}{d_{\text{model}}}}}$$</span>
+where <span class="math-inline">$d_{\text{model}}$</span> is the embedding dimension (how many numerical representations/numbers used for 1 token, usually 512) and <span class="math-inline">$i$</span> represents the dimension index within each token&#39;s embedding.</p>
+<h4 id="why_sine_and_cosine_functions_to_represent_positions">Why sine and cosine functions to represent positions?</h4>
+<p>They keep the values between 0 and 1. Most importantly, sine and cosine capture relative positioning. If you know the position of a token, then the token that is <span class="math-inline">$k$</span> steps away from that token can also be found using the formulas:</p>
+<span class="math-display">$$\sin(x + \delta) = \sin(x)\cos(\delta) + \cos(x)\sin(\delta)$$</span>
+<span class="math-display">$$\cos(x + \delta) = \cos(x)\cos(\delta) - \sin(x)\sin(\delta)$$</span>
+where <span class="math-inline">$\delta$</span> is how far the token is from the token <span class="math-inline">$x$</span> which we already have.</p>
+<p>Suppose we have an encoding at position <span class="math-inline">$pos$</span>:
+<span class="math-display">$$v_{\text{pos}} = \begin{bmatrix} \sin(\alpha) \\ \cos(\alpha) \end{bmatrix}$$</span>
+then the encoding at <span class="math-inline">$pos+k$</span> is:
+<span class="math-display">$$v_{\text{pos}+k} = \begin{bmatrix} \sin(\alpha + \beta) \\ \cos(\alpha + \beta) \end{bmatrix} = \underbrace{\begin{bmatrix} \cos(\beta) & \sin(\beta) \\ -\sin(\beta) & \cos(\beta) \end{bmatrix}}_{\text{Rotation Matrix}} \cdot \begin{bmatrix} \sin(\alpha) \\ \cos(\alpha) \end{bmatrix}$$</span>
+where <span class="math-inline">$\beta = k \cdot w_{i}$</span>.</p>
+<p>The positional encoding at position <span class="math-inline">$pos+k$</span> is just a rotation of the encoding at <span class="math-inline">$pos$</span> by an angle <span class="math-inline">$\beta = k \cdot w_{i}$</span>. This means that the model can learn a consistent notion of relative position without any parameters.</p>
+<h4 id="integration_into_transformer_attention">Integration into Transformer Attention</h4>
+<p>Let the token sequences be:
+<span class="math-display">$$x = [x_1, x_2, \dots, x_n]$$</span>
+Each token is embedded:
+<span class="math-display">$$\text{Embed}(x_i) = E[x_i]$$</span>
+Now to this embedding we add <span class="math-inline">$x_i$</span>&#39;s positional encoding, so the modified <span class="math-inline">$x_i$</span> becomes:
+<span class="math-display">$$\tilde{x}_i = \text{Embed}(x_i) + \text{PE}(i)$$</span>
+The positional encodings allow <span class="math-inline">$Q$</span> and <span class="math-inline">$K$</span> to now contain both <strong>semantic</strong> and <strong>positional</strong> information, allowing the attention scores to factor in sequence order.</p>
+<h2 id="self_attention">Self Attention</h2>
+<p>Input vector is turned into 3 vectors which provide information/context about the input and what other vectors are important/relevant to this specific input:</p>
+<ol>
+<li><strong>Query</strong>: This vector collects information from what is needed for the input vector. It is a question asking what information is relevant to the current input vector.</li>
+<li><strong>Key</strong>: All vectors have a key vector which is used to match the input&#39;s query vector with. So for a given query vector from an input, we look for the answer (the matching information) in every other vector&#39;s key vector. The key vector helps locate relevant positions. Value is the one that contains the meaning of those vectors. The key vector does not carry the position, it just carries a compressed version of the token&#39;s semantic role in the attention mechanism. <strong>The key represents what information is held by the token</strong> and <strong>not</strong> the <strong>information itself</strong>.
+<strong>Note</strong>: Even the input vector has a key vector that is trained during training. This is how all other vectors build up their key vector.</li>
+<li><strong>Value</strong>: After we find the necessary answer to the query, this vector actually carries the value (the meaning of every word/token) in it. It actually holds the information of tokens that means something. It has the same source as the Key vector.</li>
+</ol>
+<p>These 3 vectors are trained through weights and are linear projections of the input vector that is fed.</p>
+<p>For each input token <span class="math-inline">$x_{i}$</span>:
+<span class="math-display">$$q_i = W^Q x_i,\quad k_i = W^K x_i,\quad v_i = W^V x_i$$</span>
+Where the dimensions are:
+<span class="math-display">$$W^Q, W^K, W^V \in \mathbb{R}^{d_k \times d_{\text{model}}}$$</span>
+<h3 id="attention">Attention</h3>
+<span class="math-display">$$\text{Scores} = QK^T$$</span>
+This dot product tells us the relationship between query <span class="math-inline">$Q$</span> and key <span class="math-inline">$K$</span> and how they are related to each other. This tells us how important <span class="math-inline">$Q$</span> is to <span class="math-inline">$K$</span>.</p>
+<p>This gives a sequence length <span class="math-inline">$\times$</span> sequence length matrix which tells us for the given query what other keys mean to it. The dot product of the query vector and other key vectors helps us understand what tokens are important and relevant to our input vector.</p>
+<span class="math-display">$$\text{Scaled Scores} = \frac{QK^T}{\sqrt{d_k}}$$</span>
+<p><strong>How the matrix looks:</strong>
+Each query is represented by a row. Each key is represented by a column. So the queries in all rows 1 to <span class="math-inline">$n$</span> are being compared to keys in all columns 1 to <span class="math-inline">$n$</span>.</p>
+<p>Say, at position 2,3 we are comparing how the second query is affected by the third key. We divide the scores by the square root of the dimensions to avoid large values.</p>
+<span class="math-display">$$\text{Attention Weights} = \text{softmax}\left(\frac{QK^T}{\sqrt{d_k}}\right)$$</span>
+<p>Then multiply Values to the aggregate:
+<span class="math-display">$$\text{Output} = \text{Attention Weights} \cdot V$$</span>
+Each output has a weighted sum of value vectors of all tokens (their meaning) times the amount of attention paid to each of them.</p>
+<p>So what is actually happening here is for all the Values of every token (what every token means) we are actually only taking the relevant and important information to our specific input by multiplying all the values with the attention weights which scale the value vectors to our need to suit the input. (that&#39;s a big ass line btw)</p>
+<p>What is happening in Self Attention:
+The input query vector wants to find tokens that are important/relevant to itself. So when the Key and Query dot product is trained and the output is high, it means that for that specific query the key vector is really important. So we need to fetch this key vector&#39;s value (meaning) because it is important for the context.</p>
+<p>Example:
+He went to the bank to withdraw money.
+When attending to the word <strong>“withdraw”</strong>, the model might:</p>
+<ul>
+<li>Assign a high attention weight to <strong>“bank”</strong>,</li>
+<li>Because the <strong>Query(“withdraw”) ⋅ Key(“bank”)</strong> is high,</li>
+<li>And then it pulls in <strong>Value(“bank”)</strong> — i.e., semantic information about financial institutions.</li>
+</ul>
+<p>The model learns in training to adjust its matrices in such a way that it gives high values to key query dot products that are relevant. When it comes to the value vector, in training it is adjusted such that the key which has a higher importance, its value also has a heavier weight which makes sure that this value comes out on top despite the values of all tokens being used. So in this case, the value of &#39;bank&#39; will come out on top because it will have a higher numerical value. The model trains itself that way.</p>
+<h2 id="multi_head_attention">Multi Head Attention</h2>
+<p>The above process is for one head as in one iteration. We use multiple such heads (kind of like using many CNNs so that each CNN layer learns multiple features) so that different heads can focus on different aspects of the input.</p>
+<p>We compute <span class="math-inline">$h$</span> heads in parallel:</p>
+<ol>
+<li>Calculate Query, Key, Value</li>
+<li>Calculate attention weights and scale values by attention weights</li>
+<li>Get the output</li>
+</ol>
+<p>For <span class="math-inline">$h$</span> attention heads we compute:
+<span class="math-display">$$\text{head}_i = \text{Attention}(Q_i, K_i, V_i) = \text{softmax}\left( \frac{Q_i K_i^\top}{\sqrt{d_k}} \right) V_i$$</span>
+<h3 id="combining_the_heads">Combining the heads</h3>
+<p>After all the heads are computed, we concatenate them so that all the relevant features are combined.
+<span class="math-display">$$\text{Concat}(\text{head}_1, \text{head}_2, \dots, \text{head}_h)$$</span>
+<p>All of these are then passed through a final linear layer:
+<span class="math-display">$$\text{MultiHead}(Q, K, V) = \text{Concat}(\text{head}_1, \dots, \text{head}_h)W^O$$</span>
+where <span class="math-inline">$W^O \in \mathbb{R}^{h d_v \times d_{\text{model}}}$</span> is a learnable projection matrix.</p>
+<h3 id="after_multi_head_attention">After Multi Head Attention</h3>
+<p>We add a Residual Connection:
+<span class="math-display">$$\text{out}_1 = \text{LayerNorm}(\text{input} + \text{MultiHead}(Q, K, V))$$</span>
+This ensures gradient flow and helps preserve original information as well as stabilizes training.</p>
+<h3 id="feed_forward_networks">Feed Forward Networks</h3>
+<p>This is a dense layer applied to each token:
+<span class="math-display">$$\text{FFN}(x) = \text{ReLU}(xW_1 + b_1)W_2 + b_2$$</span>
+This is done to introduce non linearity to the model so that it learns more complex patterns and extracts more features from data.</p>
+<p>After this we add another Residual Connection and LayerNorm:
+<span class="math-display">$$\text{out}_2 = \text{LayerNorm}(\text{out}_1 + \text{FFN}(\text{out}_1))$$</span>
+That is the Encoder block complete.</p>
+<h2 id="decoder">Decoder</h2>
+<p>Decoder block is where the output part generation happens. Whether it is text prediction or text translation or whatever, this is where that part happens.</p>
+<h3 id="masked_multi_head_attention">Masked Multi Head Attention</h3>
+<p>The decoder starts with using Multi Head attention to generate outputs given inputs. In Masked Multi Head attention we do something called <strong>shift right</strong> where in training we push the output prediction tokens one token to the right so that the model learns instead of seeing all the correct predictions.</p>
+<p>Example:</p>
+<div class="table-wrapper"><table>
+<thead><tr><th>Decoder Input</th><th>Decoder Output</th></tr></thead>
+<tbody><tr><td>[ start token ]</td><td>I</td></tr><tr><td>I</td><td>love</td></tr><tr><td>love</td><td>cats</td></tr><tr><td>cats</td><td>[end token]</td></tr></tbody>
+</table></div>
+<p>This is done so that during training we create perfect pairs. For example, if we give the start with the input &#39;I&#39; itself without giving a start token, then in the first token generation it will have to do is &#39;love&#39; and it will entirely miss the &#39;I&#39; token. So we shift the target tokens right so that teacher forcing is feasible. So when we start with the [start token] we can teacher force it starting with &#39;I&#39;.</p>
+<h3 id="masked_attention">Masked Attention</h3>
+<p>While training the attention in the decoder, we hide the future outputs from the current input state since it is going to predict the future outputs.</p>
+<p>For example:
+For the sentence &#39;I am a swimmer&#39; if we are at the word &#39;a&#39;, we hide the key/value vector of &#39;swimmer&#39; from &#39;a&#39; because &#39;swimmer&#39; has not been generated yet and to show the word &#39;swimmer&#39; would affect the model learning and could be considered cheating.</p>
+<p>Each token at <span class="math-inline">$t$</span> can only see tokens before it till <span class="math-inline">$t-1$</span> and not the tokens ahead of it.</p>
+<p>For a decoder input sequence:
+<span class="math-display">$$Y = [y_1, y_2, \dots, y_T]$$</span>
+We compute:
+<span class="math-display">$$Q = Y W^Q$$</span>
+<span class="math-display">$$K = Y W^K$$</span>
+<span class="math-display">$$V = Y W^V$$</span>
+In calculating the attention however:
+<span class="math-display">$$\text{Attention}(Q, K, V) = \text{softmax} \left( \frac{QK^\top}{\sqrt{d_k}} + M \right) V$$</span>
+Mask <span class="math-inline">$M$</span> is used.</p>
+<p><span class="math-inline">$M$</span> is a matrix of shape <span class="math-inline">$T \times T$</span> where entries above the diagonal are set to <span class="math-inline">$-\infty$</span> and entries on or below the diagonal are 0.</p>
+<p>Suppose we take <span class="math-inline">$T=4$</span>:
+<span class="math-display">$$\text{Mask} = \begin{bmatrix} 0 & -\infty & -\infty & -\infty \\ 0 & 0 & -\infty & -\infty \\ 0 & 0 & 0 & -\infty \\ 0 & 0 & 0 & 0 \end{bmatrix}$$</span>
+Here at row 0 it can only attend to column 0 and not columns ahead of it. At row 1 it can attend to 0 and 1 only and not columns ahead of it, and so on. So adding this matrix to the soft score means that the <span class="math-inline">$-\infty$</span> is added to the values greater than the current sequence&#39;s values, nullifying their existence.</p>
+<h3 id="whats_happening_at_this_stage">What&#39;s happening at this stage?</h3>
+<p>Input Queries taken are the previously generated outputs by the decoder. All tokens generated so far are taken as queries. Keys used are the previously generated output tokens.</p>
+<p>At each position <span class="math-inline">$t$</span>, we compute <strong>how much attention it should pay to each earlier token</strong> <span class="math-inline">$&lt; t$</span>, in order to build a contextualized understanding of what has been generated so far.</p>
+<p>Masked self attention in the decoder is the mechanism that enables the model to “think” about the past before generating the next token — while strictly preventing cheating by looking ahead.</p>
+<p>The <em>Query</em> at position <span class="math-inline">$t$</span> asks: “What do I need to know from the past to decide what to generate next?”
+The <em>Keys</em> and <em>Values</em> contain the representations of all previous tokens.</p>
+<p>The model is basically building up context from what has been generated so far and assigning weights to every token with respect to every other token (that has been generated so far ONLY past tokens not future tokens) to see what needs to be generated in the future.</p>
+<p>A good intuition is that when you are speaking and framing a sentence &#39;I am Kanishk and I am doing-&#39; here the word &#39;I&#39; refers to Kanishk and the second &#39;I&#39; also refers to him and what he is doing. This information is inferred through previously spoken words. What you say next depends on what you have said before. That is what is happening in this layer.</p>
+<p>After this we add residual connections and layer norm.</p>
+<h3 id="encoder_decoder_multi_head_attention">Encoder Decoder Multi Head Attention</h3>
+<p>This attention module lets the decoder view the encoder&#39;s outputs and acts upon them. The first attention block focuses on what the decoder has generated already, while this one focuses on the encoder&#39;s outputs and how they can be used to generate the next token.</p>
+<h4 id="input">Input</h4>
+<ul>
+<li><strong>Queries</strong>: Decoder hidden states from the previous layer</li>
+<li><strong>Keys and Values</strong>: Encoder hidden states (final outputs of the encoder)</li>
+</ul>
+<h4 id="output">Output</h4>
+<p>Context vectors that explain which encoder vectors are important to which decoder vectors. What information to infer from the encoder to produce the next token.</p>
+<p>This step is called cross attention where we connect the source sentence with the target.</p>
+<p>Same as any attention module:</p>
+<ol>
+<li>We create linear projections that serve as queries, keys and values.</li>
+<li>Assign attention scores using the formula:
+<span class="math-display">$$\text{Attention}(Q, K, V) = \text{softmax}\left( \frac{QK^T}{\sqrt{d_k}} \right) V$$</span>
+where encoder outputs serve as keys and values, and decoder output from the previous attention module serves as queries.</li>
+<li>So once the attention module finds keys that are relevant, their values are used to calculate attention.</li>
+</ol>
+<p>Obviously since it is a multi head attention module, this process will happen for several heads so that all of them can capture different features and different information.</p>
+<p>Everything about this block is the same as any multi head attention so there is not much to talk about here. What is important is why this block exists and what it does.</p>
+<h4 id="whats_actually_happening">What&#39;s actually happening?</h4>
+<ol>
+<li>This attention module ultimately puts together vectors from the encoder outputs that are important for the next token generation.</li>
+<li>It does so by finding out which tokens are important to the input decoder tokens and assigning heavy weights to their values.</li>
+</ol>
+<p>So for example:</p>
+<ul>
+<li><strong>Encoder Output</strong>: Kanishk is going to cycle.</li>
+<li><strong>Decoder Output</strong>: He is &#39;cycling&#39;.</li>
+</ul>
+<p>If the model were to complete the sentence from the word &#39;is&#39;, it would look at the encoder output token &#39;cycle&#39; and then give importance to it so that it can decide the next token &#39;cycling&#39;.</p>
+<h3 id="feed_forward_network">Feed Forward Network</h3>
+<p>Each token goes through a two layer feed forward network. It has a linear layer, ReLU activation, followed by another linear layer:</p>
+<ol>
+<li>Linear layer: Increase dimensions from 512 to 2048</li>
+<li>ReLU activation (to add non linearity to the model)</li>
+<li>Linear layer: Project back to 512</li>
+</ol>
+<p>This is applied separately at each timestep so each token position is processed independently.</p>
+<h3 id="residual_connection_and_layernorm">Residual Connection and LayerNorm</h3>
+<p>Each sub layer (including the feed forward network and the encoder decoder attention module plus the self attention module) is wrapped in <span class="math-inline">$\text{LayerNorm}(x + \text{SubLayer}(x))$</span>. Basically, LayerNorm is applied after a residual connection is applied to the sub layers. This is to stabilize training and help the gradients flow better.</p>
+<h3 id="context_vector">Context Vector</h3>
+<p>After all of the attention modules plus residual connections and layer norms plus linear layers and activation functions, the final context vector that we have is the representation of what the next token in the sequence is likely to be.</p>
+<p>Everything we have done so far produces a context vector that shows us what the next token in the sequence could be. We are going to now use this context vector to find the next token.</p>
+<h3 id="prediction_of_tokens">Prediction of Tokens</h3>
+<p>The actual prediction of tokens happens in the linear layer + softmax module.</p>
+<p>The decoder&#39;s output is a sequence of contextual vectors:
+<span class="math-display">$$\text{Decoder Output: } h \in \mathbb{R}^{T \times d_{\text{model}}}$$</span>
+<p>We need to convert this into logits for every word in the vocabulary (predictions for every word in the vocabulary being the next token), so we apply a linear layer:
+<span class="math-display">$$\text{Logits} = h W^T + b$$</span>
+where <span class="math-inline">$W \in \mathbb{R}^{V \times d_{\text{model}}}$</span> consists of learnable weights, and <span class="math-inline">$b \in \mathbb{R}^V$</span> is the bias vector.</p>
+<p>For every token <span class="math-inline">$t$</span>, you get a vector representing scores for every token in the vocabulary.</p>
+<h4 id="how_prediction_happens">How prediction happens:</h4>
+<p>The weight matrix here consists of the entire vocabulary of tokens. Each row represents a token.</p>
+<ul>
+<li><span class="math-inline">$W \in \mathbb{R}^{V \times d_{\text{model}}}$</span> — the weight matrix in the final linear layer.</li>
+<li><span class="math-inline">$\mathbf{h}_t \in \mathbb{R}^{d_{\text{model}}}$</span> — the context vector from the decoder.</li>
+<li>Hence the dimensions match for every row in the weight vector to be compared to the entire context vector.</li>
+<li><strong>Note</strong>: In many models this output weight matrix is actually tied to the input embedding matrix so that the model has one shared representation space for both understanding words and generating them.</li>
+</ul>
+<p>If the context vector matches a row (through the dot product) then its logit score would be high. So we look for how similar the context vector and each token row in the weight matrix is and assign logits according to that.</p>
+<p>Each dot product tells us how aligned the context is with each word&#39;s representation. A high dot product means that the current context vector is very similar to that word vector. This linear layer essentially compares the context with every possible word in the vocabulary.</p>
+<p>Then we use softmax to get probabilities:
+<span class="math-display">$$P(y_t = w_i \mid \text{context}) = \frac{\exp(\text{logit}_i)}{\sum_{j=1}^{V} \exp(\text{logit}_j)}$$</span>
+<p>The most probable token is the one whose embedding is most aligned (has the highest dot product) with the current context.</p>
+<p>So that is the whole pipeline from raw input embeddings to the final probability distribution over the vocabulary. Once the model picks the best token, it feeds it back into the decoder to generate the next one, repeating the cycle. It is simple math when you break it down, but the parallelization makes it incredibly powerful.</p>
+
+      </div>
+
+      <nav class="note-nav-bottom">
+        <span></span>
+        <a href="02_gpt_bert_and_bart.html" class="nav-next"><span class="nav-label">Next</span><span class="nav-title">GPT BERT and BART →</span></a>
+      </nav>
+    </article>
+  </main>
+</div>
+
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"
+  onload="renderMathInElement(document.getElementById('note-content'), {
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '$', right: '$', display: false}
+    ],
+    throwOnError: false,
+    trust: true,
+    strict: false
+  });"></script>
+<script>
+(function initAmbientBackground() {
+  const canvas = document.getElementById('ambient-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  
+  let width = canvas.width = window.innerWidth;
+  let height = canvas.height = window.innerHeight;
+  
+  window.addEventListener('resize', () => {
+    width = canvas.width = window.innerWidth;
+    height = canvas.height = window.innerHeight;
+  });
+  
+  const particles = [];
+  const particleCount = Math.min(60, Math.floor((width * height) / 20000));
+  const connectionDistance = 120;
+  
+  class Particle {
+    constructor() {
+      this.x = Math.random() * width;
+      this.y = Math.random() * height;
+      this.vx = (Math.random() - 0.5) * 0.25;
+      this.vy = (Math.random() - 0.5) * 0.25;
+      this.radius = Math.random() * 1.2 + 0.6;
+    }
+    
+    update() {
+      this.x += this.vx;
+      this.y += this.vy;
+      
+      if (this.x < 0 || this.x > width) this.vx *= -1;
+      if (this.y < 0 || this.y > height) this.vy *= -1;
+    }
+    
+    draw() {
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(126, 247, 201, 0.4)';
+      ctx.fill();
+    }
+  }
+  
+  for (let i = 0; i < particleCount; i++) {
+    particles.push(new Particle());
+  }
+  
+  function animate() {
+    ctx.clearRect(0, 0, width, height);
+    particles.forEach(p => {
+      p.update();
+      p.draw();
+    });
+    
+    for (let i = 0; i < particles.length; i++) {
+      for (let j = i + 1; j < particles.length; j++) {
+        const dx = particles[i].x - particles[j].x;
+        const dy = particles[i].y - particles[j].y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        
+        if (dist < connectionDistance) {
+          const alpha = (1 - (dist / connectionDistance)) * 0.08;
+          ctx.beginPath();
+          ctx.moveTo(particles[i].x, particles[i].y);
+          ctx.lineTo(particles[j].x, particles[j].y);
+          ctx.strokeStyle = "rgba(126, 247, 201, " + alpha + ")";
+          ctx.lineWidth = 0.8;
+          ctx.stroke();
+        }
+      }
+    }
+    requestAnimationFrame(animate);
+  }
+  animate();
+})();
+</script>
+</body>
+</html>

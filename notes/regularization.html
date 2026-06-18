@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Regularization — kanishk's notes</title>
+  <meta name="description" content="Regularization — Deep Learning Foundations notes by kanishk" />
+  <link rel="icon" type="image/png" href="../assets/favicon.png" />
+  <link rel="stylesheet" href="../css/style.css" />
+  <link rel="stylesheet" href="../css/notes.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous" />
+</head>
+<body>
+<canvas id="ambient-canvas"></canvas>
+
+<!-- Top Floating Navigation Bar -->
+<header class="navbar">
+  <div class="nav-container">
+    <a href="../index.html" class="nav-logo">kanishk</a>
+    <nav class="nav-links">
+      <a href="../index.html#home">Home</a>
+      <a href="../index.html#projects">Projects</a>
+      <a href="../index.html#blogs">Blogs</a>
+      <a href="../index.html#notes" class="active">Notes</a>
+    </nav>
+    <div class="nav-socials">
+      <a href="https://github.com/kanishkez" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://huggingface.co/kanishkez" target="_blank" rel="noopener">HuggingFace</a>
+    </div>
+  </div>
+</header>
+
+<div class="container">
+  <main class="main-content">
+    <article class="note-page">
+      <div class="note-breadcrumb">
+        <a href="../index.html#notes">Notes</a>
+        <span class="breadcrumb-sep">›</span>
+        <a href="../index.html#notes">Deep Learning Foundations</a>
+        <span class="breadcrumb-sep">›</span>
+        <span>Regularization</span>
+      </div>
+
+      <header class="note-header">
+        <div class="note-category-tag">Deep Learning Foundations</div>
+        <h1>Regularization</h1>
+      </header>
+
+      <nav class="note-toc" id="note-toc">
+        <div class="toc-title">Contents</div>
+        <div class="toc-items">
+          <a href="#regularization" class="toc-item toc-h1">Regularization</a>
+          <a href="#types_of_regularization" class="toc-item toc-h3">Types of Regularization</a>
+          <a href="#l2_regularization" class="toc-item toc-h3">L2 Regularization</a>
+          <a href="#l1_regularization" class="toc-item toc-h2">L1 Regularization</a>
+        </div>
+      </nav>
+
+      <div class="note-content" id="note-content">
+        <h1 id="regularization">Regularization</h1>
+<p>Regularization is a set of techniques used to reduce overfitting in machine learning by adding a penalty to the model&#39;s loss function, thereby reducing accuracy on training data to increase generalizability so that the model can adapt to a wider range of unseen data.</p>
+<p>Overfitting occurs when the model learns to solely minimize loss and fits the training data too closely, capturing noise instead of the underlying distribution.</p>
+<p>To add a penalty, we modify the loss function:
+<span class="math-display">$$\text{Loss} = \text{Data Loss} + \lambda \cdot \text{Penalty}$$</span>
+where <span class="math-inline">$\lambda$</span> determines how strong we want the penalty to act.</p>
+<p>The penalty discourages model complexity so that the network does not overfit. This means that we penalize large weights (which affect predictions too heavily) and overconfident predictions.</p>
+<p>For a single weight <span class="math-inline">$w$</span>, gradient descent performs:
+<span class="math-display">$$w \leftarrow w - \eta \Big( \underbrace{\frac{\partial \text{Task Loss}}{\partial w}}_{\text{task gradient}} + \underbrace{\lambda \cdot \text{sign}(w)}_{\text{L1 gradient}} \Big)$$</span>
+So, the weight changes according to both the task loss and the penalizer.</p>
+<p>Total gradient:
+<span class="math-display">$$\nabla w = \nabla \text{Task Loss} + \nabla \text{Regularization}$$</span>
+<h3 id="types_of_regularization">Types of Regularization</h3>
+<h3 id="l2_regularization">L2 Regularization</h3>
+<p>L2 regularization is the most common and simple form of regularization.
+<span class="math-display">$$\text{Penalty} = \sum w^2$$</span>
+<p>So the loss function becomes:
+<span class="math-display">$$\text{Loss} = \text{Data Loss} + \lambda \sum w^2$$</span>
+<p>During training, if a weight becomes too large, this penalty pushes the weight down to reduce its size.</p>
+<p>If a weight becomes large:</p>
+<ul>
+<li><span class="math-inline">$w^2$</span> becomes extremely large.</li>
+<li>The loss increases.</li>
+<li>The optimizer pushes the weight down to minimize the loss.</li>
+</ul>
+<p>L2 regularization is widely used in linear regression, logistic regression, and neural networks.</p>
+<p>Taking the derivative of the penalty term:
+<span class="math-display">$$\frac{d}{dw}(\lambda w^2) = 2\lambda w$$</span>
+Thus, the magnitude of the weight determines the strength of the penalty.</p>
+<p>If the weight is large (for example, <span class="math-inline">$w = 10$</span>):</p>
+<ul>
+<li>The gradient is <span class="math-inline">$20\lambda$</span>.</li>
+<li>The reduction of the weight is highly noticeable.</li>
+</ul>
+<p>If the weight is small (for example, <span class="math-inline">$w = 0.002$</span>):</p>
+<ul>
+<li>The gradient is <span class="math-inline">$0.004\lambda$</span>.</li>
+<li>The weight difference is negligible.</li>
+</ul>
+<h2 id="l1_regularization">L1 Regularization</h2>
+<span class="math-display">$$\text{Penalty} = \sum |w|$$</span>
+<span class="math-display">$$\text{Loss} = \text{Data Loss} + \lambda \sum |w|$$</span>
+<p>Under L1 regularization, small weights are driven to exactly zero, rendering some weights entirely unused.</p>
+<p>Derivative of <span class="math-inline">$|w|$</span>:
+<span class="math-display">$$\frac{d}{dw}|w| = \begin{cases} +\lambda & w &gt; 0 \\ -\lambda & w &lt; 0 \\ \text{any value in }[-\lambda, \lambda] & w = 0 \end{cases}$$</span>
+<p>If a weight is weak:
+<span class="math-display">$$\left|\frac{\partial \text{Task Loss}}{\partial w}\right| &lt; \lambda$$</span>
+The regularization gradient dominates and the weight is pushed towards zero.</p>
+<p>Therefore, L1 regularization causes shrinkage of small weights because their task loss gradient is smaller than the regularization penalty gradient.</p>
+
+      </div>
+
+      <nav class="note-nav-bottom">
+        <a href="12_activation_functions.html" class="nav-prev"><span class="nav-label">Previous</span><span class="nav-title">← Activation Functions</span></a>
+        <span></span>
+      </nav>
+    </article>
+  </main>
+</div>
+
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"
+  onload="renderMathInElement(document.getElementById('note-content'), {
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '$', right: '$', display: false}
+    ],
+    throwOnError: false,
+    trust: true,
+    strict: false
+  });"></script>
+<script>
+(function initAmbientBackground() {
+  const canvas = document.getElementById('ambient-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  
+  let width = canvas.width = window.innerWidth;
+  let height = canvas.height = window.innerHeight;
+  
+  window.addEventListener('resize', () => {
+    width = canvas.width = window.innerWidth;
+    height = canvas.height = window.innerHeight;
+  });
+  
+  const particles = [];
+  const particleCount = Math.min(60, Math.floor((width * height) / 20000));
+  const connectionDistance = 120;
+  
+  class Particle {
+    constructor() {
+      this.x = Math.random() * width;
+      this.y = Math.random() * height;
+      this.vx = (Math.random() - 0.5) * 0.25;
+      this.vy = (Math.random() - 0.5) * 0.25;
+      this.radius = Math.random() * 1.2 + 0.6;
+    }
+    
+    update() {
+      this.x += this.vx;
+      this.y += this.vy;
+      
+      if (this.x < 0 || this.x > width) this.vx *= -1;
+      if (this.y < 0 || this.y > height) this.vy *= -1;
+    }
+    
+    draw() {
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(126, 247, 201, 0.4)';
+      ctx.fill();
+    }
+  }
+  
+  for (let i = 0; i < particleCount; i++) {
+    particles.push(new Particle());
+  }
+  
+  function animate() {
+    ctx.clearRect(0, 0, width, height);
+    particles.forEach(p => {
+      p.update();
+      p.draw();
+    });
+    
+    for (let i = 0; i < particles.length; i++) {
+      for (let j = i + 1; j < particles.length; j++) {
+        const dx = particles[i].x - particles[j].x;
+        const dy = particles[i].y - particles[j].y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        
+        if (dist < connectionDistance) {
+          const alpha = (1 - (dist / connectionDistance)) * 0.08;
+          ctx.beginPath();
+          ctx.moveTo(particles[i].x, particles[i].y);
+          ctx.lineTo(particles[j].x, particles[j].y);
+          ctx.strokeStyle = "rgba(126, 247, 201, " + alpha + ")";
+          ctx.lineWidth = 0.8;
+          ctx.stroke();
+        }
+      }
+    }
+    requestAnimationFrame(animate);
+  }
+  animate();
+})();
+</script>
+</body>
+</html>

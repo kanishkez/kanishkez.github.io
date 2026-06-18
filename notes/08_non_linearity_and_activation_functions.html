@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Non Linearity and Activation Functions — kanishk's notes</title>
+  <meta name="description" content="Non Linearity and Activation Functions — Deep Learning Foundations notes by kanishk" />
+  <link rel="icon" type="image/png" href="../assets/favicon.png" />
+  <link rel="stylesheet" href="../css/style.css" />
+  <link rel="stylesheet" href="../css/notes.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous" />
+</head>
+<body>
+<canvas id="ambient-canvas"></canvas>
+
+<!-- Top Floating Navigation Bar -->
+<header class="navbar">
+  <div class="nav-container">
+    <a href="../index.html" class="nav-logo">kanishk</a>
+    <nav class="nav-links">
+      <a href="../index.html#home">Home</a>
+      <a href="../index.html#projects">Projects</a>
+      <a href="../index.html#blogs">Blogs</a>
+      <a href="../index.html#notes" class="active">Notes</a>
+    </nav>
+    <div class="nav-socials">
+      <a href="https://github.com/kanishkez" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://huggingface.co/kanishkez" target="_blank" rel="noopener">HuggingFace</a>
+    </div>
+  </div>
+</header>
+
+<div class="container">
+  <main class="main-content">
+    <article class="note-page">
+      <div class="note-breadcrumb">
+        <a href="../index.html#notes">Notes</a>
+        <span class="breadcrumb-sep">›</span>
+        <a href="../index.html#notes">Deep Learning Foundations</a>
+        <span class="breadcrumb-sep">›</span>
+        <span>Non Linearity and Activation Functions</span>
+      </div>
+
+      <header class="note-header">
+        <div class="note-category-tag">Deep Learning Foundations</div>
+        <h1>Non Linearity and Activation Functions</h1>
+      </header>
+
+      <nav class="note-toc" id="note-toc">
+        <div class="toc-title">Contents</div>
+        <div class="toc-items">
+          <a href="#why_do_we_need_nonlinearity" class="toc-item toc-h3">Why do we need nonlinearity?</a>
+          <a href="#what_are_activation_functions" class="toc-item toc-h3">What are Activation Functions?</a>
+          <a href="#common_activation_functions" class="toc-item toc-h3">common activation functions</a>
+        </div>
+      </nav>
+
+      <div class="note-content" id="note-content">
+        <p>Let&#39;s take the classic XOR example.
+Here is the XOR table.</p>
+<div class="table-wrapper"><table>
+<thead><tr><th><strong><span class="math-inline">$x_1$</span></strong></th><th><strong><span class="math-inline">$x_2$</span></strong></th><th><strong><span class="math-inline">$y$</span></strong></th></tr></thead>
+<tbody><tr><td>0</td><td>0</td><td>0</td></tr><tr><td>0</td><td>1</td><td>1</td></tr><tr><td>1</td><td>0</td><td>1</td></tr><tr><td>1</td><td>1</td><td>0</td></tr><tr><td></td><td></td><td></td></tr><tr><td>Suppose we want to make a model that predicts this then we would not be able to do so with simple linear regression or classification.</td><td></td><td></td></tr></tbody>
+</table></div>
+<p>If you plot these points, you’ll see:</p>
+<ul>
+<li>The “1”s are at <span class="math-inline">$(0,1)$</span> and <span class="math-inline">$(1,0)$</span></li>
+<li>The “0”s are at <span class="math-inline">$(0,0)$</span> and <span class="math-inline">$(1,1)$</span></li>
+</ul>
+<p>No straight line can separate the 1’s from the 0’s.
+This means a single perceptron (linear classifier) <strong>cannot solve XOR</strong>.</p>
+<p>so we would need to use non linearity.</p>
+<h3 id="why_do_we_need_nonlinearity"><strong>Why do we need nonlinearity?</strong></h3>
+<p>If you just stack multiple linear transformations, you don’t actually get more power.</p>
+<p>For example:</p>
+<span class="math-display">$$z^{(1)} = W^{(1)} x + b^{(1)}$$</span>
+<span class="math-display">$$z^{(2)} = W^{(2)} z^{(1)} + b^{(2)}$$</span>
+<p>If you combine these:
+<span class="math-display">$$z^{(2)} = W^{(2)}(W^{(1)}x + b^{(1)}) + b^{(2)} \
+
+= (W^{(2)}W^{(1)})x + (W^{(2)}b^{(1)} + b^{(2)})$$</span>
+<p>This is still just a <strong>linear transformation</strong> of <span class="math-inline">$x$</span>.
+So even if you stack 100 linear layers, the whole thing is equivalent to a single linear layer.
+→ The model is still limited to straight line decision boundaries.
+So what do we do? We need to break this <strong>linearity trap</strong>.
+That’s where <strong>activation functions</strong> come in.</p>
+<h3 id="what_are_activation_functions"><strong>What are Activation Functions?</strong></h3>
+<p>An <strong>activation function</strong> is applied after each layer’s weighted sum.
+It introduces <strong>nonlinearity</strong> into the network, allowing it to learn complex, curved, and flexible decision boundaries.
+Basically, non linear activation functions make the learning pattern complex by adding dimensions to the training phase of the network.
+We are making the network complex so that it can learn complex patterns and features.
+A good way to visualize this is to think of it this way:
+Instead of using a line to fit the features and predict something, we&#39;re introducing another dimension and seperating the features there.</p>
+<p>So instead of:
+<span class="math-inline">$z = Wx + b$</span>
+<p>We do:
+<span class="math-inline">$a = \phi(Wx + b)$</span>
+<p>where <span class="math-inline">$\phi$</span> is the activation function.</p>
+<p>This way, stacking multiple layers actually gives us more expressive power.</p>
+<h3 id="common_activation_functions"><strong>common activation functions</strong></h3>
+<p>the <strong>sigmoid</strong> function is given by</p>
+<span class="math-display">$$\sigma(x) = \frac{1}{1 + e^{-x}}$$</span>
+<p>it squashes any input into the range (0,1). the derivative is
+<span class="math-display">$$\sigma’(x) = \sigma(x)(1 - \sigma(x))$$</span>
+<p>this means the gradient is highest when the output is around 0.5 and becomes very small when the output is close to 0 or 1.
+this small gradient is called the vanishing gradient problem. 
+<strong>What does sigmoid let through?</strong>
+Lets through: values near zero (centered around 0.5)
+Blocks: large positive/negative values (saturates at 0 or 1)
+sigmoid was used in early neural networks and still makes sense when you need probabilities, but it slows down training for deep models.</p>
+<p>the <strong>tanh</strong> function is
+<span class="math-display">$$\tanh(x) = \frac{e^x - e^{-x}}{e^x + e^{-x}}$$</span>
+it outputs values in the range (-1,1), which makes it zero centered unlike sigmoid. the derivative is</p>
+<span class="math-display">$$\tanh’(x) = 1 - \tanh^2(x)$$</span>
+<p>gradients are stronger around zero but still vanish when the input is very large in magnitude. 
+tanh often performs better than sigmoid in practice but still suffers from vanishing gradients in deep networks.
+What does tanh let through?:
+Lets through: values near zero (centered at 0)
+Blocks: large positive/negative values (saturates at -1 or 1)</p>
+<p><strong>How does it shape learning?</strong>
+Zero centered output helps with optimization (balances positive/negative signals).
+Still suffers from vanishing gradients for large <span class="math-inline">$|x|$</span>.
+Better than sigmoid for hidden layers, but still limited in deep networks.</p>
+<p>the <strong>relu</strong> function is
+<span class="math-display">$$\text{ReLU}(x) = \max(0, x)$$</span>
+its derivative is</p>
+<span class="math-display">$$\text{ReLU}’(x) =
+
+\begin{cases}
+
+1 & x &gt; 0 \
+
+0 & x \leq 0
+
+\end{cases}$$</span>
+<p>relu is the most widely used activation today because it avoids the vanishing gradient problem for positive inputs, making training much faster.
+but the problem is for negative inputs, the gradient is zero, which means those neurons can “die” and stop learning.
+this is called the dying relu problem.
+<strong>What does ReLU let through?</strong>
+Lets through: all positive values (unchanged)
+Blocks: all negative values (outputs zero)</p>
+<p><strong>How does it shape learning?</strong>
+Enables sparse activations (many neurons output zero), which can improve efficiency and generalization.
+Avoids vanishing gradient for <span class="math-inline">$x &gt; 0$</span> (gradient is 1), but can cause &quot;dead neurons&quot; (if <span class="math-inline">$x &lt; 0$</span> always, neuron never activates).
+Default for hidden layers in modern deep networks.</p>
+<p><strong>Analogy:</strong> Like a one way valve—only lets positive flow through, blocks the rest.</p>
+<p>a variation is <strong>leaky relu</strong>, defined as</p>
+<span class="math-display">$$\text{LeakyReLU}(x) =
+
+\begin{cases}
+
+x & x &gt; 0 \
+
+\alpha x & x \leq 0
+
+\end{cases}$$</span>
+<p>where <span class="math-inline">$\alpha$</span> is a small positive constant like 0.01. its derivative is 1 for positive inputs and <span class="math-inline">$\alpha$</span> for negative inputs, so the gradient never becomes zero completely. this fixes the dying relu issue.</p>
+<p>another important activation is <strong>softmax</strong>, which is used for multi class classification. for a vector of logits <span class="math-display">$$z = (z_1, z_2, \dots, z_K)$$</span>the softmax is</p>
+<span class="math-display">$$\text{Softmax}(z_i) = \frac{e^{z_i}}{\sum_{j=1}^K e^{z_j}}$$</span>
+<p>this converts logits into a probability distribution over classes. the derivative is more complex since it’s a vector function, but the key thing is that it allows us to compute cross entropy loss easily for classification.</p>
+
+      </div>
+
+      <nav class="note-nav-bottom">
+        <a href="07_neural_networks.html" class="nav-prev"><span class="nav-label">Previous</span><span class="nav-title">← Neural Networks</span></a>
+        <a href="09_optimization_algorithms.html" class="nav-next"><span class="nav-label">Next</span><span class="nav-title">Optimization Algorithms →</span></a>
+      </nav>
+    </article>
+  </main>
+</div>
+
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"
+  onload="renderMathInElement(document.getElementById('note-content'), {
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '$', right: '$', display: false}
+    ],
+    throwOnError: false,
+    trust: true,
+    strict: false
+  });"></script>
+<script>
+(function initAmbientBackground() {
+  const canvas = document.getElementById('ambient-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  
+  let width = canvas.width = window.innerWidth;
+  let height = canvas.height = window.innerHeight;
+  
+  window.addEventListener('resize', () => {
+    width = canvas.width = window.innerWidth;
+    height = canvas.height = window.innerHeight;
+  });
+  
+  const particles = [];
+  const particleCount = Math.min(60, Math.floor((width * height) / 20000));
+  const connectionDistance = 120;
+  
+  class Particle {
+    constructor() {
+      this.x = Math.random() * width;
+      this.y = Math.random() * height;
+      this.vx = (Math.random() - 0.5) * 0.25;
+      this.vy = (Math.random() - 0.5) * 0.25;
+      this.radius = Math.random() * 1.2 + 0.6;
+    }
+    
+    update() {
+      this.x += this.vx;
+      this.y += this.vy;
+      
+      if (this.x < 0 || this.x > width) this.vx *= -1;
+      if (this.y < 0 || this.y > height) this.vy *= -1;
+    }
+    
+    draw() {
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(126, 247, 201, 0.4)';
+      ctx.fill();
+    }
+  }
+  
+  for (let i = 0; i < particleCount; i++) {
+    particles.push(new Particle());
+  }
+  
+  function animate() {
+    ctx.clearRect(0, 0, width, height);
+    particles.forEach(p => {
+      p.update();
+      p.draw();
+    });
+    
+    for (let i = 0; i < particles.length; i++) {
+      for (let j = i + 1; j < particles.length; j++) {
+        const dx = particles[i].x - particles[j].x;
+        const dy = particles[i].y - particles[j].y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        
+        if (dist < connectionDistance) {
+          const alpha = (1 - (dist / connectionDistance)) * 0.08;
+          ctx.beginPath();
+          ctx.moveTo(particles[i].x, particles[i].y);
+          ctx.lineTo(particles[j].x, particles[j].y);
+          ctx.strokeStyle = "rgba(126, 247, 201, " + alpha + ")";
+          ctx.lineWidth = 0.8;
+          ctx.stroke();
+        }
+      }
+    }
+    requestAnimationFrame(animate);
+  }
+  animate();
+})();
+</script>
+</body>
+</html>

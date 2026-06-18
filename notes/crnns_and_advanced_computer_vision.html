@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>CRNNs and Advanced Computer Vision — kanishk's notes</title>
+  <meta name="description" content="CRNNs and Advanced Computer Vision — Computer Vision notes by kanishk" />
+  <link rel="icon" type="image/png" href="../assets/favicon.png" />
+  <link rel="stylesheet" href="../css/style.css" />
+  <link rel="stylesheet" href="../css/notes.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous" />
+</head>
+<body>
+<canvas id="ambient-canvas"></canvas>
+
+<!-- Top Floating Navigation Bar -->
+<header class="navbar">
+  <div class="nav-container">
+    <a href="../index.html" class="nav-logo">kanishk</a>
+    <nav class="nav-links">
+      <a href="../index.html#home">Home</a>
+      <a href="../index.html#projects">Projects</a>
+      <a href="../index.html#blogs">Blogs</a>
+      <a href="../index.html#notes" class="active">Notes</a>
+    </nav>
+    <div class="nav-socials">
+      <a href="https://github.com/kanishkez" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://huggingface.co/kanishkez" target="_blank" rel="noopener">HuggingFace</a>
+    </div>
+  </div>
+</header>
+
+<div class="container">
+  <main class="main-content">
+    <article class="note-page">
+      <div class="note-breadcrumb">
+        <a href="../index.html#notes">Notes</a>
+        <span class="breadcrumb-sep">›</span>
+        <a href="../index.html#notes">Computer Vision</a>
+        <span class="breadcrumb-sep">›</span>
+        <span>CRNNs and Advanced Computer Vision</span>
+      </div>
+
+      <header class="note-header">
+        <div class="note-category-tag">Computer Vision</div>
+        <h1>CRNNs and Advanced Computer Vision</h1>
+      </header>
+
+      <nav class="note-toc" id="note-toc">
+        <div class="toc-title">Contents</div>
+        <div class="toc-items">
+          <a href="#crnns" class="toc-item toc-h3">CRNNS </a>
+          <a href="#architecture" class="toc-item toc-h3">Architecture:</a>
+          <a href="#yolo" class="toc-item toc-h3">yolo:</a>
+        </div>
+      </nav>
+
+      <div class="note-content" id="note-content">
+        <h3 id="crnns">CRNNS</h3>
+<p>Convolutional Recurrent Neural Networks are a combination of CNNS and RNNS and are used in tasks like OCR where you have to deal with sequential vision data</p>
+<h3 id="architecture">Architecture:</h3>
+<figure><img src="images/Pasted%20image%2020250919144256.png" alt="image" loading="lazy"><figcaption>image</figcaption></figure>
+<p>A CNN can at best look at an image can decide what it is by classifying it into a class that we&#39;ve trained it on 
+But for tasks like OCR where theres loads of characters and they only make sense together when you read them sequentially (left to right) we need something more complex</p>
+<p>Here is where RNNS come in.
+Recurrent Neural Networks are known for their ability to process sequential information to build up context or information based on previous information that has passed by. They do so by making use of hidden states and time stamps.
+As a character comes by, it looks at the previous time step&#39;s hidden state to make sense of the new character by looking at all the old characters&#39; data and then updating this data for the next character.</p>
+<p>This logic is applied to the data from CNNS.</p>
+<p>What we do is we essentially divide the image into parts to process it sequentially.</p>
+<p><strong>Example</strong>:</p>
+<figure><img src="images/Pasted%20image%2020250919144354.png" alt="image" loading="lazy"><figcaption>image</figcaption></figure>
+<p>We divide the word &#39;state&#39; into sequences so that the CNNS can learn individual features instead of processing the entire image at once. </p>
+<p>After dividing the image into feature vectors, they are processed by CNNS.
+This sequential data is sent to RNNS where we build up context from all of the different feature vectors.</p>
+<p>The result can be a bunch of vectors that carry the context of the word
+But here&#39;s the thing:</p>
+<p>When you divide a word into columns, some letters can reapeat themselves.</p>
+<p>Let&#39;s take the example of the word &#39;hello&#39; where due to us using multiple receptive fields and columns, the machine has gotten the vectors of &#39;hhh eeee lll oooo&#39; instead.</p>
+<p>Here is where transcription comes in.</p>
+<p>Transcription is used to map a bunch of input sequences to output sequences where:</p>
+<ol>
+<li>The length of input and output sequences are different.</li>
+<li>Ratio of length of X and Y vary from word to word.</li>
+<li>There is no alignment.</li>
+</ol>
+<p>So we suppose we divide the word &#39;hello&#39; into 10 columns, we might end up with the word &#39;hhh ee ll oo o&#39; or any other combination where multiple characters are repeating.</p>
+<p>Example for the word &#39;hey&#39;:</p>
+<figure><img src="images/Pasted%20image%2020250919150937.png" alt="image" loading="lazy"><figcaption>image</figcaption></figure>
+Our job is to train the model in such a way that it takes any such combination and just map it to the word &#39;hello&#39;</p>
+<p>We use CTC (Connectionist Temporal Classification) for this:</p>
+<ol>
+<li>We consider all of the combinations of the correct word &#39;hello&#39; (where we seperate 2  characters by a blank space including 2 same characters) and give them all high probability </li>
+<li>This way, the model learns to predict/answer one of those combinations where we actually spell out the world &#39;hello&#39; (one where we use blank spaces to only get the word hello without repeating any characters)</li>
+<li>CTC then sums the probablities of all of these valid alignments and maximises that probability
+<figure><img src="images/Pasted%20image%2020250919150836.png" alt="image" loading="lazy"><figcaption>image</figcaption></figure></li>
+</ol>
+<p>Now obviously, the amount of such combinations is huge and if we decide to brute force it, that would be incredibly expensive. So we use dynamic programming to build a trellis graph that represents all of the alignments compactly.
+We then only assign high probabilities to all of the combinations in this graph during training.</p>
+<p>During inference, we might get a lot of these combinations as well, so we use:</p>
+<ol>
+<li>Greedy decoding: Pick the max label at each timestep</li>
+<li>Beam search: keep multiple hypotheses and collapse blanks later</li>
+</ol>
+<h3 id="yolo">yolo:</h3>
+
+      </div>
+
+      <nav class="note-nav-bottom">
+        <a href="14_residual_networks.html" class="nav-prev"><span class="nav-label">Previous</span><span class="nav-title">← Residual Networks</span></a>
+        <span></span>
+      </nav>
+    </article>
+  </main>
+</div>
+
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"
+  onload="renderMathInElement(document.getElementById('note-content'), {
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '$', right: '$', display: false}
+    ],
+    throwOnError: false,
+    trust: true,
+    strict: false
+  });"></script>
+<script>
+(function initAmbientBackground() {
+  const canvas = document.getElementById('ambient-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  
+  let width = canvas.width = window.innerWidth;
+  let height = canvas.height = window.innerHeight;
+  
+  window.addEventListener('resize', () => {
+    width = canvas.width = window.innerWidth;
+    height = canvas.height = window.innerHeight;
+  });
+  
+  const particles = [];
+  const particleCount = Math.min(60, Math.floor((width * height) / 20000));
+  const connectionDistance = 120;
+  
+  class Particle {
+    constructor() {
+      this.x = Math.random() * width;
+      this.y = Math.random() * height;
+      this.vx = (Math.random() - 0.5) * 0.25;
+      this.vy = (Math.random() - 0.5) * 0.25;
+      this.radius = Math.random() * 1.2 + 0.6;
+    }
+    
+    update() {
+      this.x += this.vx;
+      this.y += this.vy;
+      
+      if (this.x < 0 || this.x > width) this.vx *= -1;
+      if (this.y < 0 || this.y > height) this.vy *= -1;
+    }
+    
+    draw() {
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(126, 247, 201, 0.4)';
+      ctx.fill();
+    }
+  }
+  
+  for (let i = 0; i < particleCount; i++) {
+    particles.push(new Particle());
+  }
+  
+  function animate() {
+    ctx.clearRect(0, 0, width, height);
+    particles.forEach(p => {
+      p.update();
+      p.draw();
+    });
+    
+    for (let i = 0; i < particles.length; i++) {
+      for (let j = i + 1; j < particles.length; j++) {
+        const dx = particles[i].x - particles[j].x;
+        const dy = particles[i].y - particles[j].y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        
+        if (dist < connectionDistance) {
+          const alpha = (1 - (dist / connectionDistance)) * 0.08;
+          ctx.beginPath();
+          ctx.moveTo(particles[i].x, particles[i].y);
+          ctx.lineTo(particles[j].x, particles[j].y);
+          ctx.strokeStyle = "rgba(126, 247, 201, " + alpha + ")";
+          ctx.lineWidth = 0.8;
+          ctx.stroke();
+        }
+      }
+    }
+    requestAnimationFrame(animate);
+  }
+  animate();
+})();
+</script>
+</body>
+</html>

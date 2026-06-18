@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Activation Functions — kanishk's notes</title>
+  <meta name="description" content="Activation Functions — Deep Learning Foundations notes by kanishk" />
+  <link rel="icon" type="image/png" href="../assets/favicon.png" />
+  <link rel="stylesheet" href="../css/style.css" />
+  <link rel="stylesheet" href="../css/notes.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous" />
+</head>
+<body>
+<canvas id="ambient-canvas"></canvas>
+
+<!-- Top Floating Navigation Bar -->
+<header class="navbar">
+  <div class="nav-container">
+    <a href="../index.html" class="nav-logo">kanishk</a>
+    <nav class="nav-links">
+      <a href="../index.html#home">Home</a>
+      <a href="../index.html#projects">Projects</a>
+      <a href="../index.html#blogs">Blogs</a>
+      <a href="../index.html#notes" class="active">Notes</a>
+    </nav>
+    <div class="nav-socials">
+      <a href="https://github.com/kanishkez" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://huggingface.co/kanishkez" target="_blank" rel="noopener">HuggingFace</a>
+    </div>
+  </div>
+</header>
+
+<div class="container">
+  <main class="main-content">
+    <article class="note-page">
+      <div class="note-breadcrumb">
+        <a href="../index.html#notes">Notes</a>
+        <span class="breadcrumb-sep">›</span>
+        <a href="../index.html#notes">Deep Learning Foundations</a>
+        <span class="breadcrumb-sep">›</span>
+        <span>Activation Functions</span>
+      </div>
+
+      <header class="note-header">
+        <div class="note-category-tag">Deep Learning Foundations</div>
+        <h1>Activation Functions</h1>
+      </header>
+
+      <nav class="note-toc" id="note-toc">
+        <div class="toc-title">Contents</div>
+        <div class="toc-items">
+          <a href="#chapter_12_activation_functions_in_neural_networks" class="toc-item toc-h1">Chapter 12: Activation Functions in Neural Networks</a>
+          <a href="#introduction_why_activation_functions_deep_conceptual_view" class="toc-item toc-h2">Introduction: Why Activation Functions? (Deep Conceptual View)</a>
+          <a href="#sigmoid" class="toc-item toc-h2">Sigmoid</a>
+          <a href="#tanh" class="toc-item toc-h2">Tanh</a>
+          <a href="#relu" class="toc-item toc-h2">ReLU</a>
+          <a href="#leaky_relu" class="toc-item toc-h2">Leaky ReLU</a>
+          <a href="#activation_functions_and_gradient_flow" class="toc-item toc-h2">Activation Functions and Gradient Flow</a>
+          <a href="#how_activation_functions_shape_model_capacity" class="toc-item toc-h2">How Activation Functions Shape Model Capacity</a>
+          <a href="#softmax" class="toc-item toc-h2">Softmax</a>
+          <a href="#swish" class="toc-item toc-h2">Swish</a>
+          <a href="#gelu" class="toc-item toc-h2">GELU</a>
+          <a href="#properties" class="toc-item toc-h2">Properties</a>
+          <a href="#vanishing_gradients" class="toc-item toc-h2">Vanishing Gradients</a>
+          <a href="#role_in_deep_learning" class="toc-item toc-h2">Role in Deep Learning</a>
+          <a href="#connections_to_machine_learning" class="toc-item toc-h2">Connections to Machine Learning</a>
+        </div>
+      </nav>
+
+      <div class="note-content" id="note-content">
+        <h1 id="chapter_12_activation_functions_in_neural_networks">Chapter 12: Activation Functions in Neural Networks</h1>
+<hr>
+<h2 id="introduction_why_activation_functions_deep_conceptual_view">Introduction: Why Activation Functions? (Deep Conceptual View)</h2>
+<p>Activation functions are the gatekeepers of information in neural networks. They decide what information passes through each neuron, how signals are transformed, and how gradients flow during learning.</p>
+<p><strong>Why are activation functions essential?</strong></p>
+<ul>
+<li>Without them, neural networks would be linear and unable to model complex, nonlinear relationships.</li>
+<li>They shape the &quot;information landscape&quot; of the network, determining what patterns can be learned and how efficiently.</li>
+</ul>
+<hr>
+<h2 id="sigmoid">Sigmoid</h2>
+<p>The sigmoid activation function is defined as <span class="math-inline">$\sigma(x) = \frac{1}{1 + e^{-x}}$</span>. It maps real valued inputs to the interval <span class="math-inline">$(0, 1)$</span>, making it suitable for modeling probabilities. The sigmoid is differentiable, with derivative <span class="math-inline">$\sigma'(x) = \sigma(x)(1-\sigma(x))$</span>, which is used in backpropagation.</p>
+<p>In ML, the sigmoid function is used in logistic regression, binary classification, and as an activation in early neural networks. Its smooth, S shaped curve enables the modeling of nonlinear relationships, but it suffers from vanishing gradients for large input magnitudes. (See Backpropagation and Neural Networks chapters for more details)</p>
+<p><strong>What does sigmoid let through?</strong></p>
+<ul>
+<li>Lets through: values near zero (centered around 0.5)</li>
+<li>Blocks: large positive/negative values (saturates at 0 or 1)</li>
+</ul>
+<p><strong>How does it shape learning?</strong></p>
+<ul>
+<li>Compresses input into a narrow range, making outputs interpretable as probabilities.</li>
+<li>In deep networks, repeated squashing leads to vanishing gradients—gradients become tiny, slowing or stopping learning.</li>
+<li>Useful for output layers in binary classification, but less so for hidden layers.</li>
+</ul>
+<p><strong>Analogy:</strong> Like a dimmer switch that only allows a small range of brightness, blocking extremes.</p>
+<hr>
+<h2 id="tanh">Tanh</h2>
+<p>The hyperbolic tangent (tanh) activation function is defined as <span class="math-inline">$\tanh(x) = \frac{e^x - e^{-x}}{e^x + e^{-x}}$</span>. It maps inputs to <span class="math-inline">$(-1, 1)$</span> and is zero centered, which can improve convergence in training. The derivative is <span class="math-inline">$1 - \tanh^2(x)$</span>. (See Backpropagation and Neural Networks chapters for more details)</p>
+<p>Tanh is preferred over sigmoid in many deep learning applications due to its zero centered output, which facilitates optimization. However, it also suffers from vanishing gradients for large input values, limiting its effectiveness in very deep networks.</p>
+<p><strong>What does tanh let through?</strong>
+Lets through: values near zero (centered at 0)
+Blocks: large positive/negative values (saturates at -1 or 1)</p>
+<p><strong>How does it shape learning?</strong>
+Zero centered output helps with optimization (balances positive/negative signals).
+Still suffers from vanishing gradients for large <span class="math-inline">$|x|$</span>.
+Better than sigmoid for hidden layers, but still limited in deep networks.</p>
+<p><strong>Analogy:</strong> Like a see saw, balancing positive and negative signals but limiting extremes.</p>
+<hr>
+<h2 id="relu">ReLU</h2>
+<p>The rectified linear unit (ReLU) is defined as <span class="math-inline">$\text{ReLU}(x) = \max(0, x)$</span>. It introduces nonlinearity while preserving positive values and setting negative values to zero. ReLU is computationally efficient and mitigates the vanishing gradient problem for positive inputs. (See Backpropagation and Neural Networks chapters for more details)</p>
+<p>In ML, ReLU has become the default activation for deep networks, enabling the training of very deep architectures. Its simplicity and effectiveness have driven advances in computer vision, natural language processing, and reinforcement learning.</p>
+<p><strong>What does ReLU let through?</strong>
+Lets through: all positive values (unchanged)
+Blocks: all negative values (outputs zero)</p>
+<p><strong>How does it shape learning?</strong>
+Enables sparse activations (many neurons output zero), which can improve efficiency and generalization.
+Avoids vanishing gradient for <span class="math-inline">$x &gt; 0$</span> (gradient is 1), but can cause &quot;dead neurons&quot; (if <span class="math-inline">$x &lt; 0$</span> always, neuron never activates).
+Default for hidden layers in modern deep networks.</p>
+<p><strong>Analogy:</strong> Like a one way valve—only lets positive flow through, blocks the rest.</p>
+<hr>
+<h2 id="leaky_relu">Leaky ReLU</h2>
+<p>Leaky ReLU modifies the standard ReLU by allowing a small, nonzero gradient for negative inputs: <span class="math-inline">$\text{LeakyReLU}(x) = \max(\alpha x, x)$</span>, where <span class="math-inline">$\alpha$</span> is a small positive constant. This addresses the &quot;dying ReLU&quot; problem, where neurons become inactive and stop learning. (See Neural Networks chapter for more details)</p>
+<p>Leaky ReLU improves the robustness and expressivity of deep networks, especially in settings where negative activations are informative. It is used in generative models, adversarial networks, and architectures prone to neuron inactivation.</p>
+<p><strong>What does Leaky ReLU let through?</strong></p>
+<ul>
+<li>Lets through: all positive values, and a small fraction of negative values</li>
+<li>Blocks: nothing completely, but negative values are greatly diminished</li>
+</ul>
+<p><strong>How does it shape learning?</strong></p>
+<ul>
+<li>Reduces risk of dead neurons by allowing some gradient for <span class="math-inline">$x &lt; 0$</span></li>
+<li>Maintains sparsity and efficiency</li>
+</ul>
+<p><strong>Analogy:</strong> Like a leaky valve—mostly blocks negative flow, but lets a trickle through.</p>
+<hr>
+<h2 id="activation_functions_and_gradient_flow">Activation Functions and Gradient Flow</h2>
+<ul>
+<li><strong>Vanishing Gradients:</strong> Sigmoid/tanh can squash gradients to near zero, especially in deep networks. (See Backpropagation chapter for more details)</li>
+<li><strong>Exploding Gradients:</strong> Rare, but can occur if activations or weights grow too large.</li>
+<li><strong>Sparsity:</strong> ReLU and variants create sparse activations, which can help with generalization and efficiency.</li>
+</ul>
+<hr>
+<h2 id="how_activation_functions_shape_model_capacity">How Activation Functions Shape Model Capacity</h2>
+<ul>
+<li>The choice of activation determines what functions the network can approximate.</li>
+<li>nonlinear activations enable universal approximation (the ability to model any function given enough neurons/layers).</li>
+<li>Poor choice can limit expressivity or make training difficult.</li>
+</ul>
+<h2 id="softmax">Softmax</h2>
+<p>The softmax function generalizes the sigmoid to multiclass settings: <span class="math-inline">$\text{softmax}(\mathbf{z})_i = \frac{e^{z_i}}{\sum_j e^{z_j}}$</span>. It maps a vector of real values to a probability distribution over classes, with outputs summing to one. (See Classification and Neural Networks chapters for more details)</p>
+<p>In ML, softmax is used in the output layer of multiclass classifiers, enabling probabilistic interpretation and gradient based optimization. It is central to models for language modeling, image classification, and structured prediction.</p>
+<h2 id="swish">Swish</h2>
+<p>Swish is a smooth, non monotonic activation function defined as <span class="math-inline">$\text{swish}(x) = x \cdot \sigma(x)$</span>, where <span class="math-inline">$\sigma(x)$</span> is the sigmoid. Swish has been shown to improve performance in deep networks, particularly in very deep or wide architectures.</p>
+<p>Swish combines the benefits of smoothness, nonlinearity, and unboundedness, enabling better gradient flow and expressivity. It is used in state of the art architectures such as EfficientNet and has inspired the development of other advanced activations.</p>
+<h2 id="gelu">GELU</h2>
+<p>The Gaussian Error Linear Unit (GELU) is defined as <span class="math-inline">$\text{GELU}(x) = x \cdot \Phi(x)$</span>, where <span class="math-inline">$\Phi(x)$</span> is the cumulative distribution function of the standard normal distribution. GELU provides a smooth, probabilistic gating of inputs, improving performance in deep networks.</p>
+<p>GELU is used in transformer architectures and large language models, where its smoothness and expressivity enable better training dynamics and generalization. It has become a standard activation in modern deep learning.</p>
+<h2 id="properties">Properties</h2>
+<p>Activation functions are characterized by properties such as nonlinearity, differentiability, boundedness, and zero centeredness. These properties affect the expressivity, trainability, and convergence of neural networks. (See Neural Networks chapter for more details)</p>
+<p>In ML, the choice of activation function is guided by the task, architecture, and optimization considerations. Advances in activation function design have led to improved performance, stability, and interpretability in deep networks.</p>
+<h2 id="vanishing_gradients">Vanishing Gradients</h2>
+<p>The vanishing gradient problem occurs when gradients become very small during backpropagation, preventing effective learning in deep networks. Activation functions with bounded derivatives, such as sigmoid and tanh, are particularly susceptible to this issue. (See Backpropagation chapter for more details)</p>
+<p>In ML, addressing vanishing gradients is critical for training deep architectures. Solutions include using ReLU based activations, careful initialization, normalization, and architectural innovations such as residual connections.</p>
+<h2 id="role_in_deep_learning">Role in Deep Learning</h2>
+<p>Activation functions enable neural networks to model complex, nonlinear relationships. They determine the capacity of the network, the flow of gradients, and the efficiency of training. The choice and tuning of activation functions are central to the success of deep learning.</p>
+<p>In ML, activation functions are a key area of research and innovation, with new functions continually being developed to address the challenges of depth, expressivity, and optimization in modern architectures.</p>
+<h2 id="connections_to_machine_learning">Connections to Machine Learning</h2>
+<p>Activation functions are fundamental to the design and success of neural networks and deep learning. Their properties and behavior influence every aspect of model training, evaluation, and deployment.</p>
+<p>Mastery of activation functions provides insight into the design of advanced models, the interpretation of learned representations, and the development of new algorithms for challenging ML problems. </p>
+
+      </div>
+
+      <nav class="note-nav-bottom">
+        <a href="11_normalization.html" class="nav-prev"><span class="nav-label">Previous</span><span class="nav-title">← Normalization</span></a>
+        <a href="regularization.html" class="nav-next"><span class="nav-label">Next</span><span class="nav-title">Regularization →</span></a>
+      </nav>
+    </article>
+  </main>
+</div>
+
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"
+  onload="renderMathInElement(document.getElementById('note-content'), {
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '$', right: '$', display: false}
+    ],
+    throwOnError: false,
+    trust: true,
+    strict: false
+  });"></script>
+<script>
+(function initAmbientBackground() {
+  const canvas = document.getElementById('ambient-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  
+  let width = canvas.width = window.innerWidth;
+  let height = canvas.height = window.innerHeight;
+  
+  window.addEventListener('resize', () => {
+    width = canvas.width = window.innerWidth;
+    height = canvas.height = window.innerHeight;
+  });
+  
+  const particles = [];
+  const particleCount = Math.min(60, Math.floor((width * height) / 20000));
+  const connectionDistance = 120;
+  
+  class Particle {
+    constructor() {
+      this.x = Math.random() * width;
+      this.y = Math.random() * height;
+      this.vx = (Math.random() - 0.5) * 0.25;
+      this.vy = (Math.random() - 0.5) * 0.25;
+      this.radius = Math.random() * 1.2 + 0.6;
+    }
+    
+    update() {
+      this.x += this.vx;
+      this.y += this.vy;
+      
+      if (this.x < 0 || this.x > width) this.vx *= -1;
+      if (this.y < 0 || this.y > height) this.vy *= -1;
+    }
+    
+    draw() {
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(126, 247, 201, 0.4)';
+      ctx.fill();
+    }
+  }
+  
+  for (let i = 0; i < particleCount; i++) {
+    particles.push(new Particle());
+  }
+  
+  function animate() {
+    ctx.clearRect(0, 0, width, height);
+    particles.forEach(p => {
+      p.update();
+      p.draw();
+    });
+    
+    for (let i = 0; i < particles.length; i++) {
+      for (let j = i + 1; j < particles.length; j++) {
+        const dx = particles[i].x - particles[j].x;
+        const dy = particles[i].y - particles[j].y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        
+        if (dist < connectionDistance) {
+          const alpha = (1 - (dist / connectionDistance)) * 0.08;
+          ctx.beginPath();
+          ctx.moveTo(particles[i].x, particles[i].y);
+          ctx.lineTo(particles[j].x, particles[j].y);
+          ctx.strokeStyle = "rgba(126, 247, 201, " + alpha + ")";
+          ctx.lineWidth = 0.8;
+          ctx.stroke();
+        }
+      }
+    }
+    requestAnimationFrame(animate);
+  }
+  animate();
+})();
+</script>
+</body>
+</html>

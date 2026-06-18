@@ -1,0 +1,358 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mixture of Experts — kanishk's notes</title>
+  <meta name="description" content="Mixture of Experts — Transformers & LLMs notes by kanishk" />
+  <link rel="icon" type="image/png" href="../assets/favicon.png" />
+  <link rel="stylesheet" href="../css/style.css" />
+  <link rel="stylesheet" href="../css/notes.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous" />
+</head>
+<body>
+<canvas id="ambient-canvas"></canvas>
+
+<!-- Top Floating Navigation Bar -->
+<header class="navbar">
+  <div class="nav-container">
+    <a href="../index.html" class="nav-logo">kanishk</a>
+    <nav class="nav-links">
+      <a href="../index.html#home">Home</a>
+      <a href="../index.html#projects">Projects</a>
+      <a href="../index.html#blogs">Blogs</a>
+      <a href="../index.html#notes" class="active">Notes</a>
+    </nav>
+    <div class="nav-socials">
+      <a href="https://github.com/kanishkez" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://huggingface.co/kanishkez" target="_blank" rel="noopener">HuggingFace</a>
+    </div>
+  </div>
+</header>
+
+<div class="container">
+  <main class="main-content">
+    <article class="note-page">
+      <div class="note-breadcrumb">
+        <a href="../index.html#notes">Notes</a>
+        <span class="breadcrumb-sep">›</span>
+        <a href="../index.html#notes">Transformers & LLMs</a>
+        <span class="breadcrumb-sep">›</span>
+        <span>Mixture of Experts</span>
+      </div>
+
+      <header class="note-header">
+        <div class="note-category-tag">Transformers & LLMs</div>
+        <h1>Mixture of Experts</h1>
+      </header>
+
+      <nav class="note-toc" id="note-toc">
+        <div class="toc-title">Contents</div>
+        <div class="toc-items">
+          <a href="#mixture_of_experts" class="toc-item toc-h1">Mixture of Experts</a>
+          <a href="#core_idea" class="toc-item toc-h3">Core Idea</a>
+          <a href="#conditional_computation" class="toc-item toc-h2">Conditional Computation </a>
+          <a href="#history" class="toc-item toc-h2">History</a>
+          <a href="#gshard" class="toc-item toc-h3">GShard</a>
+          <a href="#switch_transformer" class="toc-item toc-h3">Switch Transformer </a>
+          <a href="#components" class="toc-item toc-h3">Components</a>
+          <a href="#expert_capacity" class="toc-item toc-h3">Expert Capacity</a>
+          <a href="#load_balancing_loss" class="toc-item toc-h3">Load Balancing Loss</a>
+          <a href="#working" class="toc-item toc-h3">Working</a>
+          <a href="#backpropagation" class="toc-item toc-h3">Backpropagation</a>
+          <a href="#parallelism" class="toc-item toc-h2">Parallelism </a>
+          <a href="#types_of_parallelism" class="toc-item toc-h3">Types of Parallelism</a>
+          <a href="#data_parallelism_dp" class="toc-item toc-h2">Data Parallelism (DP)</a>
+          <a href="#model_parallelism_mp" class="toc-item toc-h2">Model Parallelism (MP)</a>
+          <a href="#tensor_parallelism" class="toc-item toc-h3">Tensor Parallelism</a>
+          <a href="#pipeline_parallelism" class="toc-item toc-h3">Pipeline Parallelism</a>
+          <a href="#expert_parallelism_moes_native_parallelism" class="toc-item toc-h2">Expert Parallelism (MoE's native parallelism)</a>
+          <a href="#hybrid_parallelism" class="toc-item toc-h2">Hybrid Parallelism</a>
+          <a href="#role_of_moe_in_llms" class="toc-item toc-h2">Role of MoE in LLMs</a>
+        </div>
+      </nav>
+
+      <div class="note-content" id="note-content">
+        <h1 id="mixture_of_experts">Mixture of Experts</h1>
+<p>Dense language models waste a massive amount of compute because they run every single token through every single parameter. Mixture of experts addresses this by using conditional computation to only activate a tiny fraction of the network for each token. This lets us scale the model&#39;s capacity and parameters without blowing up our training and inference costs.</p>
+<h3 id="core_idea">Core Idea</h3>
+<p>Modern LLMs are powerful but computationally expensive since every token is processed by the entire dense network. Very often, when a token is processed, we don&#39;t need all of the activations or all of the weights.</p>
+<p>Research has shown that for most tokens, only a small subset of weights (like 5%) is actually needed. The remaining 95% of compute is basically wasted.</p>
+<p>To solve this, Mixture of Experts was introduced to process tokens using conditional computation.</p>
+<p>Mixture of Experts are feed forward layers used as experts, where each token gets processed by an expert layer based on its domain instead of being processed by the entire dense model.</p>
+<p>So, we have a bunch of experts that process tokens separately. When a token comes in, we decide which expert to send it to and process it.</p>
+<span class="math-display">$$y = \sum_i G(x)_i E_i(x)$$</span>
+The multiplication <span class="math-inline">$G(x)_i E_i(x)$</span> means that the expert&#39;s opinion is only as valuable as the gate&#39;s trust in it.</p>
+<h2 id="conditional_computation">Conditional Computation</h2>
+<p>The key idea is that we have a function <span class="math-inline">$f(x,\theta)$</span>, but we don&#39;t want to evaluate all parameters for every <span class="math-inline">$x$</span>.</p>
+<p>So instead of one function, we define a family of functions:
+<span class="math-display">$$\{f_{1}, f_{2}, \dots, f_{E}\}$$</span>
+and we use a selection mechanism that decides which parameter is evaluated by which function.</p>
+<span class="math-display">$$z \sim p(z \mid x)$$</span>
+<h2 id="history">History</h2>
+<p><strong>Early Mixture of Experts</strong>
+Original MoE (in 1991) used linear regressors as experts and used softmax as its gating network.</p>
+<p>Theoretically MoE was right but practically training was unstable due to load imbalances and other problems.</p>
+<p><strong>2017</strong>
+LSTMs were trained using a sparsely gated MoE layer.</p>
+<p>Problems faced:</p>
+<ol>
+<li>Bad routing </li>
+<li>One expert dominates</li>
+<li>No parallelism and high overhead</li>
+</ol>
+<h3 id="gshard">GShard</h3>
+<p>GShard introduced:</p>
+<ol>
+<li>Top k routing </li>
+<li>Auxiliary load balancing loss: to prevent one expert from dominating, we add an auxiliary loss (acting as regularization)</li>
+<li>Expert parallelism</li>
+</ol>
+<h3 id="switch_transformer">Switch Transformer</h3>
+<p>Here, we don&#39;t use Top k routing and use top 1 routing instead.
+One expert per token.
+No expert mixing.</p>
+<p>Backprop: Only that expert updated.</p>
+<h3 id="components">Components</h3>
+<h4 id="experts">Experts</h4>
+<p>Usually feed forward networks with an activation function.</p>
+<span class="math-display">$$f_i(x) = W_{2,i}\,\sigma(W_{1,i}x)$$</span>
+Experts are the feed forward networks that tokens flow through inside a transformer layer.
+There are <span class="math-inline">$E$</span> experts and usually processing is divided between experts.
+So generally, if we have <span class="math-inline">$N$</span> tokens, the processing is divided between all experts individually.</p>
+<p>Each token is only processed by one expert (unless you use top k routing or whatever).</p>
+<h4 id="router_gating_network">Router / Gating Network</h4>
+<p>This produces the routing scores that decide which token goes to which expert.</p>
+<p>Normally this is a simple linear layer where a token <span class="math-inline">$x$</span> is multiplied by a matrix of weights.
+<span class="math-display">$$g(x) = xW_{g}$$</span>
+The router gives a score for every expert per token. So if you have 8 experts, we get 8 raw numbers.
+We then apply softmax to these scores and turn them into a probability distribution.</p>
+<p>We then pick the routes using various routing algorithms.</p>
+<p>There are many types of routing/gating.</p>
+<h4 id="dense_gating">Dense Gating</h4>
+<p>Here we apply softmax over all experts and compute all of them (very inefficient).
+This is only theoretical; nobody uses this practically.</p>
+<p>Let&#39;s see what is actually used in modern MoEs.</p>
+<h4 id="sparse_routing">Sparse Routing</h4>
+<p><strong>Top k Routing</strong>
+We select the top k experts per token, picking them based on softmax probabilities.</p>
+<span class="math-display">$$g(x) = \text{TopK}(\text{softmax}(xW_g), k)$$</span>
+Issues:</p>
+<ul>
+<li>Non differentiability</li>
+<li>Load imbalance</li>
+<li>Expert collapse</li>
+</ul>
+<p><strong>Switch Routing (Used in Switch Transformer)</strong>
+We use Top 1 routing here.</p>
+<p>Each token gets assigned only one expert.
+It is simpler, faster, and more stable.</p>
+<p>Router outputs scores and picks the argmax expert.</p>
+<h4 id="routing">Routing</h4>
+<p>At the very beginning, the router&#39;s weights and experts&#39; weights are all randomly initialized.
+The router picks experts randomly.</p>
+<p>There is no specialization yet.
+The magic happens through backpropagation.</p>
+<ul>
+<li>The router randomly sends a &quot;math token&quot; to an expert in the forward pass.</li>
+<li>The gradient flows back through the model, and both the expert and the router learn.</li>
+<li>Expert 3 becomes slightly better at math.</li>
+<li>The router now sends math like problems to Expert 3 only.</li>
+</ul>
+<p>That is how specialization learning happens to experts.</p>
+<h3 id="expert_capacity">Expert Capacity</h3>
+<p>Each expert has a capacity:
+<span class="math-display">$$C = \left\lceil \frac{N \cdot k}{E} \cdot \text{capacity\_factor} \right\rceil$$</span>
+If too many tokens go to one expert, they are either rerouted or dropped.</p>
+<span class="math-display">$$\text{Expert Capacity} = \left( \frac{\text{tokens per batch}}{\text{number of experts}} \right) \times \text{capacity factor}$$</span>
+<h3 id="load_balancing_loss">Load Balancing Loss</h3>
+<p>This is an auxiliary loss added to the original task loss which encourages uniform expert usage.</p>
+<span class="math-display">$$\mathcal{L}_{lb} = E \sum_{i=1}^E f_i p_i$$</span>
+Where:</p>
+<ul>
+<li><span class="math-inline">$f_i$</span>: fraction of tokens routed to expert <span class="math-inline">$i$</span></li>
+<li><span class="math-inline">$p_i$</span>: average router probability for expert <span class="math-inline">$i$</span></li>
+</ul>
+<p>This is <strong>entropy maximization under constraints</strong>.</p>
+<p>The ideal value for both <span class="math-inline">$f_i$</span> and <span class="math-inline">$p_i$</span> should be <span class="math-inline">$\frac{1}{E}$</span> so that the router uses all experts equally and each expert receives the same amount of tokens as the others.</p>
+<p>It is important to balance both so that routing is stable.</p>
+<h3 id="working">Working</h3>
+<ol>
+<li>Token enters the transformer block (attention happens and we get the suitable output).</li>
+<li>Router computes scores and assigns an expert for the token.
+<span class="math-display">$$s = xW_g \quad\Rightarrow\quad i^* = \arg\max s$$</span></li>
+<li>We check the capacity of the expert. If it is full, we either drop the token, send it to a backup expert, or mask the gradient (depending on what we choose).</li>
+<li>Expert computation. Token is sent to the feed forward layer and is computed according to the expert.
+<span class="math-display">$$y = W_{2,i^*} \sigma(W_{1,i^*} x)$$</span></li>
+<li>Tokens are gathered back into the original order.</li>
+</ol>
+<h3 id="backpropagation">Backpropagation</h3>
+<p>Gradients only flow through the selected expert, the router parameters, and the load balancing loss. All others get zero gradient.</p>
+<h2 id="parallelism">Parallelism</h2>
+<p>Note: Devices refer to training servers/GPUs etc.</p>
+<p>Parallelism in large language models is the use of multiple processing units (like GPUs) to simultaneously execute different parts of the model or process data in parallel (during training and inference).</p>
+<h3 id="types_of_parallelism">Types of Parallelism</h3>
+<h2 id="data_parallelism_dp">Data Parallelism (DP)</h2>
+<p><strong>What it is</strong></p>
+<ul>
+<li>Same model replicated on multiple devices</li>
+<li>Each device processes different data</li>
+<li>Gradients are averaged</li>
+</ul>
+<p>The data is split into several shards, and every shard is allocated to each device, which equals parallel training in the dimension of the data batch. Every device has an intact copy/replica of the model, and the parameters of the model are updated based on the data split on each device.</p>
+<p>Limitation:
+<span class="math-display">$$\text{Max model size} \le \text{single GPU memory}$$</span>
+<h2 id="model_parallelism_mp">Model Parallelism (MP)</h2>
+<p>Split the model itself across devices.</p>
+<h3 id="tensor_parallelism">Tensor Parallelism</h3>
+<ul>
+<li>Split weight matrices (e.g. columns of FFN)</li>
+<li>All GPUs compute every token</li>
+</ul>
+<h3 id="pipeline_parallelism">Pipeline Parallelism</h3>
+<ul>
+<li>Different layers on different devices</li>
+<li>Microbatching required</li>
+</ul>
+<h2 id="expert_parallelism_moes_native_parallelism">Expert Parallelism (MoE&#39;s native parallelism)</h2>
+<p><strong>Key idea</strong></p>
+<ul>
+<li>Experts are independent</li>
+<li>Each expert lives on a different device</li>
+<li>Tokens are routed to experts</li>
+</ul>
+<p>Instead of splitting a matrix, we send different tokens to different networks present on different devices.</p>
+<h2 id="hybrid_parallelism">Hybrid Parallelism</h2>
+<p>Modern MoE LLMs use all of them:</p>
+<ul>
+<li>Data parallelism across nodes</li>
+<li>Tensor parallelism inside experts</li>
+<li>Expert parallelism across experts</li>
+<li>Pipeline parallelism across layers</li>
+</ul>
+<p>Training parallelism maximizes throughput; inference parallelism minimizes latency under memory constraints.</p>
+<h2 id="role_of_moe_in_llms">Role of MoE in LLMs</h2>
+<p>It is important to revisit what the attention block does in a transformer.</p>
+<p>For each token, it collects relevant context from the sequence and assigns probabilities/attention to other tokens in the sequence. So, for each token it tells how much it should focus on other tokens in the same sequence when generating an answer.</p>
+<p>This is what an attention block does: it gathers context and relates one token to the other.</p>
+<p>Feed forward networks look at this modified token (with attention and stuff, basically the hidden state after the attention block) and decide what token to generate next.</p>
+<p>The actual generation of tokens happens inside the feed forward network.</p>
+<p>The attention block doesn&#39;t understand or store facts; its job is to look at words and see how they relate to each other.</p>
+<p>The FFN is where actual knowledge building happens. It stores facts, grammar rules, and reasoning.</p>
+<p><strong>Important</strong>:
+Researchers discovered that even in dense models, FFNs were already acting like experts. If you looked at a dense model, you would find that for a math question, only 10% of the neurons were doing the actual work.</p>
+<p>So, MoE came to be by making these FFNs into specialized blocks and allowing these blocks to learn domain specialization.</p>
+<p><strong>In modern LLMs, MoEs hold most of the parameters instead of attention blocks because that is where most of the computation happens to see what token will be generated next.</strong></p>
+<p>Expert weights store facts, skills, and patterns, not attention blocks.</p>
+<p>Everything that a model learns, like facts and logic, is stored in the expert blocks, not attention blocks.</p>
+<p>Attention blocks learn:</p>
+<ul>
+<li>Syntax</li>
+<li>Alignment</li>
+<li>Induction heads</li>
+<li>Copy mechanisms</li>
+<li>Positional logic</li>
+</ul>
+<p>Attention blocks are only for contextualization.</p>
+<p>MoE expert blocks are where computation and next token generation take place.</p>
+<p>Ultimately, attention handles the relationships between tokens while mixture of experts does the heavy lifting of storing actual facts and generating the next token. Splitting FFNs into specialized experts lets us scale parameter counts to trillions without blowing up the compute budget. Next up, we should look at how specific architectures like Mixtral or DeepSeek implement these concepts in practice.</p>
+
+      </div>
+
+      <nav class="note-nav-bottom">
+        <a href="gpu_optimization.html" class="nav-prev"><span class="nav-label">Previous</span><span class="nav-title">← GPU Optimization</span></a>
+        <a href="peft.html" class="nav-next"><span class="nav-label">Next</span><span class="nav-title">PEFT →</span></a>
+      </nav>
+    </article>
+  </main>
+</div>
+
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"
+  onload="renderMathInElement(document.getElementById('note-content'), {
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '$', right: '$', display: false}
+    ],
+    throwOnError: false,
+    trust: true,
+    strict: false
+  });"></script>
+<script>
+(function initAmbientBackground() {
+  const canvas = document.getElementById('ambient-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  
+  let width = canvas.width = window.innerWidth;
+  let height = canvas.height = window.innerHeight;
+  
+  window.addEventListener('resize', () => {
+    width = canvas.width = window.innerWidth;
+    height = canvas.height = window.innerHeight;
+  });
+  
+  const particles = [];
+  const particleCount = Math.min(60, Math.floor((width * height) / 20000));
+  const connectionDistance = 120;
+  
+  class Particle {
+    constructor() {
+      this.x = Math.random() * width;
+      this.y = Math.random() * height;
+      this.vx = (Math.random() - 0.5) * 0.25;
+      this.vy = (Math.random() - 0.5) * 0.25;
+      this.radius = Math.random() * 1.2 + 0.6;
+    }
+    
+    update() {
+      this.x += this.vx;
+      this.y += this.vy;
+      
+      if (this.x < 0 || this.x > width) this.vx *= -1;
+      if (this.y < 0 || this.y > height) this.vy *= -1;
+    }
+    
+    draw() {
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(126, 247, 201, 0.4)';
+      ctx.fill();
+    }
+  }
+  
+  for (let i = 0; i < particleCount; i++) {
+    particles.push(new Particle());
+  }
+  
+  function animate() {
+    ctx.clearRect(0, 0, width, height);
+    particles.forEach(p => {
+      p.update();
+      p.draw();
+    });
+    
+    for (let i = 0; i < particles.length; i++) {
+      for (let j = i + 1; j < particles.length; j++) {
+        const dx = particles[i].x - particles[j].x;
+        const dy = particles[i].y - particles[j].y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        
+        if (dist < connectionDistance) {
+          const alpha = (1 - (dist / connectionDistance)) * 0.08;
+          ctx.beginPath();
+          ctx.moveTo(particles[i].x, particles[i].y);
+          ctx.lineTo(particles[j].x, particles[j].y);
+          ctx.strokeStyle = "rgba(126, 247, 201, " + alpha + ")";
+          ctx.lineWidth = 0.8;
+          ctx.stroke();
+        }
+      }
+    }
+    requestAnimationFrame(animate);
+  }
+  animate();
+})();
+</script>
+</body>
+</html>

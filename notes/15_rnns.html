@@ -1,0 +1,408 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>RNNs — kanishk's notes</title>
+  <meta name="description" content="RNNs — Sequence & Recurrent Models notes by kanishk" />
+  <link rel="icon" type="image/png" href="../assets/favicon.png" />
+  <link rel="stylesheet" href="../css/style.css" />
+  <link rel="stylesheet" href="../css/notes.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous" />
+</head>
+<body>
+<canvas id="ambient-canvas"></canvas>
+
+<!-- Top Floating Navigation Bar -->
+<header class="navbar">
+  <div class="nav-container">
+    <a href="../index.html" class="nav-logo">kanishk</a>
+    <nav class="nav-links">
+      <a href="../index.html#home">Home</a>
+      <a href="../index.html#projects">Projects</a>
+      <a href="../index.html#blogs">Blogs</a>
+      <a href="../index.html#notes" class="active">Notes</a>
+    </nav>
+    <div class="nav-socials">
+      <a href="https://github.com/kanishkez" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://huggingface.co/kanishkez" target="_blank" rel="noopener">HuggingFace</a>
+    </div>
+  </div>
+</header>
+
+<div class="container">
+  <main class="main-content">
+    <article class="note-page">
+      <div class="note-breadcrumb">
+        <a href="../index.html#notes">Notes</a>
+        <span class="breadcrumb-sep">›</span>
+        <a href="../index.html#notes">Sequence & Recurrent Models</a>
+        <span class="breadcrumb-sep">›</span>
+        <span>RNNs</span>
+      </div>
+
+      <header class="note-header">
+        <div class="note-category-tag">Sequence & Recurrent Models</div>
+        <h1>RNNs</h1>
+      </header>
+
+      <nav class="note-toc" id="note-toc">
+        <div class="toc-title">Contents</div>
+        <div class="toc-items">
+          <a href="#recurrent_neural_networks" class="toc-item toc-h1">Recurrent Neural Networks</a>
+          <a href="#sequential_data" class="toc-item toc-h2">Sequential Data</a>
+          <a href="#sequential_processing" class="toc-item toc-h2">Sequential Processing</a>
+          <a href="#core_equation" class="toc-item toc-h3">Core Equation</a>
+          <a href="#usage_of_tanh_as_an_activation_function" class="toc-item toc-h3">Usage of Tanh as an Activation Function</a>
+          <a href="#retaining_memory" class="toc-item toc-h2">Retaining Memory</a>
+          <a href="#at_timestep_one" class="toc-item toc-h2">At Timestep One</a>
+          <a href="#at_timestep_two" class="toc-item toc-h2">At Timestep Two</a>
+          <a href="#sharing_weights_and_parameters" class="toc-item toc-h2">Sharing Weights and Parameters</a>
+          <a href="#backpropagation" class="toc-item toc-h2">Backpropagation</a>
+          <a href="#1_forward_pass_in_rnns" class="toc-item toc-h3">1. Forward Pass in RNNs</a>
+          <a href="#2_why_we_need_gradient_wrt_input" class="toc-item toc-h3">2. Why We Need Gradient w.r.t Input</a>
+          <a href="#3_the_core_recurrence_in_backpropagation" class="toc-item toc-h3">3. The Core Recurrence in Backpropagation</a>
+          <a href="#4_unrolling_the_recurrence" class="toc-item toc-h3">4. Unrolling the Recurrence</a>
+          <a href="#5_final_expression" class="toc-item toc-h3">5. Final Expression</a>
+          <a href="#6_why_losses_are_added" class="toc-item toc-h3">6. Why Losses are Added</a>
+          <a href="#7_numerical_example_three_timestep_rnn" class="toc-item toc-h3">7. Numerical Example: Three Timestep RNN</a>
+          <a href="#why_eigenvectors_matter_for_rnns" class="toc-item toc-h2">Why Eigenvectors Matter for RNNs</a>
+          <a href="#predicting_behavior_using_eigenvectors" class="toc-item toc-h2">Predicting Behavior Using Eigenvectors</a>
+          <a href="#problems_with_rnns" class="toc-item toc-h2">Problems with RNNs</a>
+          <a href="#vanishing_gradients" class="toc-item toc-h2">Vanishing Gradients</a>
+          <a href="#exploding_gradients" class="toc-item toc-h2">Exploding Gradients</a>
+          <a href="#short_term_memory_bias" class="toc-item toc-h2">Short Term Memory Bias</a>
+          <a href="#no_memory_control" class="toc-item toc-h2">No Memory Control</a>
+          <a href="#optimizer_used" class="toc-item toc-h3">Optimizer Used</a>
+          <a href="#adam_optimizer" class="toc-item toc-h2">Adam Optimizer</a>
+        </div>
+      </nav>
+
+      <div class="note-content" id="note-content">
+        <h1 id="recurrent_neural_networks">Recurrent Neural Networks</h1>
+<p>Recurrent Neural Networks are a class of neural networks designed to model sequential data. Unlike feedforward networks which assume inputs are independent, RNNs introduce temporal memory. They retain information about previous inputs in the sequence.</p>
+<h2 id="sequential_data">Sequential Data</h2>
+<p>Data in which order matters.
+For example:</p>
+<ul>
+<li>Words in a sentence, text, video, and audio data.</li>
+</ul>
+<h2 id="sequential_processing">Sequential Processing</h2>
+<p>Instead of taking all inputs at once, RNNs process one element of the sequence at a time, maintaining a hidden state that acts as memory.</p>
+<h3 id="core_equation">Core Equation</h3>
+<p>At each time step <span class="math-inline">$t$</span>, the RNN updates a hidden state <span class="math-inline">$h_t$</span>:
+<span class="math-display">$$h_t = \tanh(W_{hx} x_t + W_{hh} h_{t-1} + b_h)$$</span>
+<p>Then it outputs:
+<span class="math-display">$$y_t = W_{hy} h_t + b_y$$</span>
+<p>Where:</p>
+<ul>
+<li><span class="math-inline">$x_t$</span>: input at time <span class="math-inline">$t$</span></li>
+<li><span class="math-inline">$h_{t-1}$</span>: hidden state from the previous time step</li>
+<li><span class="math-inline">$W_{hx}$</span>: input to hidden weight matrix</li>
+<li><span class="math-inline">$W_{hh}$</span>: hidden to hidden weight matrix</li>
+<li><span class="math-inline">$W_{hy}$</span>: hidden to output weight matrix</li>
+<li><span class="math-inline">$\tanh$</span>: activation function nonlinearity</li>
+<li><span class="math-inline">$y_t$</span>: output from a layer or neuron</li>
+</ul>
+<h3 id="usage_of_tanh_as_an_activation_function">Usage of Tanh as an Activation Function</h3>
+<span class="math-display">$$\tanh(x) \in (-1, 1)$$</span>
+<ol>
+<li>It outputs between <span class="math-inline">$-1$</span> and <span class="math-inline">$1$</span>.</li>
+<li>It allows the model to understand positive and negative influence in data.</li>
+<li>Its outputs are centered around zero which leads to stable training and gradients.</li>
+<li>Tanh helps mitigate the vanishing gradient problem to an extent because the derivative of tanh is higher than sigmoid, and it solves exploding gradients to an extent because unlike ReLU it does not let everything in.</li>
+<li>We need to preserve both positive and negative values.</li>
+</ol>
+<p>Although it can still suffer with vanishing gradients problem.</p>
+<h2 id="retaining_memory">Retaining Memory</h2>
+<p>Even though in standard neural networks we take the output from one layer and send it to the other layer, they do not retain any memory of what was once in them or what has passed through them. They only take input and give output.
+In RNNs, layers borrow memory or hidden states from themselves during the previous point in time.</p>
+<p>In RNNs, we deal with two axes:</p>
+<ol>
+<li>Timestamps: Data from each word (weight multiplied by input plus bias) is stored in a neuron for future use. Words are processed one by one in order. Every word has a time step which consists of all the layers at once. The word is sent to all the layers and that is considered one time step.</li>
+<li>Layers: The depth of the model with many layers, like in any neural network. Layers are stacked vertically, and output from one layer goes to input as the next layer in the same time step. Each layer has its own hidden state.</li>
+</ol>
+<p>Example:
+Let us say you have a sentence:
+<strong>&quot;I love pizza&quot;</strong> which is represented as <span class="math-inline">$[x_1, x_2, x_3]$</span>.
+We break it into three words:</p>
+<div class="table-wrapper"><table>
+<thead><tr><th>Time Step</th><th>Word</th></tr></thead>
+<tbody><tr><td><span class="math-inline">$t=1$</span></td><td>I</td></tr><tr><td><span class="math-inline">$t=2$</span></td><td>love</td></tr><tr><td><span class="math-inline">$t=3$</span></td><td>pizza</td></tr></tbody>
+</table></div>
+<p>Consider that we are using two layers in the model.</p>
+<h2 id="at_timestep_one">At Timestep One</h2>
+<ol>
+<li><strong>Layer 1:</strong> It receives the word &#39;I&#39;, computes a hidden state, and using that hidden state computes an output to pass on to the next layer.</li>
+<li><strong>Layer 2:</strong> It receives the output from Layer 1, builds a hidden state, stores the data, and then uses that to get an output.</li>
+</ol>
+<h2 id="at_timestep_two">At Timestep Two</h2>
+<ol>
+<li><strong>Layer 1:</strong> It receives the word &#39;love&#39; and remembers the hidden state from time step one about the word &#39;I&#39;. It then computes the hidden state using the previous hidden state. This hidden state is then used to get an output and send to the next layer.</li>
+<li><strong>Layer 2:</strong> It receives the input from Layer 1, uses its previous hidden state from time step one, and gets an output using it.</li>
+</ol>
+<p>So in this way, time steps are used to remember the previous word data so that we can find meaning between all the words and relate the words.
+Not using a timestamp would mean that we process all the words separately without any relationship or meaning between them.</p>
+<figure><img src="https://media.geeksforgeeks.org/wp-content/uploads/20241030134529497963/recurrent-neuron.png" alt="recurrent neuron" loading="lazy"><figcaption>recurrent neuron</figcaption></figure>
+<p>The neuron uses its previous hidden state data in a forward pass.</p>
+<h2 id="sharing_weights_and_parameters">Sharing Weights and Parameters</h2>
+<p>In RNNs, a neuron or layer shares the same weights across the time steps.
+We do not want the model to learn different parameters for each time step so that the model learns the meaning of the entire sentence using all the words.</p>
+<h2 id="backpropagation">Backpropagation</h2>
+<h3 id="1_forward_pass_in_rnns">1. Forward Pass in RNNs</h3>
+<p>%TOKEN_LINE_115%Given a sequence input <span class="math-inline">$x^{(1)}, x^{(2)}, \dots, x^{(T)}$</span>, the RNN computes:
+<span class="math-display">$$\begin{align*}
+h^{(t)} &= \tanh(W_{hh} h^{(t-1)} + W_{xh} x^{(t)} + b_h) \\
+y^{(t)} &= W_{hy} h^{(t)} + b_y
+\end{align*}$$</span>
+<p>Where:</p>
+<ul>
+<li><span class="math-inline">$W_{xh} \in \mathbb{R}^{n \times d}$</span> is the input to hidden weight matrix.</li>
+<li><span class="math-inline">$W_{hh} \in \mathbb{R}^{n \times n}$</span> is the hidden to hidden recurrent weight matrix.</li>
+<li><span class="math-inline">$W_{hy} \in \mathbb{R}^{m \times n}$</span> is the hidden to output weight matrix.</li>
+<li><span class="math-inline">$h^{(0)} = 0$</span> is the initial hidden state, which can also be a learned parameter.</li>
+</ul>
+<p>Loss is computed at each time step:
+<span class="math-display">$$\mathcal{L} = \sum_{t=1}^T \mathcal{L}^{(t)}$$</span>
+<p>Each <span class="math-inline">$\mathcal{L}^{(t)}$</span> is typically cross entropy or mean squared error comparing <span class="math-inline">$y^{(t)}$</span> with target <span class="math-inline">$\hat{y}^{(t)}$</span>.</p>
+<h3 id="2_why_we_need_gradient_wrt_input">2. Why We Need Gradient w.r.t Input</h3>
+<p>Each hidden state <span class="math-inline">$h^{(t)}$</span> depends on the <strong>previous</strong> hidden state <span class="math-inline">$h^{(t-1)}$</span>. So when you compute the gradient of the loss with respect to the weights <span class="math-inline">$W_{hh}$</span>, you need:
+<span class="math-display">$$\frac{\partial \mathcal{L}}{\partial W_{hh}} = \sum_{t=1}^{T} \frac{\partial \mathcal{L}}{\partial h^{(t)}} \cdot \frac{\partial h^{(t)}}{\partial z^{(t)}} \cdot \frac{\partial z^{(t)}}{\partial W_{hh}}$$</span>
+<p>where <span class="math-inline">$z^{(t)} = W_{hh} h^{(t-1)} + W_{xh} x^{(t)} + b_h$</span>.
+Clearly here <span class="math-inline">$z^{(t)}$</span> derived with respect to <span class="math-inline">$W_{hh}$</span> will give <span class="math-inline">$h^{(t-1)}$</span> because the previous hidden state is used to compute <span class="math-inline">$z$</span>, and <span class="math-inline">$h^{(t)} = \tanh(z^{(t)})$</span> which is the final output.</p>
+<span class="math-display">$$\frac{\partial z^{(t)}}{\partial W_{hh}} = h^{(t-1)}$$</span>
+<p>So we <strong>need the gradient of the loss w.r.t. each hidden input</strong> <span class="math-inline">$h^{(t)}$</span>. This forms the basis of Backpropagation Through Time (BPTT).</p>
+<h3 id="3_the_core_recurrence_in_backpropagation">3. The Core Recurrence in Backpropagation</h3>
+<p>The total gradient of the loss w.r.t. <span class="math-inline">$h^{(t)}$</span> is:
+<span class="math-display">$$\frac{\partial \mathcal{L}}{\partial h^{(t)}} = \frac{\partial \mathcal{L}^{(t)}}{\partial h^{(t)}} + \frac{\partial \mathcal{L}}{\partial h^{(t+1)}} \cdot \frac{\partial h^{(t+1)}}{\partial h^{(t)}}$$</span>
+<h4 id="why_we_add_and_not_multiply_latexinline69latexend">Why We Add and Not Multiply <span class="math-inline">$h^{(t)}$</span></h4>
+<p><span class="math-inline">$h^{(t)}$</span> affects both its own time step loss <span class="math-inline">$\mathcal{L}^{(t)}$</span> and all future losses through <span class="math-inline">$h^{(t+1)}$</span>.
+Each path contributes a term to the gradient, so we <strong>add</strong> them.
+This is the <strong>chain rule over time</strong>, not a product of losses.</p>
+<h3 id="4_unrolling_the_recurrence">4. Unrolling the Recurrence</h3>
+<p>Each <span class="math-inline">$h^{(t+1)}$</span> is a function of <span class="math-inline">$h^{(t)}$</span>:
+<span class="math-display">$$\begin{align*}
+z^{(t+1)} &= W_{hh} h^{(t)} + W_{xh} x^{(t+1)} + b \\
+h^{(t+1)} &= \tanh(z^{(t+1)})
+\end{align*}$$</span>
+<p>So:
+<span class="math-display">$$\frac{\partial h^{(t+1)}}{\partial h^{(t)}} = \text{diag}(1 - (h^{(t+1)})^2) \cdot W_{hh}$$</span>
+<h3 id="5_final_expression">5. Final Expression</h3>
+<span class="math-display">$$z^{(t)} = W_{hh} h^{(t-1)} + W_{xh} x^{(t)} + b_h$$</span>
+<span class="math-display">$$h^{(t)} = \tanh(z^{(t)})$$</span>
+<p>So:
+<span class="math-display">$$\frac{\partial h^{(t)}}{\partial z^{(t)}} = 1 - (h^{(t)})^2 \quad \text{(element wise)}$$</span>
+<p>Then to compute:
+<span class="math-display">$$\frac{\partial \mathcal{L}}{\partial W_{hh}} = \sum_{t=1}^{T} \frac{\partial \mathcal{L}}{\partial h^{(t)}} \cdot \frac{\partial h^{(t)}}{\partial z^{(t)}} \cdot \frac{\partial z^{(t)}}{\partial W_{hh}}$$</span>
+<p>where:
+<span class="math-display">$$\frac{\partial z^{(t)}}{\partial W_{hh}} = h^{(t-1)}$$</span>
+<p>For each time step:
+<span class="math-display">$$\frac{\partial \mathcal{L}}{\partial W_{hh}} += \delta^{(t)} \cdot (h^{(t-1)})^T$$</span>
+<p>where:
+<span class="math-display">$$\delta^{(t)} = \frac{\partial \mathcal{L}}{\partial h^{(t)}} \circ (1 - (h^{(t)})^2)$$</span>
+<p>To compute gradient at time <span class="math-inline">$t$</span>:
+<span class="math-display">$$\frac{\partial \mathcal{L}}{\partial h^{(t)}} = \frac{\partial \mathcal{L}^{(t)}}{\partial h^{(t)}} + (W_{hh}^T \cdot \delta^{(t+1)})$$</span>
+<p>Compute:
+<span class="math-display">$$\delta^{(t)} = \left( \frac{\partial \mathcal{L}^{(t)}}{\partial h^{(t)}} + W_{hh}^T \delta^{(t+1)} \right) \circ (1 - (h^{(t)})^2)$$</span>
+<h3 id="6_why_losses_are_added">6. Why Losses are Added</h3>
+<p>We <strong>add</strong> losses:
+<span class="math-display">$$\mathcal{L} = \sum_{t=1}^{T} \mathcal{L}^{(t)}$$</span>
+<p>Even though the model might be predicting sequence likelihood as a product:
+<span class="math-display">$$P(y^{(1)}, \dots, y^{(T)}) = \prod_{t=1}^T P(y^{(t)})$$</span>
+<p>When we apply negative log, the total loss becomes:
+<span class="math-display">$$\mathcal{L} = -\sum_{t=1}^{T} \log P(y^{(t)})$$</span>
+<p><strong>So even when the model multiplies probabilities, the loss adds due to log.</strong></p>
+<h3 id="7_numerical_example_three_timestep_rnn">7. Numerical Example: Three Timestep RNN</h3>
+<p>Let us say:</p>
+<ul>
+<li>Input dimension: 2</li>
+<li>Hidden dimension: 2</li>
+<li>Sequence length: 3</li>
+</ul>
+<p>Initial weights:
+<span class="math-display">$$W_{xh} = \begin{bmatrix} 0.1 & 0.3 \\ 0.2 & 0.4 \end{bmatrix}, \quad
+W_{hh} = \begin{bmatrix} 0.5 & -0.1 \\ 0.6 & 0.2 \end{bmatrix}, \quad
+W_{hy} = \begin{bmatrix} 1.0 & -1.0 \end{bmatrix}$$</span>
+<p>Inputs:
+<span class="math-display">$$x^{(1)} = \begin{bmatrix} 1 \\ 0 \end{bmatrix}, \quad
+x^{(2)} = \begin{bmatrix} 0 \\ 1 \end{bmatrix}, \quad
+x^{(3)} = \begin{bmatrix} 1 \\ 1 \end{bmatrix}$$</span>
+<p>Start from <span class="math-inline">$h^{(0)} = \begin{bmatrix} 0 \\ 0 \end{bmatrix}$</span> and compute forward pass step by step:</p>
+<ul>
+<li>Step 1:
+<span class="math-display">$$z^{(1)} = W_{xh} x^{(1)} + W_{hh} h^{(0)} \quad h^{(1)} = \tanh(z^{(1)})$$</span></li>
+<li>Step 2:
+<span class="math-display">$$z^{(2)} = W_{xh} x^{(2)} + W_{hh} h^{(1)} \quad h^{(2)} = \tanh(z^{(2)})$$</span></li>
+<li>Step 3:
+<span class="math-display">$$z^{(3)} = W_{xh} x^{(3)} + W_{hh} h^{(2)} \quad h^{(3)} = \tanh(z^{(3)})$$</span></li>
+</ul>
+<p>Each time, compute:
+<span class="math-display">$$y^{(t)} = W_{hy} h^{(t)}$$</span>
+<p>Then use mean squared error or cross entropy loss to compute <span class="math-inline">$\mathcal{L}^{(t)}$</span> for each time step.</p>
+<p>Then for backpropagation:</p>
+<ul>
+<li>Compute <span class="math-inline">$\frac{\partial \mathcal{L}^{(3)}}{\partial h^{(3)}}$</span> from output layer.</li>
+<li>Use recurrence to compute <span class="math-inline">$\delta^{(2)}$</span> and then <span class="math-inline">$\delta^{(1)}$</span>.</li>
+<li>Use all <span class="math-inline">$\delta^{(t)}$</span> to compute gradients for each parameter.</li>
+</ul>
+<p>This gives you full BPTT on a three step RNN.</p>
+<h2 id="why_eigenvectors_matter_for_rnns">Why Eigenvectors Matter for RNNs</h2>
+<p>In a vanilla RNN, the hidden state is updated recurrently as:
+<span class="math-display">$$h^{(t)} = W_{hh} h^{(t-1)}$$</span>
+<p>When this happens repeatedly, we are effectively applying the matrix <span class="math-inline">$W_{hh}$</span> many times:
+<span class="math-display">$$h^{(t)} = W_{hh}^t h^{(0)}$$</span>
+<p>This means the <strong>long term behavior</strong> of the RNN is governed by how matrix powers <span class="math-inline">$W_{hh}^t$</span> behave. And this is exactly what <strong>eigenvalues and eigenvectors</strong> tell us.</p>
+<p>When analyzing the recurrent weight matrix <span class="math-inline">$W_{hh}$</span>, eigenvectors tell you <strong>which directions in the hidden state space remain consistent</strong> as the matrix is applied repeatedly.</p>
+<ul>
+<li>If a hidden state vector aligns with an eigenvector of <span class="math-inline">$W_{hh}$</span>, then across time steps:
+<span class="math-display">$$W_{hh}^t v = \lambda^t v$$</span>
+That direction simply gets <strong>scaled</strong>, not rotated or altered, making it easier to <strong>predict how it evolves over time</strong>.</li>
+</ul>
+<h2 id="predicting_behavior_using_eigenvectors">Predicting Behavior Using Eigenvectors</h2>
+<ul>
+<li><strong>Stable directions</strong>: If an eigenvalue <span class="math-inline">$\lambda \approx 1$</span>, the state along its eigenvector remains steady.</li>
+<li><strong>Diverging directions</strong>: If <span class="math-inline">$|\lambda| &gt; 1$</span>, activity in that direction grows exponentially, risking exploding gradients.</li>
+<li><strong>Fading directions</strong>: If <span class="math-inline">$|\lambda| &lt; 1$</span>, memory in that direction fades, leading to vanishing gradients.</li>
+</ul>
+<p>So yes, by analyzing the eigenvalues and eigenvectors, you can:</p>
+<ul>
+<li>Understand the long term behavior of your RNN.</li>
+<li>Choose smart weight initializations.</li>
+<li>Know which directions dominate the dynamics and fine tune or regularize accordingly.</li>
+</ul>
+<h2 id="problems_with_rnns">Problems with RNNs</h2>
+<h2 id="vanishing_gradients">Vanishing Gradients</h2>
+<ul>
+<li>During backpropagation through time (BPTT), the gradients involve repeated matrix multiplications:
+<span class="math-display">$$\delta^{(t)} = W_{hh}^T \delta^{(t+1)} \circ (1 - (h^{(t)})^2)$$</span></li>
+<li>If the spectral radius of <span class="math-inline">$W_{hh}$</span> (meaning <span class="math-inline">$\max |\lambda|$</span>) is less than 1, then:
+<span class="math-display">$$\delta^{(t)} \to 0 \text{ exponentially as } t \to 0$$</span></li>
+<li><strong>Consequence</strong>: Early layers receive almost no gradient, meaning the model cannot learn long term dependencies.</li>
+</ul>
+<h2 id="exploding_gradients">Exploding Gradients</h2>
+<p>This is related to the same effect of the <span class="math-inline">$W_{hh}$</span> matrix being involved in so many matrix multiplications that at some point the gradient value can grow extremely large (when <span class="math-inline">$\lambda_{\max} &gt; 1$</span>).</p>
+<h2 id="short_term_memory_bias">Short Term Memory Bias</h2>
+<ul>
+<li>Even when gradients do not vanish or explode, RNNs tend to <strong>bias heavily toward recent inputs</strong>.</li>
+<li>They forget older information because:
+<span class="math-display">$$h^{(t)} = \tanh(W_{xh} x^{(t)} + W_{hh} h^{(t-1)} + b)$$</span>
+keeps overwriting <span class="math-inline">$h^{(t-1)}$</span> at every time step.</li>
+</ul>
+<h2 id="no_memory_control">No Memory Control</h2>
+<ul>
+<li>RNNs have no mechanism to:<ul>
+<li>Decide <strong>what to forget</strong></li>
+<li>Choose <strong>what to remember</strong></li>
+<li>Select <strong>what to expose</strong></li>
+</ul>
+</li>
+<li>They always update the hidden state regardless of input, which leads to <strong>unstructured memory</strong> and <strong>information dilution</strong>.</li>
+</ul>
+<h3 id="optimizer_used">Optimizer Used</h3>
+<h2 id="adam_optimizer">Adam Optimizer</h2>
+<p>It handles vanishing and exploding gradients well since RNNs involve multiplying many Jacobians.</p>
+<ul>
+<li>It has adaptive learning rates.</li>
+<li>Momentum stabilizes gradients in BPTT.</li>
+<li>Variance normalization prevents updates from becoming too small or too large.</li>
+</ul>
+
+      </div>
+
+      <nav class="note-nav-bottom">
+        <span></span>
+        <a href="16_sequence_to_sequence_rnns.html" class="nav-next"><span class="nav-label">Next</span><span class="nav-title">Sequence to Sequence RNNs →</span></a>
+      </nav>
+    </article>
+  </main>
+</div>
+
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"
+  onload="renderMathInElement(document.getElementById('note-content'), {
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '$', right: '$', display: false}
+    ],
+    throwOnError: false,
+    trust: true,
+    strict: false
+  });"></script>
+<script>
+(function initAmbientBackground() {
+  const canvas = document.getElementById('ambient-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  
+  let width = canvas.width = window.innerWidth;
+  let height = canvas.height = window.innerHeight;
+  
+  window.addEventListener('resize', () => {
+    width = canvas.width = window.innerWidth;
+    height = canvas.height = window.innerHeight;
+  });
+  
+  const particles = [];
+  const particleCount = Math.min(60, Math.floor((width * height) / 20000));
+  const connectionDistance = 120;
+  
+  class Particle {
+    constructor() {
+      this.x = Math.random() * width;
+      this.y = Math.random() * height;
+      this.vx = (Math.random() - 0.5) * 0.25;
+      this.vy = (Math.random() - 0.5) * 0.25;
+      this.radius = Math.random() * 1.2 + 0.6;
+    }
+    
+    update() {
+      this.x += this.vx;
+      this.y += this.vy;
+      
+      if (this.x < 0 || this.x > width) this.vx *= -1;
+      if (this.y < 0 || this.y > height) this.vy *= -1;
+    }
+    
+    draw() {
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(126, 247, 201, 0.4)';
+      ctx.fill();
+    }
+  }
+  
+  for (let i = 0; i < particleCount; i++) {
+    particles.push(new Particle());
+  }
+  
+  function animate() {
+    ctx.clearRect(0, 0, width, height);
+    particles.forEach(p => {
+      p.update();
+      p.draw();
+    });
+    
+    for (let i = 0; i < particles.length; i++) {
+      for (let j = i + 1; j < particles.length; j++) {
+        const dx = particles[i].x - particles[j].x;
+        const dy = particles[i].y - particles[j].y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        
+        if (dist < connectionDistance) {
+          const alpha = (1 - (dist / connectionDistance)) * 0.08;
+          ctx.beginPath();
+          ctx.moveTo(particles[i].x, particles[i].y);
+          ctx.lineTo(particles[j].x, particles[j].y);
+          ctx.strokeStyle = "rgba(126, 247, 201, " + alpha + ")";
+          ctx.lineWidth = 0.8;
+          ctx.stroke();
+        }
+      }
+    }
+    requestAnimationFrame(animate);
+  }
+  animate();
+})();
+</script>
+</body>
+</html>

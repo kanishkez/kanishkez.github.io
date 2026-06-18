@@ -1,0 +1,364 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Backpropagation — kanishk's notes</title>
+  <meta name="description" content="Backpropagation — Deep Learning Foundations notes by kanishk" />
+  <link rel="icon" type="image/png" href="../assets/favicon.png" />
+  <link rel="stylesheet" href="../css/style.css" />
+  <link rel="stylesheet" href="../css/notes.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous" />
+</head>
+<body>
+<canvas id="ambient-canvas"></canvas>
+
+<!-- Top Floating Navigation Bar -->
+<header class="navbar">
+  <div class="nav-container">
+    <a href="../index.html" class="nav-logo">kanishk</a>
+    <nav class="nav-links">
+      <a href="../index.html#home">Home</a>
+      <a href="../index.html#projects">Projects</a>
+      <a href="../index.html#blogs">Blogs</a>
+      <a href="../index.html#notes" class="active">Notes</a>
+    </nav>
+    <div class="nav-socials">
+      <a href="https://github.com/kanishkez" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://huggingface.co/kanishkez" target="_blank" rel="noopener">HuggingFace</a>
+    </div>
+  </div>
+</header>
+
+<div class="container">
+  <main class="main-content">
+    <article class="note-page">
+      <div class="note-breadcrumb">
+        <a href="../index.html#notes">Notes</a>
+        <span class="breadcrumb-sep">›</span>
+        <a href="../index.html#notes">Deep Learning Foundations</a>
+        <span class="breadcrumb-sep">›</span>
+        <span>Backpropagation</span>
+      </div>
+
+      <header class="note-header">
+        <div class="note-category-tag">Deep Learning Foundations</div>
+        <h1>Backpropagation</h1>
+      </header>
+
+      <nav class="note-toc" id="note-toc">
+        <div class="toc-title">Contents</div>
+        <div class="toc-items">
+          <a href="#motivation" class="toc-item toc-h2">Motivation</a>
+          <a href="#chain_rule" class="toc-item toc-h2">Chain Rule</a>
+          <a href="#computational_graph" class="toc-item toc-h2">Computational Graph</a>
+          <a href="#forward_pass" class="toc-item toc-h2">Forward Pass</a>
+          <a href="#backward_pass" class="toc-item toc-h2">Backward Pass</a>
+          <a href="#gradients" class="toc-item toc-h2">Gradients</a>
+          <a href="#parameter_update" class="toc-item toc-h2">Parameter Update</a>
+          <a href="#efficiency" class="toc-item toc-h2">Efficiency</a>
+          <a href="#vanishingexploding_gradients" class="toc-item toc-h2">Vanishing/Exploding Gradients</a>
+          <a href="#backpropagation_complete_notes" class="toc-item toc-h2"> Backpropagation: Complete Notes</a>
+          <a href="#core_idea" class="toc-item toc-h3"> Core Idea</a>
+          <a href="#chain_rule_refresher_with_a_simple_example" class="toc-item toc-h2"> Chain Rule Refresher with a Simple Example</a>
+          <a href="#why_we_need_gradient_wrt_input_in_deep_neural_networks" class="toc-item toc-h2"> Why We Need Gradient w.r.t. Input in Deep Neural Networks</a>
+          <a href="#key_rule" class="toc-item toc-h3"> Key Rule:</a>
+          <a href="#example" class="toc-item toc-h2">Example:</a>
+          <a href="#cnn_backpropagation_step_by_step" class="toc-item toc-h2"> CNN Backpropagation Step by Step</a>
+          <a href="#forward_pass_cross_correlation" class="toc-item toc-h3"> Forward Pass (Cross Correlation)</a>
+          <a href="#backpropagation_in_cnns" class="toc-item toc-h2"> Backpropagation in CNNs</a>
+          <a href="#1_gradient_wrt_filter_kernel" class="toc-item toc-h3">1. Gradient w.r.t. Filter (Kernel)</a>
+          <a href="#2_gradient_wrt_input" class="toc-item toc-h3">2. Gradient w.r.t. Input</a>
+          <a href="#summary_of_derivatives" class="toc-item toc-h2"> Summary of Derivatives</a>
+          <a href="#final_takeaways" class="toc-item toc-h2">Final Takeaways</a>
+        </div>
+      </nav>
+
+      <div class="note-content" id="note-content">
+        <h2 id="motivation">Motivation</h2>
+<p>Backpropagation is the algorithm that enables efficient training of deep neural networks by computing gradients of the loss function with respect to all parameters. The motivation for backpropagation arises from the need to optimize complex, multi layered models with millions of parameters, where naive computation of gradients would be computationally prohibitive.</p>
+<p>In ML, backpropagation is foundational, making it possible to train deep networks on large datasets. Its efficiency and scalability have driven the success of deep learning in a wide range of applications, from computer vision to natural language processing.</p>
+<h2 id="chain_rule">Chain Rule</h2>
+<p>The chain rule of calculus is the mathematical foundation of backpropagation. (See Calculus and Neural Networks chapters for more details)</p>
+<h2 id="computational_graph">Computational Graph</h2>
+<p>A computational graph is a directed acyclic graph that represents the sequence of operations in a neural network. Nodes correspond to operations or variables, and edges represent dependencies. The graph structure enables efficient forward and backward passes by organizing computations and dependencies.</p>
+<p>In ML, computational graphs are used in automatic differentiation frameworks, enabling flexible model design and efficient gradient computation. Visualization of computational graphs aids in understanding model structure and debugging.</p>
+<h2 id="forward_pass">Forward Pass</h2>
+<p>The forward pass computes the output of the network by propagating the input through each layer. (See Neural Networks chapter for more details)</p>
+<h2 id="backward_pass">Backward Pass</h2>
+<p>The backward pass computes gradients of the loss function with respect to each parameter by propagating errors backward through the network. (See Neural Networks and Optimization chapters for more details)</p>
+<h2 id="gradients">Gradients</h2>
+<p>Gradients are vectors of partial derivatives that indicate the direction and rate of change of the loss function with respect to the parameters. (See Calculus and Optimization chapters for more details)</p>
+<h2 id="parameter_update">Parameter Update</h2>
+<p>Parameter updates are performed using the computed gradients, typically via gradient descent or its variants. (See Optimization chapter for more details)</p>
+<h2 id="efficiency">Efficiency</h2>
+<p>Efficiency in backpropagation is achieved by reusing intermediate computations, exploiting the structure of the computational graph, and optimizing memory usage. Techniques such as dynamic computation graphs and operator fusion further improve efficiency.</p>
+<p>In ML, efficient backpropagation enables the training of large, deep networks on modern hardware. Understanding and optimizing efficiency is essential for scaling models and reducing training time.</p>
+<h2 id="vanishingexploding_gradients">Vanishing/Exploding Gradients</h2>
+<p>Vanishing and exploding gradients are phenomena that occur when gradients become too small or too large during backpropagation, leading to slow or unstable training. These issues are common in deep or recurrent networks and can prevent effective learning.</p>
+<p>In ML, techniques such as careful initialization, normalization, and specialized architectures (e.g., LSTM, ResNet) are used to mitigate vanishing and exploding gradients. Understanding these phenomena is essential for designing robust and scalable models.</p>
+<h2 id="backpropagation_complete_notes"> Backpropagation: Complete Notes</h2>
+<h3 id="core_idea"> Core Idea</h3>
+<p>Backpropagation computes gradients of the loss with respect to all parameters (weights, biases, filters) using the <strong>chain rule of calculus</strong>, allowing the model to learn via <strong>gradient descent</strong>.</p>
+<h2 id="chain_rule_refresher_with_a_simple_example"> Chain Rule Refresher with a Simple Example</h2>
+<p>Let:</p>
+<ul>
+<li><span class="math-display">$$z = f(x) = (3x + 2)^2$$</span>
+</li>
+<li><p>You want to compute <span class="math-display">$$\frac{dz}{dx}$$</span>
+Break it down:</p>
+</li>
+<li><p>Let <span class="math-display">$$u = 3x + 2$$</span>
+</li>
+<li><p>Then <span class="math-display">$$z = u^2$$</span>
+Apply the chain rule:</p>
+</li>
+</ul>
+<span class="math-display">$$\frac{dz}{dx} = \frac{dz}{du} \cdot \frac{du}{dx}
+
+= 2u \cdot 3 = 2(3x+2) \cdot 3 = 6(3x+2)$$</span>
+<p>This is the basis of how <strong>gradients are propagated layer by layer</strong> in neural networks.</p>
+<hr>
+<h2 id="why_we_need_gradient_wrt_input_in_deep_neural_networks"> Why We Need Gradient w.r.t. Input in Deep Neural Networks</h2>
+<p>In deep networks, each layer passes activations to the next. So during backprop, we need to:</p>
+<ol>
+<li><p>Compute the gradient of the <strong>loss</strong> with respect to the <strong>parameters (weights, biases)</strong> in each layer.</p>
+</li>
+<li><p>To compute this, we need the gradient of the <strong>loss w.r.t. the inputs</strong> of that layer.</p>
+</li>
+</ol>
+<h3 id="key_rule"> Key Rule:</h3>
+<p>To update parameters in a layer, say layer L, we need:</p>
+<span class="math-display">$$\frac{\partial \mathcal{L}}{\partial W^{(L)}} = \frac{\partial \mathcal{L}}{\partial a^{(L)}} \cdot \frac{\partial a^{(L)}}{\partial z^{(L)}} \cdot \frac{\partial z^{(L)}}{\partial W^{(L)}}$$</span>
+<p>Where:</p>
+<ul>
+<li><p>a^{(L)}: activation</p>
+</li>
+<li><p>z^{(L)}: input to activation function</p>
+</li>
+<li><p>W^{(L)}: weights</p>
+</li>
+</ul>
+<p>To compute <span class="math-display">$$\frac{\partial \mathcal{L}}{\partial a^{(L-1)}}$$</span>which is needed to update earlier layers, we need:</p>
+<span class="math-display">$$\frac{\partial \mathcal{L}}{\partial a^{(L-1)}} = \frac{\partial \mathcal{L}}{\partial z^{(L)}} \cdot \frac{\partial z^{(L)}}{\partial a^{(L-1)}}$$</span>
+<p>So gradients <strong>must be passed back through the inputs</strong>.</p>
+<h2 id="example">Example:</h2>
+<p>Take 2 layers in a Network </p>
+<figure><img src="images/Pasted%20image%2020250708074912.png" alt="image" loading="lazy"><figcaption>image</figcaption></figure>
+Consider the output as A</p>
+<p>In Neuron 1 using weights W and input X we get:
+Y1=W1 * x + b1
+This Y1 is then in turn used as an input in the next Neuron 2
+So:
+Y2= W2 * y1 + b2</p>
+<p>So in order to compute the gradient of the first Neuron 1 we need the input gradient of Y2 (which is y1)
+To update the weights of <strong>Neuron 1</strong> (W_1), we need to compute:</p>
+<span class="math-display">$$\frac{\partial \mathcal{L}}{\partial W_1}$$</span>
+We apply the chain rule backwards:</p>
+<span class="math-display">$$\frac{\partial \mathcal{L}}{\partial W_1}
+
+= \frac{\partial \mathcal{L}}{\partial y_2}
+
+\cdot \frac{\partial y_2}{\partial y_1}
+
+\cdot \frac{\partial y_1}{\partial W_1}$$</span>
+So
+<span class="math-display">$$\frac{\partial \mathcal{L}}{\partial W_1}
+
+= \left( \frac{\partial \mathcal{L}}{\partial y_2} \cdot W_2 \right) \cdot x^\top$$</span>
+<h2 id="cnn_backpropagation_step_by_step"> CNN Backpropagation Step by Step</h2>
+<p>Assume a 2D convolution with:</p>
+<ul>
+<li><p>Input: <span class="math-display">$$X \in \mathbb{R}^{H \times W}$$</span>
+</li>
+<li><p>Filter: <span class="math-display">$$K \in \mathbb{R}^{k \times k}$$</span>
+</li>
+<li><p>Output: <span class="math-display">$$Y = X * K \in \mathbb{R}^{(H-k+1) \times (W-k+1)}$$</span>
+</li>
+</ul>
+<p>Here, * denotes <strong>cross correlation</strong> (not convolution).</p>
+<hr>
+<h3 id="forward_pass_cross_correlation"> Forward Pass (Cross Correlation)</h3>
+<span class="math-display">$$Y[i, j] = \sum_{m=0}^{k-1} \sum_{n=0}^{k-1} X[i + m, j + n] \cdot K[m, n]$$</span>
+<p>This slides the filter over the input, performing elementwise multiplication and summing the result.</p>
+<hr>
+<h2 id="backpropagation_in_cnns"> Backpropagation in CNNs</h2>
+<p>Let’s compute:</p>
+<ol>
+<li><span class="math-display">$$\frac{\partial \mathcal{L}}{\partial K}$$</span>Gradient w.r.t. the filter</li>
+<li><span class="math-display">$$\frac{\partial \mathcal{L}}{\partial X}$$</span>
+Gradient w.r.t. the input</li>
+</ol>
+<p>Let <span class="math-display">$$\frac{\partial \mathcal{L}}{\partial Y}$$</span>= <span class="math-display">$$\delta_Y$$</span>(the upstream gradient).</p>
+<hr>
+<h3 id="1_gradient_wrt_filter_kernel"><strong>1. Gradient w.r.t. Filter (Kernel)</strong></h3>
+<p>We want:</p>
+<span class="math-display">$$\frac{\partial \mathcal{L}}{\partial K[m, n]} = \sum_{i,j} \frac{\partial \mathcal{L}}{\partial Y[i,j]} \cdot \frac{\partial Y[i,j]}{\partial K[m,n]}$$</span>
+<p> From:</p>
+<span class="math-display">$$Z_{i,j} = \sum_{m’=0}^{f-1} \sum_{n’=0}^{f-1} X_{i+m’, j+n’} \cdot K_{m’,n’}$$</span>
+<p>To get: </p>
+<span class="math-display">$$\frac{\partial Z_{i,j}}{\partial K_{m,n}} = X_{i+m, j+n}$$</span>
+<p>because K_{m,n} appears <strong>only once</strong> in that sum (as long as m’,n’ are indexed uniquely).
+This is because we take gradients for each parameter seperately.
+The kernel <span class="math-display">$$K \in \mathbb{R}^{f \times f}$$</span>is a <strong>matrix of learnable parameters</strong>.</p>
+<p>When doing backprop, you compute:</p>
+<span class="math-display">$$\frac{\partial \mathcal{L}}{\partial K_{m,n}} \quad \text{for all } m,n$$</span>
+<p>Each entry <span class="math-display">$$K_{m,n}$$</span>is treated as <strong>its own variable</strong>.</p>
+<p>So:</p>
+<ul>
+<li>When we compute:</li>
+</ul>
+<span class="math-display">$$\frac{\partial \mathcal{L}}{\partial K_{0,1}} = \sum_{i,j} \delta_{i,j} \cdot X_{i+0,j+1}$$</span>
+<ul>
+<li>That’s <strong>just one of many</strong> such computations — we’ll also compute:</li>
+</ul>
+<span class="math-display">$$\frac{\partial \mathcal{L}}{\partial K_{1,0}},\ \frac{\partial \mathcal{L}}{\partial K_{1,1}}, \text{ etc.}$$</span>
+<p>This is why in the gradient expression:</p>
+<span class="math-display">$$\frac{\partial \mathcal{L}}{\partial K_{m,n}} = \sum_{i,j} \delta_{i,j} \cdot X_{i+m, j+n}$$</span>
+<span class="math-display">$$Y[p, q] = \sum_{m,n} K[m,n] \cdot X[p + m, q + n]$$</span>
+<p>So:</p>
+<span class="math-display">$$\frac{\partial Y[i,j]}{\partial K[m,n]} = X[i + m, j + n]$$</span>
+<p>Thus:</p>
+<span class="math-display">$$\frac{\partial \mathcal{L}}{\partial K[m,n]} = \sum_{i,j} \delta_Y[i,j] \cdot X[i + m, j + n]$$</span>
+<p>This is equivalent to <strong>cross correlating the input with the gradient</strong>.</p>
+<hr>
+<h3 id="2_gradient_wrt_input"><strong>2. Gradient w.r.t. Input</strong></h3>
+<p>We want:</p>
+<span class="math-display">$$\frac{\partial \mathcal{L}}{\partial X[i,j]} = \sum_{p,q} \frac{\partial \mathcal{L}}{\partial Y[p,q]} \cdot \frac{\partial Y[p,q]}{\partial X[i,j]}$$</span>
+<p>From forward pass:</p>
+<span class="math-display">$$Y[p,q] = \sum_{m,n} X[p + m, q + n] \cdot K[m,n]$$</span>
+<p>So:</p>
+<span class="math-display">$$\frac{\partial Y[p,q]}{\partial X[i,j]} = \begin{cases}
+
+K[i - p, j - q] & \text{if } (i - p, j - q) \in [0,k-1] \
+
+0 & \text{otherwise}
+
+\end{cases}$$</span>
+<p>So:</p>
+<span class="math-display">$$\frac{\partial \mathcal{L}}{\partial X[i,j]} = \sum_{m,n} \delta_Y[i - m, j - n] \cdot K[m,n]$$</span>
+<p>This is equivalent to a <strong>full convolution of</strong> \delta_Y <strong>with the rotated kernel</strong>.</p>
+<hr>
+<h2 id="summary_of_derivatives"> Summary of Derivatives</h2>
+<div class="table-wrapper"><table>
+<thead><tr><th><strong>Gradient</strong></th><th><strong>Formula</strong></th><th><strong>Notes</strong></th></tr></thead>
+<tbody><tr><td>\frac{\partial \mathcal{L}}{\partial K}</td><td>\delta_Y * X</td><td>Cross correlation of input with upstream grad</td></tr><tr><td>\frac{\partial \mathcal{L}}{\partial X}</td><td>\delta_Y * K^{\text{rot}}</td><td>Convolution with rotated kernel</td></tr><tr><td>\frac{\partial \mathcal{L}}{\partial Y}</td><td>Comes from next layer</td><td>Used to compute both above</td></tr></tbody>
+</table></div>
+<hr>
+<h2 id="final_takeaways"><strong>Final Takeaways</strong></h2>
+<ul>
+<li><p>Backprop relies on <strong>chain rule</strong>, computing gradients layer by layer.</p>
+</li>
+<li><p>To update weights in a layer, we need <strong>loss gradient w.r.t. that layer’s input</strong>.</p>
+</li>
+<li><p>In CNNs:</p>
+</li>
+<li><p>Gradients wrt filter = cross correlate input with upstream gradient</p>
+</li>
+<li><p>Gradients wrt input = convolve upstream gradient with rotated kernel</p>
+</li>
+<li><p>Only one term survives in convolution derivatives due to alignment — crucial for efficiency.</p>
+</li>
+</ul>
+<hr>
+<p>Would you like this split into separate Obsidian .md files (one per topic like “Chain Rule”, “CNN Backprop”, etc.)?</p>
+
+      </div>
+
+      <nav class="note-nav-bottom">
+        <a href="09_optimization_algorithms.html" class="nav-prev"><span class="nav-label">Previous</span><span class="nav-title">← Optimization Algorithms</span></a>
+        <a href="11_normalization.html" class="nav-next"><span class="nav-label">Next</span><span class="nav-title">Normalization →</span></a>
+      </nav>
+    </article>
+  </main>
+</div>
+
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"
+  onload="renderMathInElement(document.getElementById('note-content'), {
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '$', right: '$', display: false}
+    ],
+    throwOnError: false,
+    trust: true,
+    strict: false
+  });"></script>
+<script>
+(function initAmbientBackground() {
+  const canvas = document.getElementById('ambient-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  
+  let width = canvas.width = window.innerWidth;
+  let height = canvas.height = window.innerHeight;
+  
+  window.addEventListener('resize', () => {
+    width = canvas.width = window.innerWidth;
+    height = canvas.height = window.innerHeight;
+  });
+  
+  const particles = [];
+  const particleCount = Math.min(60, Math.floor((width * height) / 20000));
+  const connectionDistance = 120;
+  
+  class Particle {
+    constructor() {
+      this.x = Math.random() * width;
+      this.y = Math.random() * height;
+      this.vx = (Math.random() - 0.5) * 0.25;
+      this.vy = (Math.random() - 0.5) * 0.25;
+      this.radius = Math.random() * 1.2 + 0.6;
+    }
+    
+    update() {
+      this.x += this.vx;
+      this.y += this.vy;
+      
+      if (this.x < 0 || this.x > width) this.vx *= -1;
+      if (this.y < 0 || this.y > height) this.vy *= -1;
+    }
+    
+    draw() {
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(126, 247, 201, 0.4)';
+      ctx.fill();
+    }
+  }
+  
+  for (let i = 0; i < particleCount; i++) {
+    particles.push(new Particle());
+  }
+  
+  function animate() {
+    ctx.clearRect(0, 0, width, height);
+    particles.forEach(p => {
+      p.update();
+      p.draw();
+    });
+    
+    for (let i = 0; i < particles.length; i++) {
+      for (let j = i + 1; j < particles.length; j++) {
+        const dx = particles[i].x - particles[j].x;
+        const dy = particles[i].y - particles[j].y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        
+        if (dist < connectionDistance) {
+          const alpha = (1 - (dist / connectionDistance)) * 0.08;
+          ctx.beginPath();
+          ctx.moveTo(particles[i].x, particles[i].y);
+          ctx.lineTo(particles[j].x, particles[j].y);
+          ctx.strokeStyle = "rgba(126, 247, 201, " + alpha + ")";
+          ctx.lineWidth = 0.8;
+          ctx.stroke();
+        }
+      }
+    }
+    requestAnimationFrame(animate);
+  }
+  animate();
+})();
+</script>
+</body>
+</html>

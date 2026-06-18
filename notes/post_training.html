@@ -1,0 +1,476 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Post Training — kanishk's notes</title>
+  <meta name="description" content="Post Training — Reinforcement Learning notes by kanishk" />
+  <link rel="icon" type="image/png" href="../assets/favicon.png" />
+  <link rel="stylesheet" href="../css/style.css" />
+  <link rel="stylesheet" href="../css/notes.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous" />
+</head>
+<body>
+<canvas id="ambient-canvas"></canvas>
+
+<!-- Top Floating Navigation Bar -->
+<header class="navbar">
+  <div class="nav-container">
+    <a href="../index.html" class="nav-logo">kanishk</a>
+    <nav class="nav-links">
+      <a href="../index.html#home">Home</a>
+      <a href="../index.html#projects">Projects</a>
+      <a href="../index.html#blogs">Blogs</a>
+      <a href="../index.html#notes" class="active">Notes</a>
+    </nav>
+    <div class="nav-socials">
+      <a href="https://github.com/kanishkez" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://huggingface.co/kanishkez" target="_blank" rel="noopener">HuggingFace</a>
+    </div>
+  </div>
+</header>
+
+<div class="container">
+  <main class="main-content">
+    <article class="note-page">
+      <div class="note-breadcrumb">
+        <a href="../index.html#notes">Notes</a>
+        <span class="breadcrumb-sep">›</span>
+        <a href="../index.html#notes">Reinforcement Learning</a>
+        <span class="breadcrumb-sep">›</span>
+        <span>Post Training</span>
+      </div>
+
+      <header class="note-header">
+        <div class="note-category-tag">Reinforcement Learning</div>
+        <h1>Post Training</h1>
+      </header>
+
+      <nav class="note-toc" id="note-toc">
+        <div class="toc-title">Contents</div>
+        <div class="toc-items">
+          <a href="#instruction_tuning" class="toc-item toc-h2">Instruction Tuning</a>
+          <a href="#supervised_fine_tuning" class="toc-item toc-h2">Supervised Fine Tuning</a>
+          <a href="#rejection_sampling" class="toc-item toc-h3">Rejection Sampling</a>
+          <a href="#reinforce" class="toc-item toc-h2">REINFORCE</a>
+          <a href="#value_function" class="toc-item toc-h2">Value Function</a>
+          <a href="#actor_critic" class="toc-item toc-h3">Actor Critic</a>
+          <a href="#reward_model" class="toc-item toc-h2">Reward Model</a>
+          <a href="#architecture" class="toc-item toc-h3">Architecture</a>
+          <a href="#trust_region_policy_optimization" class="toc-item toc-h2">Trust Region Policy Optimization</a>
+          <a href="#the_problem" class="toc-item toc-h3">The Problem:</a>
+          <a href="#avoiding_overfitting" class="toc-item toc-h2">Avoiding Overfitting</a>
+          <a href="#proximal_policy_optimization" class="toc-item toc-h2">Proximal Policy Optimization</a>
+          <a href="#clipping" class="toc-item toc-h3">Clipping</a>
+          <a href="#ppo_gradient" class="toc-item toc-h3">PPO Gradient</a>
+          <a href="#practical_usage" class="toc-item toc-h2">Practical Usage</a>
+          <a href="#group_relative_policy_optimization" class="toc-item toc-h2">Group Relative Policy Optimization</a>
+          <a href="#the_core_idea" class="toc-item toc-h3">The Core Idea</a>
+          <a href="#the_loss" class="toc-item toc-h3">The Loss</a>
+          <a href="#how_it_works_step_by_step" class="toc-item toc-h3">How It Works Step by Step</a>
+          <a href="#why_this_works" class="toc-item toc-h3">Why This Works</a>
+          <a href="#tradeoffs" class="toc-item toc-h3">Tradeoffs</a>
+        </div>
+      </nav>
+
+      <div class="note-content" id="note-content">
+        <p>Once we have pre trained a large language model, it is basically just a giant next token predictor that does not really know how to behave like a helpful assistant or follow instructions. Post training is the phase where we take this raw, pre trained base model and refine it using techniques like supervised fine tuning and reinforcement learning. This guide covers how we transition from base models to instruction following agents, highlighting algorithms like PPO and modern compute saving alternatives like GRPO.</p>
+<h2 id="instruction_tuning">Instruction Tuning</h2>
+<p>Instruction tuned models can be used to train models to work in a natural question answering format.</p>
+<p>When we pre train a model, they are always trying to predict the next token based on the corpus of data they are trained on.</p>
+<p>So, they might not do a good job at answering questions (based on the pre trained data).</p>
+<p>Fine tuning is often used to train models to address these shortcomings (not following instructions, responding to questions that are worded differently than in the pre training data etc).</p>
+<p>The biggest change that led to models following instructions is instruction tuning that allowed us to train models on a question answer format.</p>
+<p>One simple approach to do so was to precede questions with &#39;User&#39; and answers with &#39;Model&#39;.</p>
+<p>Something like this:</p>
+<ol>
+<li>User: What is an antelope? Model: An antelope is a type of mammal that belongs to the Bovidae family...</li>
+<li>User: How many legs does a spider have? Model: A spider has eight legs...</li>
+<li>User: Who wrote Romeo and Juliet? Model: Romeo and Juliet, the iconic tragic love story, was written by...</li>
+</ol>
+<p>By structuring the question and answer in the training data in this manner, the model understands that text followed by &#39;User&#39; is a question and it will learn to complete the text followed by &#39;Model&#39; as an answer.</p>
+<p>Now, if we happen to just use &#39;User&#39; and &#39;Model&#39; as the markers, what will happen if the question or the answer itself uses those words? To address this, we use tokens <code class="inline-code"><User></code> and <code class="inline-code"><Model></code> to instruction tune.</p>
+<p>These two are used as delimiters. These tokens have their own embedding vectors and are separate from the words &#39;User&#39; and &#39;Model&#39;.</p>
+<p>Using all of this, we can put questions in the training data with instructions/answers that should follow these questions so that the model can get better at answering questions and actually work as a chatbot.</p>
+<h2 id="supervised_fine_tuning">Supervised Fine Tuning</h2>
+<p>SFT is just fine tuning and it has the exact same objective as pre training but the scope and datasets used are different.</p>
+<p>Typical datasets used are:</p>
+<ol>
+<li>QA datasets</li>
+<li>Dialogue and chat logs</li>
+<li>Summarization tasks</li>
+<li>Instruction datasets etc</li>
+</ol>
+<p>Basically whatever we want to fine tune our model on. SFT tasks vary from reasoning, explanations, QA etc. We say SFT because we are providing it a supervised dataset, one which is actually labelled unlike our pre training data.</p>
+<p>We still want our model to predict the next token out of a possibility of all the tokens in the corpus.</p>
+<p>We want to maximize the probability of the correct word being chosen as the next token.</p>
+<p>Now assuming we want the model to predict an entire sentence like:</p>
+<p>Kanishk is a monkey</p>
+<p>What we want to do is maximize: <span class="math-display">$$\pi(\text{token}_{1}) \cdot \pi(\text{token}_{2} \mid \text{token}_{1}) \dots \pi(\text{token}_{4} \mid \text{token}_{1}, \text{token}_{2}, \text{token}_{3})$$</span>
+<p>Using the chain rule of probability this translates to: <span class="math-display">$$P(t_1, t_2, t_3, t_4) = P(t_1) P(t_2 \mid t_1) P(t_3 \mid t_1, t_2) P(t_4 \mid t_1, t_2, t_3)$$</span>We can write this as an action taken for a state: <span class="math-display">$$\pi(a_{t} \mid s_{t})$$</span>Now, these probability numbers are really small (since there are say 40k words in the corpus) they should all add up to 1.</p>
+<p>So, instead of multiplying really small numbers, we use log instead so that we can just add them.</p>
+<p>This becomes: <span class="math-display">$$\sum_i \log \pi(t_i \mid t_{&lt;i})$$</span>
+<p>Instead of maximizing the above expression, we can add a negative sign and minimize it instead (since we are dealing with negative numbers because logs of numbers under 1 are all negative).</p>
+<p>This makes our problem:</p>
+<p>Minimize: <span class="math-display">$$\text{Loss} = -\sum_{t=1}^{T} \log(\pi(a_{t} \mid s_{t}))$$</span>
+<p>Rewording this to fit our model M:</p>
+<span class="math-display">$$\text{Find } M \text{ to minimize: } \text{NLL}(\vec{\text{text}}, M) = -\sum_{t=1}^{T} \log(\pi_{M}(a_{t} \mid \vec{s_{t}}))$$</span>
+<p>This is basically <strong>negative log likelihood</strong> or <strong>cross entropy loss.</strong></p>
+<p>When we take into account that we have S training samples to use this loss on, we take the average of those S training samples and it becomes:</p>
+<span class="math-display">$$\frac{1}{S} \sum_{i=1}^{S} \text{NLL}(\vec{\text{text}}_{i}, M)$$</span>
+<p>&#39;text&#39; is the concatenation of the question and answer for a sample since SFT deals with QA pairs.</p>
+<h3 id="rejection_sampling">Rejection Sampling</h3>
+<p>We sample entire responses:</p>
+<ol>
+<li>We start by giving a model a prompt</li>
+<li>Ask it to generate a number of responses using randomness (temperature or whatever) to get a variety of answers.</li>
+<li>Select the top response or a few responses by scoring them using either a reward model or by manually doing so (human preference) and discarding the rest.</li>
+<li>Fine tune the model based on these select responses.</li>
+</ol>
+<p>We do this to generate high quality datasets to fine tune the model on. In a way, we&#39;re using the model itself to generate good responses to fine tune the same model.</p>
+<p>We train a <strong>preference model</strong> or <strong>reward model</strong> that is capable of selecting the better response in a group of responses.</p>
+<p>We would still need to have human labelled data to train this model but after the initial set of labelling we would have a preference model ready. To train such a model, we have a prompt and two generated responses where one of them is labelled as the preferred response.</p>
+<p>The model has to take in these two responses as input and assign probability to each of them saying which one it thinks is preferred (It would be like binary cross entropy since there are only two classes).</p>
+<span class="math-display">$$\text{Loss} = -\log(P(\vec{\text{text}}_{w}))$$</span>
+<p>Rejection sampling and supervised fine tuning was a great way to improve models. But it did have a few issues like:</p>
+<ol>
+<li>No learning from mistakes</li>
+<li>High computational cost (generating 10 responses for each prompt costs a lot)</li>
+<li>If we train the model on a very specific type of responses, we can add bias to it and its responses will lack diversity or coherence. If the preference model likes answers that are structured and in points, all the answers will be like that and so on.</li>
+</ol>
+<h2 id="reinforce">REINFORCE</h2>
+<p>Instead of generating a set number of responses for every prompt, using the best one and throwing the rest away, we can use a reward signal to attribute the correct weight to a response based on if it is good or not and train the model.</p>
+<p>Using this we no longer need multiple samples per prompt, every generated response can be trained on.</p>
+<ol>
+<li>We generate a response for a prompt</li>
+<li>Compute reward based on if we like the answer or not</li>
+<li>Update the model</li>
+<li>Generate again with an improved policy</li>
+</ol>
+<p>So, we are using reinforcement learning to fine tune a pre trained model.</p>
+<span class="math-display">$$\text{Reward Weighted Loss} = \frac{1}{S} \sum_{i=1}^{S} R(\text{text}_{i}) \text{NLL}(\vec{\text{text}}_{i}, M)$$</span>
+<p>Instead of just assigning 1 as a weight to approved responses and discarding the rejected responses, we assign a weight R as needed for the response.</p>
+<p>Now, in practice using this can lead to having high gradients because of how varied responses we can get. A simple way of tackling this high variance and high gradient problem is by subtracting a baseline from the reward.</p>
+<p>Baseline: <span class="math-display">$$V_{M}(\vec{s_{t}})$$</span>New Loss: <span class="math-display">$$\text{Reward Weighted Loss} = -\frac{1}{S} \sum_{i=1}^{S} \sum_{t} (R(\text{text}_{i}) - V_{M}(\vec{s_{t}})) \log(\pi_{M}(a_{t} \mid \vec{s_{t}}))$$</span>
+<p>Baseline does not change expected gradient but only reduces variance. This baseline is usually: average sample reward, reward model expectation or predicted expected reward for the current partial output.</p>
+<p>Here:</p>
+<ol>
+<li>responses = actions</li>
+<li>prompt + prefix tokens = state</li>
+<li>reward = how good the response was</li>
+</ol>
+<p><strong>Note:</strong></p>
+<p>Since we want the model to only learn the answer part (and not the prompt), we start the inner sum at the first token of the answer and ignore the prompt.</p>
+<h2 id="value_function">Value Function</h2>
+<p>The value function tells us the reward the model expects to get if we continue generating the token in the sequence. It gives us an expectation as to if we keep this generation state, what could be the expected reward for a state <span class="math-inline">$s_{t}$</span>.</p>
+<p>Using this expected reward, we can assign a corrected reward for each token by utilizing it as the Baseline.</p>
+<span class="math-display">$$V_M(s_t) = \mathbb{E}_{\text{future tokens}} \big[R(\text{text generated after } s_t)\big]$$</span>
+<p>The advantage term (the term that tells us how good the current action of choosing this token is) becomes:</p>
+<span class="math-display">$$A(s_t, a_t) = R(\tau) - V_M(s_t)$$</span>For example:</p>
+<p>Total reward for the sequence: 7 Expected value after assigning a token <span class="math-inline">$t$</span> is: 3</p>
+<p>Advantage term at the time of choosing token <span class="math-inline">$t$</span> becomes:</p>
+<span class="math-display">$$7 - 3 = 4$$</span>
+<p>This is optimal rather than assigning 7 to every token in the sequence.</p>
+<span class="math-display">$$\text{Advantage} = \text{actual reward} - \text{expected reward}$$</span>
+<p><strong>Note:</strong></p>
+<p>For all of this to actually work, we would need to know the expected value of a token before actually processing the token so that we can assign the correct reward to it.</p>
+<p>In practice, we train another neural network to act as the value function. The model used for the value function estimation is called the &#39;critic&#39; and the main model is called the &#39;actor&#39;. This is known as the actor critic approach, where the actor generates text and the critic evaluates the expected rewards.</p>
+<h3 id="actor_critic">Actor Critic</h3>
+<p>In practice, we train another neural network to act as the value function. The model used for the value function estimation is called the &#39;critic&#39; and the main model is called the &#39;actor&#39;. This is known as the actor critic approach, where the actor generates text and the critic evaluates the expected rewards.</p>
+<h2 id="reward_model">Reward Model</h2>
+<p>An important part of reinforcement learning is the <strong>reward.</strong> Normally, we can train a model to predict a score for each token generation using human preference data.</p>
+<p>So, we are trying to train a model on the human ranked preferences on pairs of responses. These responses are from the original model (after SFT) and our job is to get the model to only give responses that we like. This is called reward modeling, where we train a model to reward our original model for the responses it generates, so that it can get better.</p>
+<p>For any given prompt response pair, it gives us a scalar score:</p>
+<span class="math-display">$$r_\theta(x, y)$$</span>where <span class="math-inline">$x$</span> is the prompt and <span class="math-inline">$y$</span> is the response.</p>
+<p>Its job is to solely take the prompt response pair and give us a scalar value which is the score. This score tells us if humans prefer the response or not. It tells us if the response is good or bad.</p>
+<h3 id="architecture">Architecture</h3>
+<p>It is a copy of the base transformer language model and processes tokens the same way, but instead of predicting tokens (giving logits at the end) it gives us a scalar value using a scalar head at the end.</p>
+<span class="math-display">$$r_\theta(x, y) \to \mathbb{R}$$</span>We give it a concatenated prompt + response sequence, run it through the transformer and it produces a scalar reward. It does not produce probabilities.</p>
+<p>Given two responses:</p>
+<p>Preferred: <span class="math-inline">$y^+$</span> Rejected: <span class="math-inline">$y^-$</span>
+<p>Reward model outputs a scalar value for both:</p>
+<span class="math-display">$$r^+ = r(x, y^+) \quad \text{and} \quad r^- = r(x, y^-)$$</span>
+<p>We want: <span class="math-display">$$r^+ &gt; r^-$$</span>
+<p>This is our training objective.</p>
+<p>However, it would not make sense for us to train a loss function that just uses the difference between the rewards and assigns a higher value to the preferred response.</p>
+<p>We want this scalar value to be scaled so that we can train it using a loss function. So, we use softmax.</p>
+<p>One way to do so is by converting them into softmax probabilities: <span class="math-display">$$P(\vec{\text{text}}_{i}) = \frac{\exp(R(\vec{\text{text}}_{i}))}{\exp(R(\vec{\text{text}}_{i})) + \exp(R(\vec{\text{text}}_{j}))}$$</span>where <span class="math-inline">$\vec{\text{text}}_i$</span> is the preferred response and <span class="math-inline">$\vec{\text{text}}_j$</span> is the rejected response.</p>
+<p>Since the probabilities are: <span class="math-display">$$P(\vec{\text{text}}_{i}) \quad \text{and} \quad 1 - P(\vec{\text{text}}_{i})$$</span>We can use the loss: <span class="math-display">$$-hp \log(P(\vec{\text{text}}_{i})) - (1 - hp) \log(1 - P(\vec{\text{text}}_{i}))$$</span>This is basically binary cross entropy loss.</p>
+<p>Reward function loss: <span class="math-display">$$\text{Reward Loss} = -\log(\sigma(R(\vec{\text{text}}_{w}) - R(\vec{\text{text}}_{l})))$$</span>
+<p>where <span class="math-inline">$\vec{\text{text}}_w$</span> is the preferred (winner) response and <span class="math-inline">$\vec{\text{text}}_l$</span> is the rejected (loser) response.</p>
+<h4 id="training_the_reward_model">Training the reward model:</h4>
+<ol>
+<li>Collect human preference data, each prompt has response A and B (one of which is preferred).</li>
+<li>Feed prompt response pair into the reward model</li>
+<li>Get a scalar score back</li>
+<li>Convert these scalar scores to softmax probabilities for training</li>
+<li>Use a loss function that maximizes the difference between the probabilities during training.</li>
+<li>Train the model to give us <span class="math-inline">$r(A) &gt; r(B)$</span></li>
+</ol>
+<h4 id="training_the_policy_model">Training the policy model:</h4>
+<ol>
+<li>We freeze the reward model, the policy model generates responses and the reward model scores them.</li>
+<li>Policy is then optimized using suitable techniques.</li>
+<li>We push the model towards high reward responses and penalize it for giving bad reward responses.</li>
+<li>Policy is trained</li>
+</ol>
+<h4 id="after_policy_training">After policy training:</h4>
+<ol>
+<li>Model now has suitable policy.</li>
+<li>During inference, we do not need the reward model.</li>
+<li>Only the policy model is used.</li>
+</ol>
+<p><strong>This is essentially how RLHF works:</strong> Human preference is modeled using a reward model that decides how to reward responses and an agent (policy model) is trained to pursue high reward responses using the right policy.</p>
+<h2 id="trust_region_policy_optimization">Trust Region Policy Optimization</h2>
+<h3 id="the_problem">The Problem:</h3>
+<p>When we are optimizing a policy, we start with a model <span class="math-inline">$M_{0}$</span>, samples are generated and gradients are applied to update the policy.</p>
+<p>Now, the model we have after updating policy is <span class="math-inline">$M_{1}$</span> whereas the samples generated were from <span class="math-inline">$M_{0}$</span>.</p>
+<p>Data comes from <span class="math-inline">$M_0$</span> but we are optimizing policy for <span class="math-inline">$M_1$</span>.</p>
+<p>This is off policy learning since we are not optimizing the policy we are currently using and are estimating the current policy using the previous policy.</p>
+<p>So, there exists a sampling difference between <span class="math-inline">$\pi_{0}$</span> and <span class="math-inline">$\pi_{1}$</span>.</p>
+<p>It is important that we account for this difference using <strong>importance sampling:</strong></p>
+<span class="math-display">$$\frac{\pi_1(a \mid s)}{\pi_0(a \mid s)}$$</span>This tells us, if an action is more likely under <span class="math-inline">$M_{1}$</span> than <span class="math-inline">$M_{0}$</span> weight it up, if less likely then weigh it down.</p>
+<p>This gives us the loss:</p>
+<span class="math-display">$$\text{Loss} = -\frac{1}{S} \sum_{i,t} \frac{\pi_1(a_{it} \mid s_{it})}{\pi_0(a_{it} \mid s_{it})} A(a_{it}, s_{it})$$</span>Our original loss had negative log likelihood in it:</p>
+<p>We don&#39;t need this term anymore since we don&#39;t need the log derivative trick to keep gradients in check and also we&#39;re not sampling from the same distribution.</p>
+<p>Our likelihoods are already being taken care of by the importance sampling term.</p>
+<p>We switch from an on policy gradient estimator to an off policy gradient estimator.</p>
+<h2 id="avoiding_overfitting">Avoiding Overfitting</h2>
+<p>If the model learns to overfit on the sampled prompts or ONLY to maximize reward, we may not like its generated results.</p>
+<p>Policy will learn to:</p>
+<ol>
+<li>Use formal tone</li>
+<li>Repeat the same answers</li>
+<li>Learn certain phrasing patterns</li>
+</ol>
+<p>It will learn to give responses that maximize reward but are low quality.</p>
+<p>So, the solution to this is limiting how far the model can differ from our original model.</p>
+<p>We want to restrict how far <span class="math-inline">$M_{1}$</span> can move from <span class="math-inline">$M_{0}$</span>.</p>
+<p>We still want to maximize reward, but keep the new policy close to the old one.</p>
+<p>So, we need a distance measure between these distributions.</p>
+<p>Luckily, KL Divergence does just that.</p>
+<p>It tells us how different two probability distributions are from each other.</p>
+<p>KL Divergence: <span class="math-display">$$D_{KL}(\pi_0 \parallel \pi_1)$$</span>
+<p>At each state if we compare token distributions using KL: <span class="math-display">$$D_{KL} = \sum_{a} \pi_0(a \mid s_t) \log \frac{\pi_0(a \mid s_t)}{\pi_1(a \mid s_t)}$$</span>We can restrict how far policy deviates from the original policy.</p>
+<p>Instead of blindly maximizing reward, we maximize policy improvement while restricting it.</p>
+<p>Policy is subject to: <span class="math-display">$$D_{KL}(\pi_0 \parallel \pi_1) \le \delta$$</span>We can now add this term as a penalty to the loss function so that when the new policy moves far away from the starting distribution, we can penalize the model.</p>
+<p>The loss looks like:</p>
+<span class="math-display">$$\text{TRPO Loss} = -\frac{1}{S} \sum_{i,t} \frac{\pi_1(a_{it} \mid s_{it})}{\pi_0(a_{it} \mid s_{it})} A(a_{it}, \vec{s}_{it}) + \beta D_{KL}(\pi_0(\cdot \mid \vec{s}_{t}) \parallel \pi_1(\cdot \mid \vec{s}_{t}))$$</span>
+<p>where <span class="math-inline">$\beta$</span> is a scaling factor for the KL Divergence penalty term.</p>
+<p>This is the TRPO algorithm.</p>
+<p>Sometimes it&#39;s hard to balance the scaling factor <span class="math-inline">$\beta$</span>. So, instead of using a penalty term in the loss, we can constrain the loss while keeping our original importance sampling term.</p>
+<span class="math-display">$$\text{Loss} = -\frac{1}{S} \sum_{i,t} \frac{\pi_1(a_{it} \mid s_{it})}{\pi_0(a_{it} \mid s_{it})} A(a_{it}, s_{it})$$</span>
+<span class="math-display">$$\text{subject to constraint: } \beta D_{KL}(\pi_0(\cdot \mid \vec{s}_{t}) \parallel \pi_{1}(\cdot \mid \vec{s}_{t})) \le \delta$$</span>
+<p>This constraint is the average value of <span class="math-inline">$D_{KL}$</span> of all tokens and samples rather than for each token in each sample.</p>
+<h2 id="proximal_policy_optimization">Proximal Policy Optimization</h2>
+<p>In TRPO we saw how to constrain policy updates to not deviate from the original policy using constraints.</p>
+<p>But this process of using KL Divergence is expensive, complex to implement and also it constrains the updates to being small.</p>
+<p>We can solve this by removing the KL constraint and just constraining the probability ratio.</p>
+<p>Probability Ratio: <span class="math-display">$$r_t(\theta) = \frac{\pi_\theta(a_t \mid s_t)}{\pi_{\theta_{\text{old}}}(a_t \mid s_t)}$$</span>If r&gt;1: Policy increases the probability of action (getting a good response) If r=1: Policy unchanged If r&lt;1: Policy decreases probability</p>
+<p>Now, this alone is dangerous since the optimization can blow up r and cause policy collapse.</p>
+<h3 id="clipping">Clipping</h3>
+<p>We cap how much it can decrease or increase probabilities by constraining r.</p>
+<span class="math-display">$$\text{CLIP}(r_t, 1 - \epsilon, 1 + \epsilon)$$</span>This enforces:</p>
+<span class="math-display">$$r_t \in [1 - \epsilon, 1 + \epsilon]$$</span>where <span class="math-inline">$\epsilon \in [0.1, 0.3]$</span>
+<h4 id="ppo_clipped_objective">PPO Clipped Objective:</h4>
+<p>The loss is:</p>
+<span class="math-display">$$L^{\text{CLIP}}(\theta) = \mathbb{E}\left[ \min\Big( r_t(\theta) A_t, \text{CLIP}(r_t(\theta), 1 - \epsilon, 1 + \epsilon) A_t \Big) \right]$$</span>This means:</p>
+<p><strong>First Case:</strong></p>
+<p>When the probability ratio is greater than the constraint <span class="math-inline">$1+\epsilon$</span>, the gradient becomes zero. The optimizer does not increase the probability of that action being done.</p>
+<p><strong>Second Case:</strong></p>
+<p>When the probability ratio is smaller than the constraint <span class="math-inline">$1-\epsilon$</span>, the gradient again becomes zero.</p>
+<p>For those two particular state action pairs, PPO stops pushing the probability further in the update.</p>
+<p><strong>Note:</strong> Now we might ask, if the Advantage term <span class="math-inline">$A$</span> is greater than the constraint, shouldn&#39;t we push the probability of that state action pair further, since clearly that action is of good value?</p>
+<p>But, that&#39;s not how it works.</p>
+<p>A large advantage does not mean that we can safely make a large policy update.</p>
+<p>Because, advantage term <span class="math-inline">$A_{t}$</span> is computed under the old policy. Large advantage terms are untrustworthy since they belong to the old policy&#39;s distribution. Large advantage terms often come from noise.</p>
+<p>We ignore such terms because we can cause the policy distribution to collapse or shift too hard.</p>
+<p><strong>Intuition:</strong></p>
+<p>When you&#39;re learning to walk, you walk carefully. Even if you have committed no mistakes yet, you don&#39;t immediately start running. You play it safe.</p>
+<p>In TRPO we saw that small KL updates guarantee that our policy doesn&#39;t move too much from the original policy. We apply the same concept in PPO without much of the KL ratios just by constraining the updates.</p>
+<p><strong>What we&#39;re essentially doing</strong></p>
+<p>The advantage term tells us if an action is good at a particular state (choosing a particular token at a particular sequence). Using this, we increase the probability of that action being chosen at that state in the future.</p>
+<p>We are trying to maximize the probability that in the future, when this action occurs, the model makes sure that this action takes place by increasing the probability of that state action pair.</p>
+<p>We are not teaching the model to generate this token at a state, we are teaching it to increase the probability by which it generates tokens at the right state using the Advantage term.</p>
+<p>Remember, the advantage term is just the reward for a particular state action pair that tells us how good generating a token at a particular state is (Reward subtracted by the Value function).</p>
+<h3 id="ppo_gradient">PPO Gradient</h3>
+<p>Without the clipping part, the objective is:</p>
+<span class="math-display">$$L_t(\theta) = r_t(\theta) A_t$$</span>where <span class="math-display">$$r_t(\theta) = \frac{\pi_\theta(a_t \mid s_t)}{\pi_{\text{old}}(a_t \mid s_t)}$$</span>Since <span class="math-inline">$A_t$</span> is constant with respect to <span class="math-inline">$\theta$</span> (the parameters of the model which we are optimizing).</p>
+<p>The gradient becomes: <span class="math-display">$$\nabla_\theta L_t = A_t \nabla_\theta r_t(\theta)$$</span>Since <span class="math-inline">$\pi_{old}$</span> is constant.</p>
+<span class="math-display">$$\nabla_\theta \pi_\theta(a_t \mid s_t) = \pi_\theta(a_t \mid s_t) \nabla_\theta \log \pi_\theta(a_t \mid s_t)$$</span>Substituting this: <span class="math-display">$$\nabla_\theta r_t(\theta) = \frac{\pi_\theta(a_t \mid s_t)}{\pi_{\text{old}}(a_t \mid s_t)} \nabla_\theta \log \pi_\theta(a_t \mid s_t)$$</span>
+<p>This becomes: <span class="math-display">$$\nabla_\theta r_t(\theta) = r_t(\theta) \nabla_\theta \log \pi_\theta(a_t \mid s_t)$$</span>Now the final loss gradient is: <span class="math-display">$$\nabla_\theta L_t = A_t r_t(\theta) \nabla_\theta \log \pi_\theta(a_t \mid s_t)$$</span>This is the policy gradient.</p>
+<h2 id="practical_usage">Practical Usage</h2>
+<p>Practically, we use a few tricks so that we minimize compute needed and make things simpler.</p>
+<h4 id="1_modify_the_reward">1. Modify the Reward</h4>
+<p>In our original reward setup, our reward is trajectory level, which means that in each trajectory or sequence all the tokens get the same reward.</p>
+<p>Now if we change how this reward is written and start modifying it token level, it would be a lot better.</p>
+<p><strong>We add a KL penalty as a log ratio of probabilities to the reward.</strong></p>
+<p>Now, if we put this expectation (since this KL term will tell us the expected difference in the trajectories that we don&#39;t want to exceed) within the reward itself, we can force the new policy to stay within a particular range of the old policy.</p>
+<p>The modified reward is:</p>
+<span class="math-display">$$R'(a_t, s_t) = R(a_t, s_t) - \beta \log \frac{\pi_1(a_t \mid s_t)}{\pi_0(a_t \mid s_t)}$$</span>
+<p>Normally, we put the KL term into the loss instead of the reward but it&#39;s okay to do so because the advantage function (that has the reward term in it) is linear anyway.</p>
+<p>KL penalty still behaves like a regularization term even when it&#39;s placed inside the reward.</p>
+<p>Standard advantage:</p>
+<span class="math-display">$$A_t = R_t - V(s_t)$$</span>So if:</p>
+<span class="math-display">$$R' = R - \beta \cdot \text{KL term}$$</span>Then: <span class="math-display">$$A' = A - \beta \cdot \text{KL term}$$</span>And in the policy gradient:</p>
+<span class="math-display">$$\nabla_\theta \log \pi(a_t \mid s_t) A'$$</span>We would still use PPO Clipping on top of this so that we can still control the local step size and have a hard guarantee on the probability ratios.</p>
+<p>So, basically we do PPO clipping and include a modified reward with per token penalty for drifting away from a reference policy.</p>
+<p>Ultimately what we&#39;re doing is that we are increasing the probabilities of the model generating the correct responses.</p>
+<p>We use the KL penalty in the reward to know how much more or less confident this new model is compared to the reference model.</p>
+<p>The reward is thus modified to include the difference between the new and old policy state.</p>
+<h2 id="group_relative_policy_optimization">Group Relative Policy Optimization</h2>
+<p>PPO works well but it has a problem: it needs a separate value or critic network to compute the advantage term.</p>
+<span class="math-display">$$A(s_t, a_t) = R(\tau) - V_M(s_t)$$</span>
+<p>This critic network is another entire model of the same size as our policy model. That is double the compute, double the memory, and double the complexity.</p>
+<p>For large language models, this becomes very expensive.</p>
+<p>So, the question is: can we compute the advantage term without training a separate critic network?</p>
+<p>GRPO says yes, and the idea is simple: instead of comparing a response against an estimated value function, compare it against other responses generated for the same prompt.</p>
+<h3 id="the_core_idea">The Core Idea</h3>
+<p>For every prompt, instead of generating one response, we generate a group of <span class="math-inline">$G$</span> responses:</p>
+<span class="math-display">$$\{o_1, o_2, o_3, \dots, o_G\}$$</span>
+<p>Each response gets a reward from the reward model:</p>
+<span class="math-display">$$\{R_1, R_2, R_3, \dots, R_G\}$$</span>
+<p>Now, instead of subtracting the value function as the baseline, we subtract the mean reward of the group.</p>
+<p>The advantage for response <span class="math-inline">$i$</span> is:</p>
+<span class="math-display">$$A_i = \frac{R_i - \text{mean}(\{R_1, \dots, R_G\})}{\text{std}(\{R_1, \dots, R_G\})}$$</span>
+<p>This is just a normalized score.</p>
+<p>If a response did better than average, its advantage is positive. If a response did worse than average, its advantage is negative.</p>
+<p>For example:</p>
+<p>Group of 4 responses for a prompt. Rewards are: 3, 7, 5, 9.</p>
+<p>Mean = 6, Std ≈ 2.58</p>
+<p>Advantages:</p>
+<ul>
+<li>Response 1: <span class="math-inline">$(3-6)/2.58 \approx -1.16$</span>, which is worse than average, so we decrease its probability</li>
+<li>Response 2: <span class="math-inline">$(7-6)/2.58 \approx +0.39$</span>, which is slightly better than average, so we increase its probability</li>
+<li>Response 3: <span class="math-inline">$(5-6)/2.58 \approx -0.39$</span>, which is slightly worse than average, so we decrease its probability</li>
+<li>Response 4: <span class="math-inline">$(9-6)/2.58 \approx +1.16$</span>, which is the best response, so we increase its probability the most</li>
+</ul>
+<p>We are not comparing a response against some absolute value function estimate. We are comparing it against its peers. This is <strong>relative</strong> policy optimization.</p>
+<h3 id="the_loss">The Loss</h3>
+<p>The GRPO loss follows the same structure as PPO with clipping, applied to each response <span class="math-inline">$i$</span> in the group:</p>
+<span class="math-display">$$L^{\text{GRPO}}(\theta) = \mathbb{E}\left[\frac{1}{G}\sum_{i=1}^{G} \min\Big( r_i(\theta) A_i, \text{CLIP}(r_i(\theta), 1 - \epsilon, 1 + \epsilon) A_i \Big) - \beta D_{KL}(\pi_\theta \parallel \pi_0)\right]$$</span>
+<p>where the probability ratio for each response is:</p>
+<span class="math-display">$$r_i(\theta) = \frac{\pi_\theta(o_i \mid q)}{\pi_{\theta_{\text{old}}}(o_i \mid q)}$$</span>
+<p><span class="math-inline">$q$</span> is the prompt or question.</p>
+<p>The KL divergence term is still included as a penalty (same as PPO practical usage) to stop the model from drifting too far from the reference policy.</p>
+<h3 id="how_it_works_step_by_step">How It Works Step by Step</h3>
+<ol>
+<li>Sample a prompt <span class="math-inline">$q$</span> from the training data.</li>
+<li>Generate <span class="math-inline">$G$</span> responses <span class="math-inline">$\{o_1, \dots, o_G\}$</span> from the current policy <span class="math-inline">$\pi_{\theta_\text{old}}$</span>.</li>
+<li>Score each response with the reward model to get <span class="math-inline">$\{R_1, \dots, R_G\}$</span>.</li>
+<li>Compute advantages by normalizing within the group: <span class="math-display">$$A_i = \frac{R_i - \text{mean}(R)}{\text{std}(R)}$$</span></li>
+<li>For each response, compute the PPO clipped objective using this advantage.</li>
+<li>Add the KL penalty to keep the policy close to the reference.</li>
+<li>Update the model using gradient ascent.</li>
+<li>Repeat.</li>
+</ol>
+<h3 id="why_this_works">Why This Works</h3>
+<p>The group average acts as a natural baseline.</p>
+<p>In PPO, the value network is trained to estimate what reward to expect from a state. In GRPO, we don&#39;t estimate anything. We directly observe the rewards of <span class="math-inline">$G$</span> responses and use their mean as the baseline.</p>
+<p>The more responses we sample per prompt, the better this baseline estimate becomes. With enough responses, the group mean becomes a reliable estimate of the expected reward for that prompt.</p>
+<p>This is similar to how REINFORCE used a baseline to reduce variance, but here the baseline is computed empirically from the group rather than learned by a separate network.</p>
+<h3 id="tradeoffs">Tradeoffs</h3>
+<p>GRPO trades the cost of a critic network for the cost of generating more responses per prompt.</p>
+<p>For large models, generating a few extra responses is far cheaper than maintaining an entire second model.</p>
+<p>This is why GRPO has been adopted in modern reasoning model training pipelines (like DeepSeek R1) where the policy models are very large and training a separate critic would be prohibitively expensive.</p>
+<p>Ultimately, post training is what turns raw next token predictors into alignment compliant reasoning engines that we can actually chat with. While classic reinforcement learning algorithms like PPO laid the groundwork with value critic networks, newer methods like GRPO show that we can get creative with relative group dynamics to save massive amounts of compute. Getting these alignment steps right is the real secret sauce behind today&#39;s state of the art models.</p>
+
+      </div>
+
+      <nav class="note-nav-bottom">
+        <a href="policy_gradient_theorem.html" class="nav-prev"><span class="nav-label">Previous</span><span class="nav-title">← Policy Gradient Theorem</span></a>
+        <span></span>
+      </nav>
+    </article>
+  </main>
+</div>
+
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"
+  onload="renderMathInElement(document.getElementById('note-content'), {
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '$', right: '$', display: false}
+    ],
+    throwOnError: false,
+    trust: true,
+    strict: false
+  });"></script>
+<script>
+(function initAmbientBackground() {
+  const canvas = document.getElementById('ambient-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  
+  let width = canvas.width = window.innerWidth;
+  let height = canvas.height = window.innerHeight;
+  
+  window.addEventListener('resize', () => {
+    width = canvas.width = window.innerWidth;
+    height = canvas.height = window.innerHeight;
+  });
+  
+  const particles = [];
+  const particleCount = Math.min(60, Math.floor((width * height) / 20000));
+  const connectionDistance = 120;
+  
+  class Particle {
+    constructor() {
+      this.x = Math.random() * width;
+      this.y = Math.random() * height;
+      this.vx = (Math.random() - 0.5) * 0.25;
+      this.vy = (Math.random() - 0.5) * 0.25;
+      this.radius = Math.random() * 1.2 + 0.6;
+    }
+    
+    update() {
+      this.x += this.vx;
+      this.y += this.vy;
+      
+      if (this.x < 0 || this.x > width) this.vx *= -1;
+      if (this.y < 0 || this.y > height) this.vy *= -1;
+    }
+    
+    draw() {
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(126, 247, 201, 0.4)';
+      ctx.fill();
+    }
+  }
+  
+  for (let i = 0; i < particleCount; i++) {
+    particles.push(new Particle());
+  }
+  
+  function animate() {
+    ctx.clearRect(0, 0, width, height);
+    particles.forEach(p => {
+      p.update();
+      p.draw();
+    });
+    
+    for (let i = 0; i < particles.length; i++) {
+      for (let j = i + 1; j < particles.length; j++) {
+        const dx = particles[i].x - particles[j].x;
+        const dy = particles[i].y - particles[j].y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        
+        if (dist < connectionDistance) {
+          const alpha = (1 - (dist / connectionDistance)) * 0.08;
+          ctx.beginPath();
+          ctx.moveTo(particles[i].x, particles[i].y);
+          ctx.lineTo(particles[j].x, particles[j].y);
+          ctx.strokeStyle = "rgba(126, 247, 201, " + alpha + ")";
+          ctx.lineWidth = 0.8;
+          ctx.stroke();
+        }
+      }
+    }
+    requestAnimationFrame(animate);
+  }
+  animate();
+})();
+</script>
+</body>
+</html>

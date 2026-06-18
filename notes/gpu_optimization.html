@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>GPU Optimization — kanishk's notes</title>
+  <meta name="description" content="GPU Optimization — Transformers & LLMs notes by kanishk" />
+  <link rel="icon" type="image/png" href="../assets/favicon.png" />
+  <link rel="stylesheet" href="../css/style.css" />
+  <link rel="stylesheet" href="../css/notes.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous" />
+</head>
+<body>
+<canvas id="ambient-canvas"></canvas>
+
+<!-- Top Floating Navigation Bar -->
+<header class="navbar">
+  <div class="nav-container">
+    <a href="../index.html" class="nav-logo">kanishk</a>
+    <nav class="nav-links">
+      <a href="../index.html#home">Home</a>
+      <a href="../index.html#projects">Projects</a>
+      <a href="../index.html#blogs">Blogs</a>
+      <a href="../index.html#notes" class="active">Notes</a>
+    </nav>
+    <div class="nav-socials">
+      <a href="https://github.com/kanishkez" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://huggingface.co/kanishkez" target="_blank" rel="noopener">HuggingFace</a>
+    </div>
+  </div>
+</header>
+
+<div class="container">
+  <main class="main-content">
+    <article class="note-page">
+      <div class="note-breadcrumb">
+        <a href="../index.html#notes">Notes</a>
+        <span class="breadcrumb-sep">›</span>
+        <a href="../index.html#notes">Transformers & LLMs</a>
+        <span class="breadcrumb-sep">›</span>
+        <span>GPU Optimization</span>
+      </div>
+
+      <header class="note-header">
+        <div class="note-category-tag">Transformers & LLMs</div>
+        <h1>GPU Optimization</h1>
+      </header>
+
+      <nav class="note-toc" id="note-toc">
+        <div class="toc-title">Contents</div>
+        <div class="toc-items">
+          <a href="#gpu_optimization" class="toc-item toc-h1">GPU Optimization</a>
+          <a href="#gradient_checkpointing" class="toc-item toc-h2">Gradient Checkpointing</a>
+          <a href="#the_problem" class="toc-item toc-h3">The Problem</a>
+          <a href="#memory_cost" class="toc-item toc-h3">Memory Cost</a>
+          <a href="#gpu_memory_vs_computation" class="toc-item toc-h3">GPU Memory vs Computation</a>
+          <a href="#how_gradient_checkpointing_works" class="toc-item toc-h2">How Gradient Checkpointing Works</a>
+          <a href="#mixed_precision_training" class="toc-item toc-h2">Mixed Precision Training</a>
+          <a href="#what_exactly_happens" class="toc-item toc-h3">What exactly happens</a>
+          <a href="#loss_scaling" class="toc-item toc-h3">Loss Scaling</a>
+          <a href="#accumulators" class="toc-item toc-h2">Accumulators</a>
+        </div>
+      </nav>
+
+      <div class="note-content" id="note-content">
+        <h1 id="gpu_optimization">GPU Optimization</h1>
+<p>Training large models like Transformers takes a massive amount of GPU resources, and we often hit memory walls before compute walls. To get around this, we can use smart optimization tricks to trade compute for memory or speed up operations with reduced precision. This note covers three big techniques: gradient checkpointing, mixed precision training, and high precision accumulators.</p>
+<h2 id="gradient_checkpointing">Gradient Checkpointing</h2>
+<h3 id="the_problem">The Problem</h3>
+<p>In vanilla backpropagation, we store all intermediate activations during a forward pass, and then reuse them during the backward pass to compute gradients.</p>
+<p>So, in a network of <span class="math-inline">$L$</span> layers:
+<span class="math-display">$$x_0 \to f_1 \to x_1 \to f_2 \to x_2 \to \cdots \to f_L \to x_L.$$</span>
+The activations stored are <span class="math-inline">$L$</span> as well.</p>
+<p>During the backward pass, we load these stored activations and compute gradients.</p>
+<h3 id="memory_cost">Memory Cost</h3>
+<p>The memory cost for this is high, roughly <span class="math-inline">$L$</span> times the activation size. As models get deeper, activation memory dominates, and you require a huge amount of memory to store these activations.</p>
+<h3 id="gpu_memory_vs_computation">GPU Memory vs Computation</h3>
+<p>In GPUs, memory is scarce. Large activations eat VRAM. For example, a single <span class="math-inline">$4096 \times 4096$</span> activation in FP16 is 32 MB. With 49 layers, that is about 1.5 GB for just one sample.</p>
+<p>So, the bottleneck is memory and not compute. Modern GPUs deliver loads of TFLOPS. Forward computation is fast and cheap relative to memory usage. Thus, a good way to make GPU usage efficient is by using compute instead of storing everything in memory.</p>
+<h2 id="how_gradient_checkpointing_works">How Gradient Checkpointing Works</h2>
+<p>This is a practical solution to the GPU memory activation problem. The key idea is to store selected activations (checkpoints) only. During the backward pass, we can recompute the missing activations between checkpoints.</p>
+<p>For <span class="math-inline">$L$</span> layers, we might checkpoint at:
+<span class="math-display">$$0, k, 2k, 3k, \dots, L.$$</span>
+We store activations only at these checkpoints.</p>
+<p><strong>During the forward pass:</strong></p>
+<ol>
+<li>Compute activations as usual.</li>
+<li>Store only checkpoint activations.</li>
+<li>Discard all others.</li>
+</ol>
+<p><strong>During the backward pass:</strong>
+For each segment, rerun the forward pass inside that segment to recompute the missing activations using the checkpoints.</p>
+<p>With this approach, we only store <span class="math-inline">$O(\sqrt{L})$</span> activations instead of <span class="math-inline">$O(L)$</span>. Memory reduces from linear to sublinear. Compute increases by 20 to 30%, but this is acceptable and much cheaper than running out of memory.</p>
+<h2 id="mixed_precision_training">Mixed Precision Training</h2>
+<p>Mixed precision training means we train a model using multiple floating point precisions at the same time.</p>
+<p>We use:</p>
+<ol>
+<li>FP16 or BF16 for most forward and backward passes and matmuls.</li>
+<li>FP32 to hold master weights.</li>
+<li>Loss scaling to prevent underflow.</li>
+</ol>
+<h3 id="what_exactly_happens">What exactly happens</h3>
+<p>The master weights are stored in FP32. The GPU keeps a full precision copy of the weights for stability.</p>
+<p><strong>Forward Pass</strong>
+Before each forward pass, we copy the master weights into FP16 for computation. Activations, matmuls, and convolutions all happen in FP16.</p>
+<p><strong>Backward Pass</strong>
+Gradients are computed in FP16, but these gradients are not applied directly to the FP16 weights. Instead, they are used to update the FP32 master weights.</p>
+<p>FP16 is not enough for everything because its dynamic range is limited, meaning small gradients might underflow to zero. For example, if a gradient is:
+<span class="math-display">$$1 \times 10^{-7}$$</span>
+FP16 cannot represent it as a normal number, and it might get flushed to 0.</p>
+<h3 id="loss_scaling">Loss Scaling</h3>
+<p>To prevent tiny gradients from becoming zero, we scale up the loss. We multiply the loss by a scaling factor <span class="math-inline">$S$</span>:
+<span class="math-display">$$L_{\text{scaled}} = S \cdot L$$</span>
+Then, during backpropagation, the gradients are computed in scaled form. Before applying these gradients to the FP32 master weights, we undo the scaling:
+<span class="math-display">$$\nabla L = \frac{\nabla L_{\text{scaled}}}{S}$$</span>
+Loss scaling can be static, where we use a fixed constant. Dynamic loss scaling also exists, where the scale factor increases or decreases during training depending on gradient values to avoid underflow and overflow.</p>
+<h2 id="accumulators">Accumulators</h2>
+<p>When GPUs perform a matrix multiplication:
+<span class="math-display">$$C = A \cdot B$$</span>
+They do not compute it one element at a time. Each element is a sum of many products:
+<span class="math-display">$$C_{ij} = \sum_{k=1}^{K} A_{ik} \cdot B_{kj}$$</span>
+The accumulator is the variable that stores this running sum. Accumulators are stored as FP32 instead of FP16 even if we are working with FP16 weights.</p>
+<p>This is because even if we use FP16 weights, the sum of products needs FP32 precision to prevent loss of precision or underflow. For example, multiplying two numbers increases the required precision bits:
+<span class="math-display">$$2.02 \times 2.02 = 4.0804$$</span>
+So we use FP32 precision for accumulating the running sum. After we complete the matrix multiplication, we store the result back as FP16.</p>
+<p>The accumulator is not for storing the final result, it is for computing the result correctly in high precision.</p>
+<p>Similarly, optimizer states (like running mean, momentum, and the average of Adam) must remain in FP32 because they require high precision.</p>
+<p>So that is the basic layout of how we keep GPU training efficient without sacrificing model convergence. By combining gradient checkpointing to save VRAM, mixed precision to accelerate matmuls, and high precision accumulators to keep things stable, we can scale up training significantly. Next up, we will look at how distributed training strategies build on top of these single node optimizations.</p>
+
+      </div>
+
+      <nav class="note-nav-bottom">
+        <a href="decoding_and_sampling_algorithms.html" class="nav-prev"><span class="nav-label">Previous</span><span class="nav-title">← Decoding and Sampling Algorithms</span></a>
+        <a href="mixture_of_experts.html" class="nav-next"><span class="nav-label">Next</span><span class="nav-title">Mixture of Experts →</span></a>
+      </nav>
+    </article>
+  </main>
+</div>
+
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"
+  onload="renderMathInElement(document.getElementById('note-content'), {
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '$', right: '$', display: false}
+    ],
+    throwOnError: false,
+    trust: true,
+    strict: false
+  });"></script>
+<script>
+(function initAmbientBackground() {
+  const canvas = document.getElementById('ambient-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  
+  let width = canvas.width = window.innerWidth;
+  let height = canvas.height = window.innerHeight;
+  
+  window.addEventListener('resize', () => {
+    width = canvas.width = window.innerWidth;
+    height = canvas.height = window.innerHeight;
+  });
+  
+  const particles = [];
+  const particleCount = Math.min(60, Math.floor((width * height) / 20000));
+  const connectionDistance = 120;
+  
+  class Particle {
+    constructor() {
+      this.x = Math.random() * width;
+      this.y = Math.random() * height;
+      this.vx = (Math.random() - 0.5) * 0.25;
+      this.vy = (Math.random() - 0.5) * 0.25;
+      this.radius = Math.random() * 1.2 + 0.6;
+    }
+    
+    update() {
+      this.x += this.vx;
+      this.y += this.vy;
+      
+      if (this.x < 0 || this.x > width) this.vx *= -1;
+      if (this.y < 0 || this.y > height) this.vy *= -1;
+    }
+    
+    draw() {
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(126, 247, 201, 0.4)';
+      ctx.fill();
+    }
+  }
+  
+  for (let i = 0; i < particleCount; i++) {
+    particles.push(new Particle());
+  }
+  
+  function animate() {
+    ctx.clearRect(0, 0, width, height);
+    particles.forEach(p => {
+      p.update();
+      p.draw();
+    });
+    
+    for (let i = 0; i < particles.length; i++) {
+      for (let j = i + 1; j < particles.length; j++) {
+        const dx = particles[i].x - particles[j].x;
+        const dy = particles[i].y - particles[j].y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        
+        if (dist < connectionDistance) {
+          const alpha = (1 - (dist / connectionDistance)) * 0.08;
+          ctx.beginPath();
+          ctx.moveTo(particles[i].x, particles[i].y);
+          ctx.lineTo(particles[j].x, particles[j].y);
+          ctx.strokeStyle = "rgba(126, 247, 201, " + alpha + ")";
+          ctx.lineWidth = 0.8;
+          ctx.stroke();
+        }
+      }
+    }
+    requestAnimationFrame(animate);
+  }
+  animate();
+})();
+</script>
+</body>
+</html>

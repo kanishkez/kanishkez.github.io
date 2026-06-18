@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>RoPE — kanishk's notes</title>
+  <meta name="description" content="RoPE — Transformers & LLMs notes by kanishk" />
+  <link rel="icon" type="image/png" href="../assets/favicon.png" />
+  <link rel="stylesheet" href="../css/style.css" />
+  <link rel="stylesheet" href="../css/notes.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous" />
+</head>
+<body>
+<canvas id="ambient-canvas"></canvas>
+
+<!-- Top Floating Navigation Bar -->
+<header class="navbar">
+  <div class="nav-container">
+    <a href="../index.html" class="nav-logo">kanishk</a>
+    <nav class="nav-links">
+      <a href="../index.html#home">Home</a>
+      <a href="../index.html#projects">Projects</a>
+      <a href="../index.html#blogs">Blogs</a>
+      <a href="../index.html#notes" class="active">Notes</a>
+    </nav>
+    <div class="nav-socials">
+      <a href="https://github.com/kanishkez" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://huggingface.co/kanishkez" target="_blank" rel="noopener">HuggingFace</a>
+    </div>
+  </div>
+</header>
+
+<div class="container">
+  <main class="main-content">
+    <article class="note-page">
+      <div class="note-breadcrumb">
+        <a href="../index.html#notes">Notes</a>
+        <span class="breadcrumb-sep">›</span>
+        <a href="../index.html#notes">Transformers & LLMs</a>
+        <span class="breadcrumb-sep">›</span>
+        <span>RoPE</span>
+      </div>
+
+      <header class="note-header">
+        <div class="note-category-tag">Transformers & LLMs</div>
+        <h1>RoPE</h1>
+      </header>
+
+      <nav class="note-toc" id="note-toc">
+        <div class="toc-title">Contents</div>
+        <div class="toc-items">
+          <a href="#rope" class="toc-item toc-h1">RoPE</a>
+          <a href="#the_problems_with_sinusoidal_absolute_and_learned_positional_embeddings" class="toc-item toc-h3">The problems with sinusoidal, absolute, and learned positional embeddings</a>
+          <a href="#rotation" class="toc-item toc-h3">Rotation</a>
+          <a href="#position_dependent_rotation" class="toc-item toc-h2">Position Dependent Rotation</a>
+          <a href="#integration_into_attention_score" class="toc-item toc-h3">Integration into Attention Score</a>
+          <a href="#relative_positioning" class="toc-item toc-h3">Relative Positioning </a>
+          <a href="#absolute_position" class="toc-item toc-h3">Absolute Position</a>
+          <a href="#rotation_matrix" class="toc-item toc-h3">Rotation Matrix</a>
+          <a href="#efficient_implementation_using_complex_numbers" class="toc-item toc-h2">Efficient Implementation using Complex Numbers</a>
+          <a href="#the_full_implementation_steps" class="toc-item toc-h3">The full implementation steps:</a>
+          <a href="#real_number_implementation_in_code" class="toc-item toc-h3">Real Number Implementation in Code</a>
+        </div>
+      </nav>
+
+      <div class="note-content" id="note-content">
+        <h1 id="rope">RoPE</h1>
+<p>Rotary Position Embedding, or RoPE, has basically become the standard for modern LLMs like Llama. Before getting into how it actually works, we need to look at why older positional embeddings, like absolute, learned, or standard sinusoidal ones, fall short when context windows get huge.</p>
+<h3 id="the_problems_with_sinusoidal_absolute_and_learned_positional_embeddings">The problems with sinusoidal, absolute, and learned positional embeddings</h3>
+<ol>
+<li>They can represent relative positions (sinusoidal can) but the model doesn&#39;t understand that tokens 4 and 6 are closer than tokens 1 and 100 are.</li>
+<li>At huge sequence lengths, attention scale degrades. The dot product between two distant positions becomes noisy and unstructured, so attention also gets degraded. </li>
+<li>Phase drifting: Sinusoidal encoding uses multiple frequencies. Over long sequences, different frequencies create interference patterns. 
+Mathematically:
+<span class="math-inline">$\sin(\omega(t + \Delta)) \approx \sin(\omega t) \quad \text{when } \omega \Delta \approx 2k\pi$</span>
+So positions thousands of tokens apart can become phase aligned and indistinguishable.</li>
+</ol>
+<p>So, Rotary position embeddings came to exist to encode positions in such a way that:</p>
+<ol>
+<li>Encodings represent relative positions in a way that the model understands them.</li>
+<li>They scale naturally to longer context.</li>
+<li>They integrate directly into attention math.</li>
+</ol>
+<h3 id="rotation">Rotation</h3>
+<p>Consider a two dimensional vector:
+<span class="math-display">$$x = \begin{bmatrix} x_1 \\ x_2 \end{bmatrix}$$</span>
+A counterclockwise rotation by angle <span class="math-inline">$\theta$</span> is:
+<span class="math-display">$$R(\theta) = \begin{bmatrix} \cos\theta & -\sin\theta \\ \sin\theta & \cos\theta \end{bmatrix}$$</span>
+So the rotated vector is:
+<span class="math-display">$$x' = R(\theta)x$$</span>
+<p>Query and key vectors in attention have high dimensions. RoPE splits them into <span class="math-inline">$d/2$</span> independent two dimensional rotation planes.</p>
+<p>So for a query vector of dimension <span class="math-inline">$d$</span>, we reshape it into pairs:
+<span class="math-display">$$q = [(q_1,q_2), (q_3,q_4), \dots, (q_{d-1},q_d)]$$</span>
+By this, we mean that we are splitting the single token representation into two dimensional sub vectors. </p>
+<p>For a single token <span class="math-inline">$t$</span> and a single attention head, if the query vector is of length <span class="math-inline">$d_{head}$</span>, we split that into <span class="math-inline">$d_{head}/2$</span> pairs of two dimensions. Each pair is rotated with a potentially different rotation angle.</p>
+<h2 id="position_dependent_rotation">Position Dependent Rotation</h2>
+<p>For a token at position <span class="math-inline">$t$</span>, each two dimensional pair gets a unique angle:
+<span class="math-display">$$\theta_{t,m} = t \cdot \omega_{m}$$</span>
+where:</p>
+<ul>
+<li><span class="math-inline">$t$</span> is the token index (<span class="math-inline">$0, 1, 2, \dots$</span>)</li>
+<li><span class="math-inline">$m$</span> is the pair index (<span class="math-inline">$0$</span> to <span class="math-inline">$d/2-1$</span>) representing which pair it is</li>
+<li><span class="math-inline">$\omega_m$</span> is the frequency assigned to that pair (how fast it rotates)</li>
+</ul>
+<p><strong>Frequency</strong></p>
+<p>The frequency of the rotation influences how fast or how much the rotation happens. In RoPE, the first dimensions rotate slowly, while higher dimensions rotate faster. This creates a multi frequency encoding similar to sinusoidal embeddings.</p>
+<p>The frequencies used by RoPE are:
+<span class="math-display">$$\omega_{m} = 10000^{-2m/d}, \qquad m = 0, 1, \ldots, \frac{d}{2}-1$$</span>
+So for each pair of dimensions, we assign a different frequency. We can also write that as:
+<span class="math-display">$$\omega_{m} = \left(10000^{-\frac{2}{d}}\right)^{m}$$</span>
+In the paper, a slightly different notation might be used, but the formula is functionally the same: the absolute position index is multiplied by a frequency to get the angle of the rotation.</p>
+<p>So the rotated query becomes:
+<span class="math-display">$$\tilde{q}_{t,(2m:2m+1)} = R(\theta_{t,m})\, q_{(2m:2m+1)}$$</span>
+For keys:
+<span class="math-display">$$\tilde{k}_{t,(2m:2m+1)} = R(\theta_{t,m})\, k_{(2m:2m+1)}$$</span>
+<h3 id="integration_into_attention_score">Integration into Attention Score</h3>
+<p>The attention score is:
+<span class="math-display">$$\text{score}(i,j) = \tilde{q}_i^\top \tilde{k}_j$$</span>
+<h3 id="relative_positioning">Relative Positioning</h3>
+<p>Our main goal in using RoPE is to ensure that the positions of the query and key vectors affect their score. RoPE achieves this by using their absolute position difference, which is how far the query and key are from each other in the input sequence.</p>
+<p>Here is how that works mathematically. Because rotation matrices are orthogonal, we have:
+<span class="math-display">$$R(\theta_i)^\top R(\theta_j) = R(\theta_j - \theta_i)$$</span>
+So we get:
+<span class="math-display">$$\tilde{q}_i^\top \tilde{k}_j = q_i^\top R(\theta_j - \theta_i)k_j$$</span>
+Since <span class="math-inline">$\theta_{t,m} = t\omega_m$</span>, for a specific pair we get:
+<span class="math-display">$$\theta_j - \theta_i = (j-i)\omega_m$$</span>
+This means that the attention score between query <span class="math-inline">$i$</span> and key <span class="math-inline">$j$</span> is directly influenced by the relative distance between them (<span class="math-inline">$j-i$</span>). So the attention score depends on how far apart the tokens are, not where they are globally in the sequence.</p>
+<p>Through this mechanism, RoPE turns absolute position into relative position awareness.</p>
+<h3 id="absolute_position">Absolute Position</h3>
+<p>Since the rotation is still a function of the absolute position <span class="math-inline">$t$</span>, the representations are still influenced both by the relative position between <span class="math-inline">$q$</span> and <span class="math-inline">$k$</span> and the absolute position of the token itself.</p>
+<h3 id="rotation_matrix">Rotation Matrix</h3>
+<p>RoPE applies a separate two dimensional rotation to every adjacent pair of dimensions of the embedding. So, we use a block diagonal matrix where each block rotates a different two dimensional slice of the vector. This matrix represents all the rotations combined.</p>
+<p>Each two by two block is a standard rotation matrix:
+<span class="math-display">$$R(\theta_i t) = \begin{pmatrix} \cos(t\theta_i) & -\sin(t\theta_i) \\ \sin(t\theta_i) & \cos(t\theta_i) \end{pmatrix}$$</span>
+So the full rotation matrix for dimension <span class="math-inline">$d$</span> is:
+<span class="math-display">$$R_{d,\Theta,t} = \begin{pmatrix} R(\theta_1 t) & 0 & 0 & \cdots & 0\\ 0 & R(\theta_2 t) & 0 & \cdots & 0\\ 0 & 0 & R(\theta_3 t) & \cdots & 0\\ \vdots & \vdots & \vdots & \ddots & 0\\ 0 & 0 & 0 & \cdots & R(\theta_{d/2} t) \end{pmatrix}$$</span>
+But performing a full matrix multiplication like this is computationally wasteful because it scales as <span class="math-inline">$O(d^2)$</span>.</p>
+<h2 id="efficient_implementation_using_complex_numbers">Efficient Implementation using Complex Numbers</h2>
+<p>Here is where complex numbers come in. Instead of treating each pair as a two dimensional vector, we can interpret it as a complex number:
+<span class="math-display">$$z_i = q_{2i} + j q_{2i+1}$$</span>
+So the rotation becomes a simple multiplication:
+<span class="math-display">$$z'_i = z_i \cdot e^{j \, t\theta_i}$$</span>
+Because of Euler&#39;s formula:
+<span class="math-display">$$e^{j\alpha} = \cos\alpha + j\sin\alpha$$</span>
+A single complex multiplication by <span class="math-inline">$e^{j t\theta_i}$</span> performs the exact same rotation. This means we do not need to use matrices; we can just perform elementwise operations using complex numbers.</p>
+<h3 id="the_full_implementation_steps">The full implementation steps:</h3>
+<ol>
+<li>Precompute frequencies:
+<span class="math-display">$$\theta_{i} = 10000^{-2i/d}, \quad i = 0, 1, \dots, \frac{d}{2}-1$$</span></li>
+<li>Compute the phase per position:
+<span class="math-display">$$\phi_i(t) = t\theta_i$$</span></li>
+<li>Form the rotation factor:
+<span class="math-display">$$e^{j\phi_i(t)} = \cos(\phi_i(t)) + j \sin(\phi_i(t))$$</span></li>
+<li>Apply the rotation:
+<span class="math-display">$$q_{t,i}' = q_{t,i} e^{j\phi_i(t)}, \quad k_{t,i}' = k_{t,i} e^{j\phi_i(t)}$$</span>
+where <span class="math-inline">$q_{t,i}$</span> and <span class="math-inline">$k_{t,i}$</span> are the complex representation of the <span class="math-inline">$i$</span>-th pair at position <span class="math-inline">$t$</span>.</li>
+</ol>
+<h3 id="real_number_implementation_in_code">Real Number Implementation in Code</h3>
+<p>In actual code, we often implement this using real numbers to keep it fast and compatible with frameworks that do not have great complex number support.</p>
+<p>To compute the rotation for a pair <span class="math-inline">$(x, y)$</span>:
+<span class="math-display">$$x' = x\cos\theta - y\sin\theta$$</span>
+<span class="math-display">$$y' = x\sin\theta + y\cos\theta$$</span>
+We can write this in a vectorized way. If we take the pair <span class="math-inline">$(x, y)$</span> and rotate it by 90 degrees (which is equivalent to multiplying by the imaginary unit <span class="math-inline">$j$</span>):
+<span class="math-display">$$(x, y) \rightarrow (-y, x)$$</span>
+Then the rotated pair is computed as:
+<span class="math-display">$$(x', y') = (x, y) \cos\theta + (-y, x) \sin\theta$$</span>
+This matches the rotation formula exactly. </p>
+<p>In code, we construct a rotated version of the query/key vector (often called <code class="inline-code">rotate_half</code> or <code class="inline-code">rotate_every_two</code>) where we swap and negate the pairs. Then we apply the cosine and sine coefficients elementwise:
+<span class="math-display">$$\tilde{q} = q \odot \cos(\theta) + \text{rotate}(q) \odot \sin(\theta)$$</span>
+This avoids any matrix multiplication.</p>
+<p>Finally, the attention score calculation is:
+<span class="math-display">$$A_{ij} = \frac{\tilde{q}_i \tilde{k}_j^\top}{\sqrt{d}}$$</span>
+where <span class="math-inline">$\tilde{q}_i$</span> and <span class="math-inline">$\tilde{k}_j$</span> are the rotated query and key vectors.</p>
+<p>So, at the end of the day, RoPE gives us the best of both worlds. We get the absolute position encoding&#39;s simplicity in the implementation, but we mathematically preserve relative distance between tokens. That is why it scales so well and has become the default choice for modern LLMs.</p>
+
+      </div>
+
+      <nav class="note-nav-bottom">
+        <a href="quantization.html" class="nav-prev"><span class="nav-label">Previous</span><span class="nav-title">← Quantization</span></a>
+        <span></span>
+      </nav>
+    </article>
+  </main>
+</div>
+
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"
+  onload="renderMathInElement(document.getElementById('note-content'), {
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '$', right: '$', display: false}
+    ],
+    throwOnError: false,
+    trust: true,
+    strict: false
+  });"></script>
+<script>
+(function initAmbientBackground() {
+  const canvas = document.getElementById('ambient-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  
+  let width = canvas.width = window.innerWidth;
+  let height = canvas.height = window.innerHeight;
+  
+  window.addEventListener('resize', () => {
+    width = canvas.width = window.innerWidth;
+    height = canvas.height = window.innerHeight;
+  });
+  
+  const particles = [];
+  const particleCount = Math.min(60, Math.floor((width * height) / 20000));
+  const connectionDistance = 120;
+  
+  class Particle {
+    constructor() {
+      this.x = Math.random() * width;
+      this.y = Math.random() * height;
+      this.vx = (Math.random() - 0.5) * 0.25;
+      this.vy = (Math.random() - 0.5) * 0.25;
+      this.radius = Math.random() * 1.2 + 0.6;
+    }
+    
+    update() {
+      this.x += this.vx;
+      this.y += this.vy;
+      
+      if (this.x < 0 || this.x > width) this.vx *= -1;
+      if (this.y < 0 || this.y > height) this.vy *= -1;
+    }
+    
+    draw() {
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(126, 247, 201, 0.4)';
+      ctx.fill();
+    }
+  }
+  
+  for (let i = 0; i < particleCount; i++) {
+    particles.push(new Particle());
+  }
+  
+  function animate() {
+    ctx.clearRect(0, 0, width, height);
+    particles.forEach(p => {
+      p.update();
+      p.draw();
+    });
+    
+    for (let i = 0; i < particles.length; i++) {
+      for (let j = i + 1; j < particles.length; j++) {
+        const dx = particles[i].x - particles[j].x;
+        const dy = particles[i].y - particles[j].y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        
+        if (dist < connectionDistance) {
+          const alpha = (1 - (dist / connectionDistance)) * 0.08;
+          ctx.beginPath();
+          ctx.moveTo(particles[i].x, particles[i].y);
+          ctx.lineTo(particles[j].x, particles[j].y);
+          ctx.strokeStyle = "rgba(126, 247, 201, " + alpha + ")";
+          ctx.lineWidth = 0.8;
+          ctx.stroke();
+        }
+      }
+    }
+    requestAnimationFrame(animate);
+  }
+  animate();
+})();
+</script>
+</body>
+</html>

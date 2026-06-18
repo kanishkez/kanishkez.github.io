@@ -1,0 +1,348 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Introduction to Reinforcement Learning — kanishk's notes</title>
+  <meta name="description" content="Introduction to Reinforcement Learning — Reinforcement Learning notes by kanishk" />
+  <link rel="icon" type="image/png" href="../assets/favicon.png" />
+  <link rel="stylesheet" href="../css/style.css" />
+  <link rel="stylesheet" href="../css/notes.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous" />
+</head>
+<body>
+<canvas id="ambient-canvas"></canvas>
+
+<!-- Top Floating Navigation Bar -->
+<header class="navbar">
+  <div class="nav-container">
+    <a href="../index.html" class="nav-logo">kanishk</a>
+    <nav class="nav-links">
+      <a href="../index.html#home">Home</a>
+      <a href="../index.html#projects">Projects</a>
+      <a href="../index.html#blogs">Blogs</a>
+      <a href="../index.html#notes" class="active">Notes</a>
+    </nav>
+    <div class="nav-socials">
+      <a href="https://github.com/kanishkez" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://huggingface.co/kanishkez" target="_blank" rel="noopener">HuggingFace</a>
+    </div>
+  </div>
+</header>
+
+<div class="container">
+  <main class="main-content">
+    <article class="note-page">
+      <div class="note-breadcrumb">
+        <a href="../index.html#notes">Notes</a>
+        <span class="breadcrumb-sep">›</span>
+        <a href="../index.html#notes">Reinforcement Learning</a>
+        <span class="breadcrumb-sep">›</span>
+        <span>Introduction to Reinforcement Learning</span>
+      </div>
+
+      <header class="note-header">
+        <div class="note-category-tag">Reinforcement Learning</div>
+        <h1>Introduction to Reinforcement Learning</h1>
+      </header>
+
+      <nav class="note-toc" id="note-toc">
+        <div class="toc-title">Contents</div>
+        <div class="toc-items">
+          <a href="#introduction_to_reinforcement_learning" class="toc-item toc-h1">Introduction to Reinforcement Learning</a>
+          <a href="#state" class="toc-item toc-h3">State</a>
+          <a href="#actions" class="toc-item toc-h3">Actions</a>
+          <a href="#transition_dynamics" class="toc-item toc-h3">Transition Dynamics</a>
+          <a href="#reward" class="toc-item toc-h2">Reward</a>
+          <a href="#policy" class="toc-item toc-h2">Policy</a>
+          <a href="#return" class="toc-item toc-h2">Return</a>
+          <a href="#true_objective" class="toc-item toc-h3">True Objective</a>
+          <a href="#value_function" class="toc-item toc-h3">Value Function</a>
+          <a href="#bellman_equation" class="toc-item toc-h3">Bellman Equation</a>
+          <a href="#quality" class="toc-item toc-h2">Quality</a>
+          <a href="#tasks" class="toc-item toc-h3">Tasks</a>
+          <a href="#exploitation_vs_exploration" class="toc-item toc-h3">Exploitation vs Exploration</a>
+          <a href="#two_approaches_to_rl" class="toc-item toc-h3">Two Approaches to RL</a>
+          <a href="#value_based_methods" class="toc-item toc-h3">Value Based Methods</a>
+          <a href="#policy_based_methods" class="toc-item toc-h3">Policy Based Methods</a>
+        </div>
+      </nav>
+
+      <div class="note-content" id="note-content">
+        <h1 id="introduction_to_reinforcement_learning">Introduction to Reinforcement Learning</h1>
+<p>Reinforcement learning is basically the closest learning paradigm we have to how humans and animals actually learn. Instead of feeding a model labeled datasets, we put an agent in an environment and let it figure things out through trial and error. By interacting with its surroundings, the agent learns to make decisions that maximize some notion of cumulative reward over time.</p>
+<p>At any time <span class="math-inline">$t$</span>:</p>
+<ol>
+<li>We have an agent in an environment (like a baby in a room).</li>
+<li>The agent observes the environment and chooses an action.</li>
+<li>The environment changes and the agent receives feedback.</li>
+</ol>
+<p>The key components are:</p>
+<ol>
+<li>State: The current situation/description of an environment.</li>
+<li>Rewards: This is what the agent works for; for any action it does, it receives a reward. RL works by rewarding an agent present in an environment for an action it committed until it reaches the final state/desired goal.</li>
+<li>Actions: Actions are the choices available to an agent, the things it can do to the environment. </li>
+<li>Policy: It defines the behavior of an agent and how it acts on the environment. Based on the existing states of the environment, it talks about what actions to take.</li>
+<li>Value Function: It is a function that evaluates long term benefits and ensures that the long term goal is being reached.</li>
+<li>Model: It mimics the environment and its behavior and allows us to predict what can happen in it. For a given state and action, we can predict the next state and reward.</li>
+</ol>
+<h3 id="state">State</h3>
+<p>A state is a complete description of the environment at any time.</p>
+<p>A state <span class="math-inline">$s$</span> at any time <span class="math-inline">$t$</span>:
+<span class="math-display">$$s_t \in S$$</span>
+Taking the example of a chess board, a state of the environment (the chess board) is the position of all pieces at any given time <span class="math-inline">$t$</span>.</p>
+<p>It is the description of the environment given to the agent on the basis of which it takes an action.</p>
+<h4 id="markov_property">Markov Property</h4>
+<p>For a process to be considered a Markov Decision Process, the state must satisfy the requirement:</p>
+<p>The future state depends only on the present state, not the entire past history.</p>
+<p>In a game of chess, the current board tells you everything you need to know to make your best move; you don&#39;t need to know your previous moves to understand what to do.</p>
+<p>Future ⊥ Past | Present</p>
+<p>This means that the future is independent of the past, only depending on the present.</p>
+<span class="math-display">$$P(s_{t+1} \mid s_t, a_t) = P(s_{t+1} \mid s_0,a_0,\dots,s_t,a_t)$$</span>
+This means that the probability of the state <span class="math-inline">$s_{t+1}$</span> given the current state <span class="math-inline">$s_{t}$</span> and action <span class="math-inline">$a_t$</span> is equal to the probability of moving to the next state given the entire history of states and actions <span class="math-inline">$s_0,a_0,\dots,s_t,a_t$</span>.</p>
+<p>If a system&#39;s future depends on something that happened five steps ago, then that system is non Markovian.</p>
+<p>This is done so that the problem is solvable; without this, the complexity of the problem becomes infinite.</p>
+<p>It is computationally efficient for a system to satisfy the Markov property.</p>
+<h3 id="actions">Actions</h3>
+<p>An action is a choice available to the agent; it is the list of options it can perform in the environment at the current state.</p>
+<span class="math-display">$$a_t \in A(s_t)$$</span>
+Action at time step <span class="math-inline">$t$</span> chosen from the set of actions <span class="math-inline">$A(s_t)$</span> available in state <span class="math-inline">$s_t$</span>.</p>
+<p>Actions depend on state and actions affect the future.</p>
+<p>In chess, actions are all the legal moves possible.</p>
+<p>Action space is the set of <strong>all possible actions in an environment.</strong></p>
+<h3 id="transition_dynamics">Transition Dynamics</h3>
+<p>Transition dynamics talk about how the state and environment change when the agent takes an action.</p>
+<p>It is represented as:</p>
+<span class="math-display">$$P(s_{t+1} \mid s_t, a_t)$$</span>
+This tells us the probability of transitioning to state <span class="math-inline">$s_{t+1}$</span> from state <span class="math-inline">$s_t$</span> when taking action <span class="math-inline">$a_t$</span>.</p>
+<h2 id="reward">Reward</h2>
+<p>This is the feedback we give to the agent.</p>
+<p>An action is either good or bad, and hence rewards are given on the basis of whether what the agent did ultimately reaches the end goal or not.</p>
+<p>Reward is defined as:</p>
+<span class="math-display">$$r_{t+1} = R(s_t, a_t, s_{t+1})$$</span>
+For transitioning from state <span class="math-inline">$s_t$</span> to state <span class="math-inline">$s_{t+1}$</span> after taking action <span class="math-inline">$a_t$</span>.</p>
+<h2 id="policy">Policy</h2>
+<p>It defines the behavior of the agent. It tells the agent what actions it should take for a given state.</p>
+<p>For example:</p>
+<p>If a player is at a state where they can take a pawn, their policy at that state should be to choose the action to take the pawn.</p>
+<p>Policy is a mapping; it takes a state as input and outputs an action.</p>
+<p>Policy is defined as:</p>
+<span class="math-display">$$\pi(a \mid s) = P(a_t = a \mid s_t = s)$$</span>
+<p><span class="math-inline">$\pi$</span> is the standard symbol for policy.</p>
+<p>So, policy gives us the probability of taking action <span class="math-inline">$a$</span> given state <span class="math-inline">$s$</span>, <span class="math-inline">$P(a \mid s)$</span>.</p>
+<p>In the beginning, the agent doesn&#39;t know what actions are best. 
+Its policy tells it to try different things, but as it gets rewards, it updates the probabilities <span class="math-inline">$\pi$</span>.</p>
+<p>Hence, <strong>the overall goal of RL is to find the optimal policy, which tells the agent the best actions to take to maximize the cumulative reward.</strong></p>
+<h2 id="return">Return</h2>
+<p>Return is denoted as <span class="math-inline">$G_t$</span>; it is the sum of rewards the agent receives from time step <span class="math-inline">$t$</span> until the end of the episode:</p>
+<span class="math-display">$$G_t = r_{t+1} + \gamma r_{t+2} + \gamma^2 r_{t+3} + \dots$$</span>
+<span class="math-inline">$\gamma$</span> is a discount factor (between 0 and 1).
+So, the discount factor scales down the impact of future rewards compared to immediate ones.</p>
+<p>As you can see, we use higher powers of the discount factor as we go further into the future because:</p>
+<ol>
+<li>We want the agent to understand that a reward now is better than a reward later.</li>
+<li>In continuing tasks, summing up rewards to get a return might give us an infinite return, so we do this to ensure that the return is a finite number.</li>
+</ol>
+<h3 id="true_objective">True Objective</h3>
+<p>The true objective of the agent is to maximize the expected return, which is the sum of all discounted rewards it will receive.</p>
+<span class="math-display">$$\max_\pi \mathbb{E}_\pi [G_0]$$</span>
+<h3 id="value_function">Value Function</h3>
+<p>It is the expected cumulative reward (the return) an agent can achieve starting from a given state or state action pair.
+It serves as a guide to evaluate the long term performance of the agent and to see if it is heading towards the goal of maximizing rewards.</p>
+<p>It is a representation of the future.</p>
+<p>There are two types of value functions:</p>
+<p><strong>State Value function</strong>: It estimates the expected return starting from a state.
+It tells us, for the current state and policy, what the expected reward is.
+<span class="math-display">$$V^\pi(s) = \mathbb{E}_\pi [G_t \mid s_t = s]$$</span>
+<p><strong>Action Value function</strong>: It estimates the expected return from taking a specific action in a state and then following the policy.
+This tells us how good a particular action is in a given state.</p>
+<span class="math-display">$$Q^\pi(s,a) = \mathbb{E}_\pi [G_t \mid s_t=s, a_t=a]$$</span>
+<h3 id="bellman_equation">Bellman Equation</h3>
+<p>It is a formula used in reinforcement learning to calculate the value of a state as the immediate reward plus the discounted value of future states.</p>
+<p>The value of a state is equal to the reward received now plus the expected value of the next state.</p>
+<p>This helps agents make better decisions by considering both immediate and future rewards.</p>
+<p>We start from the recursive definition of return:</p>
+<span class="math-display">$$G_t = r_{t+1} + \gamma G_{t+1}$$</span>
+We take the expectation conditioned on state <span class="math-inline">$s$</span>:
+<span class="math-display">$$V^\pi(s) = \mathbb{E}_\pi[r_{t+1} + \gamma G_{t+1} \mid s_t = s]$$</span>
+This expectation is split:
+<span class="math-display">$$V^\pi(s) = \mathbb{E}_\pi[r_{t+1} \mid s_t=s] + \gamma \mathbb{E}_\pi[G_{t+1} \mid s_t=s]$$</span>
+It is split based on the current reward and the future return.</p>
+<p>We expand these expectations over actions and transitions. Actions are chosen by the policy, and the next state is determined by the environment&#39;s transition dynamics.</p>
+<span class="math-display">$$V^\pi(s) = \sum_a \pi(a\mid s) \sum_{s'} P(s'\mid s,a) \Big[ R(s,a,s') + \gamma V^\pi(s') \Big]$$</span>
+So, the value is equal to the sum over all possible actions of the policy probability, times the sum over all possible next states of the transition probability, multiplied by the outcome value (the immediate reward plus the discounted value of the next state).</p>
+<figure><img src="images/Pasted%20image%2020251223133044.png" alt="image" loading="lazy"><figcaption>image</figcaption></figure>
+<p>The policy part gives us the probability of taking each action under the policy.</p>
+<p>The transition part describes the probability of transitioning to other states given the chosen action.</p>
+<p>The outcome value is the sum of the immediate reward and the discounted estimated value of the next state.</p>
+<p>We multiply these components because the joint probability of choosing action <span class="math-inline">$a$</span> and transitioning to state <span class="math-inline">$s'$</span> is the product of their individual probabilities (using the chain rule of conditional probability): <span class="math-inline">$P(a, s' \mid s) = \pi(a \mid s) P(s' \mid s, a)$</span>.</p>
+<h2 id="quality">Quality</h2>
+<p>Quality is the long term value of a state action pair. It tells us if the action is actually good in the long run.</p>
+<p><span class="math-inline">$Q^\pi(s,a)$</span> is the expected return starting from state <span class="math-inline">$s$</span>, taking action <span class="math-inline">$a$</span>, and then following policy <span class="math-inline">$\pi$</span> forever after.</p>
+<span class="math-display">$$Q^\pi(s,a) = \mathbb{E}_\pi [ r_{t+1} + \gamma r_{t+2} + \gamma^2 r_{t+3} + \dots \mid s_t = s, a_t = a ]$$</span>
+In a game of chess, the Q value of a move is how that move will affect us in the long run. For example, a move that traps the opponent&#39;s Queen will have a huge Q value.</p>
+<p>So, Q is basically the expectation of return:</p>
+<span class="math-display">$$Q^\pi(s,a) = \mathbb{E}_\pi [ G_t \mid s_t = s, a_t = a ]$$</span>
+<h3 id="tasks">Tasks</h3>
+<h4 id="episodic_tasks">Episodic Tasks</h4>
+<p>An episodic task has a terminal state and is broken into episodes.
+Examples include chess, Go, Atari games, etc.</p>
+<p>Formally, an episode ends at a time step <span class="math-inline">$T$</span>.</p>
+<p>Return is:</p>
+<span class="math-display">$$G_t = \sum_{k=t+1}^{T} \gamma^{k-t-1} r_k$$</span>
+The terminal state has a value of:
+<span class="math-display">$$V(s_T) = 0$$</span>
+<h4 id="continuing_tasks">Continuing Tasks</h4>
+<p>Continuing tasks have no terminal state, and the interaction goes on forever.
+Examples include stock trading agents, recommendation systems, etc.</p>
+<p>We need a discount factor to make the return finite:
+<span class="math-display">$$\gamma &lt; 1$$</span>
+<h4 id="deterministic_tasks">Deterministic Tasks</h4>
+<p>In deterministic tasks, taking a specific action in a state leads to an exact next state.
+For instance, if you make a move in chess, it leads to one specific board state.</p>
+<span class="math-display">$$P(s' \mid s,a) \in \{0,1\}$$</span>
+<h4 id="stochastic_tasks">Stochastic Tasks</h4>
+<p>In stochastic tasks, an action can have multiple outcomes.
+Examples include robotics, real world systems, etc.</p>
+<span class="math-display">$$P(s' \mid s,a) \text{ is a probability distribution}$$</span>
+<h3 id="exploitation_vs_exploration">Exploitation vs Exploration</h3>
+<p>It refers to the trade off between exploitation and exploration.</p>
+<p><strong>Exploitation</strong> is choosing and continuing the action that you currently believe is best:</p>
+<span class="math-display">$$a = \arg\max_a Q(s,a)$$</span>
+<p>The problem is that our current estimates might be wrong, meaning we might miss out on a better action.</p>
+<p><strong>Exploration</strong> is trying out different actions to gain more information. By exploring, the agent learns which actions yield higher rewards and which do not.</p>
+<p>This trade off is important because we want an agent that balances exploration and exploitation to maximize long term rewards.</p>
+<h3 id="two_approaches_to_rl">Two Approaches to RL</h3>
+<p>There are two main approaches to reinforcement learning: value based and policy based.</p>
+<h3 id="value_based_methods">Value Based Methods</h3>
+<p>In value based methods, we learn how good a state is, or how good a specific action is in a given state.</p>
+<span class="math-display">$$V^\pi(s) = \mathbb{E}_\pi [ G_t \mid s_t = s ]$$</span>
+This is the value of the current state (its expected return).</p>
+<span class="math-display">$$Q^\pi(s,a) = \mathbb{E}_\pi [ G_t \mid s_t = s, a_t = a ]$$</span>
+This tells us how good an action is for a particular state. It is the expected return when an action is applied in a state.</p>
+<span class="math-display">$$Q^*(s,a) = \max_\pi Q^\pi(s,a)$$</span>
+This is the optimal action value function, representing the best expected return we can get from any policy.
+We extract the policy greedily based on the optimal action values:
+<span class="math-display">$$\pi(s) = \arg\max_a Q^*(s,a)$$</span>
+This means we choose the action that has the highest optimal value.</p>
+<p>Common algorithms include:</p>
+<ol>
+<li>Tabular Q learning</li>
+<li>SARSA</li>
+<li>Deep Q Networks</li>
+<li>Double DQN and Dueling DQN</li>
+</ol>
+<p>In value based methods, we do not parameterize the policy directly. Instead, we focus on learning the best value (cumulative reward) for actions, and the policy is implicitly defined by choosing the best action.</p>
+<h3 id="policy_based_methods">Policy Based Methods</h3>
+<p>In policy based methods, we learn the policy directly instead of relying solely on action values.
+<span class="math-display">$$\pi_\theta(a \mid s)$$</span>
+Here, <span class="math-inline">$\pi_\theta$</span> represents a policy parameterized by <span class="math-inline">$\theta$</span> (the weights of a neural network) that outputs the probability of taking action <span class="math-inline">$a$</span> in state <span class="math-inline">$s$</span>.
+The objective is to maximize:
+<span class="math-display">$$J(\theta) = \mathbb{E}_{\pi_\theta} [ G_0 ]$$</span>
+It is like learning an overall strategy instead of just looking at the next best move.</p>
+<p>We adjust the weight vector of the neural network (<span class="math-inline">$\theta$</span>) to maximize the expected return <span class="math-inline">$J(\theta)$</span>.</p>
+<p>To do this, we use <strong>Gradient Ascent</strong>, calculating the gradient of the objective function with respect to the weights to update them in the direction that increases the reward.</p>
+<p>This allows for a stochastic policy rather than the deterministic greedy policy used in value based RL.</p>
+<p>The policy gradient theorem gives us the gradient of the objective:</p>
+<span class="math-display">$$\nabla_\theta J(\theta) = \mathbb{E}_{\pi_\theta} \big[ \nabla_\theta \log \pi_\theta(a \mid s) Q^\pi(s,a) \big]$$</span>
+<p>Ultimately, policy gradient methods directly optimize the agent&#39;s strategy by adjusting policy parameters, making them super powerful for handling complex action spaces. Choosing between value based and policy based methods—or combining them in actor critic architectures—is one of the core design decisions in modern RL. Next, we will see how these foundations lead to practical deep reinforcement learning algorithms.</p>
+
+      </div>
+
+      <nav class="note-nav-bottom">
+        <span></span>
+        <a href="policy_gradient_theorem.html" class="nav-next"><span class="nav-label">Next</span><span class="nav-title">Policy Gradient Theorem →</span></a>
+      </nav>
+    </article>
+  </main>
+</div>
+
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"
+  onload="renderMathInElement(document.getElementById('note-content'), {
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '$', right: '$', display: false}
+    ],
+    throwOnError: false,
+    trust: true,
+    strict: false
+  });"></script>
+<script>
+(function initAmbientBackground() {
+  const canvas = document.getElementById('ambient-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  
+  let width = canvas.width = window.innerWidth;
+  let height = canvas.height = window.innerHeight;
+  
+  window.addEventListener('resize', () => {
+    width = canvas.width = window.innerWidth;
+    height = canvas.height = window.innerHeight;
+  });
+  
+  const particles = [];
+  const particleCount = Math.min(60, Math.floor((width * height) / 20000));
+  const connectionDistance = 120;
+  
+  class Particle {
+    constructor() {
+      this.x = Math.random() * width;
+      this.y = Math.random() * height;
+      this.vx = (Math.random() - 0.5) * 0.25;
+      this.vy = (Math.random() - 0.5) * 0.25;
+      this.radius = Math.random() * 1.2 + 0.6;
+    }
+    
+    update() {
+      this.x += this.vx;
+      this.y += this.vy;
+      
+      if (this.x < 0 || this.x > width) this.vx *= -1;
+      if (this.y < 0 || this.y > height) this.vy *= -1;
+    }
+    
+    draw() {
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(126, 247, 201, 0.4)';
+      ctx.fill();
+    }
+  }
+  
+  for (let i = 0; i < particleCount; i++) {
+    particles.push(new Particle());
+  }
+  
+  function animate() {
+    ctx.clearRect(0, 0, width, height);
+    particles.forEach(p => {
+      p.update();
+      p.draw();
+    });
+    
+    for (let i = 0; i < particles.length; i++) {
+      for (let j = i + 1; j < particles.length; j++) {
+        const dx = particles[i].x - particles[j].x;
+        const dy = particles[i].y - particles[j].y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        
+        if (dist < connectionDistance) {
+          const alpha = (1 - (dist / connectionDistance)) * 0.08;
+          ctx.beginPath();
+          ctx.moveTo(particles[i].x, particles[i].y);
+          ctx.lineTo(particles[j].x, particles[j].y);
+          ctx.strokeStyle = "rgba(126, 247, 201, " + alpha + ")";
+          ctx.lineWidth = 0.8;
+          ctx.stroke();
+        }
+      }
+    }
+    requestAnimationFrame(animate);
+  }
+  animate();
+})();
+</script>
+</body>
+</html>

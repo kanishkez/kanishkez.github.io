@@ -1,0 +1,24 @@
+{
+  "name": "kanishkez.github.io",
+  "version": "1.0.0",
+  "description": "website: [kanishkez.github.io](https://kanishkez.github.io/)",
+  "main": "build-notes.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kanishkez/kanishkez.github.io.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/kanishkez/kanishkez.github.io/issues"
+  },
+  "homepage": "https://github.com/kanishkez/kanishkez.github.io#readme",
+  "dependencies": {
+    "marked": "^18.0.5"
+  }
+}

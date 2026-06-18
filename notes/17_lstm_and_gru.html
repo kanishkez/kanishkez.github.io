@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>LSTM and GRU — kanishk's notes</title>
+  <meta name="description" content="LSTM and GRU — Sequence & Recurrent Models notes by kanishk" />
+  <link rel="icon" type="image/png" href="../assets/favicon.png" />
+  <link rel="stylesheet" href="../css/style.css" />
+  <link rel="stylesheet" href="../css/notes.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous" />
+</head>
+<body>
+<canvas id="ambient-canvas"></canvas>
+
+<!-- Top Floating Navigation Bar -->
+<header class="navbar">
+  <div class="nav-container">
+    <a href="../index.html" class="nav-logo">kanishk</a>
+    <nav class="nav-links">
+      <a href="../index.html#home">Home</a>
+      <a href="../index.html#projects">Projects</a>
+      <a href="../index.html#blogs">Blogs</a>
+      <a href="../index.html#notes" class="active">Notes</a>
+    </nav>
+    <div class="nav-socials">
+      <a href="https://github.com/kanishkez" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://huggingface.co/kanishkez" target="_blank" rel="noopener">HuggingFace</a>
+    </div>
+  </div>
+</header>
+
+<div class="container">
+  <main class="main-content">
+    <article class="note-page">
+      <div class="note-breadcrumb">
+        <a href="../index.html#notes">Notes</a>
+        <span class="breadcrumb-sep">›</span>
+        <a href="../index.html#notes">Sequence & Recurrent Models</a>
+        <span class="breadcrumb-sep">›</span>
+        <span>LSTM and GRU</span>
+      </div>
+
+      <header class="note-header">
+        <div class="note-category-tag">Sequence & Recurrent Models</div>
+        <h1>LSTM and GRU</h1>
+      </header>
+
+      <nav class="note-toc" id="note-toc">
+        <div class="toc-title">Contents</div>
+        <div class="toc-items">
+          <a href="#cell_state" class="toc-item toc-h2">Cell State</a>
+          <a href="#forget_gate" class="toc-item toc-h2">Forget Gate</a>
+          <a href="#input_gate" class="toc-item toc-h2">Input Gate</a>
+          <a href="#candidate_memory" class="toc-item toc-h2">Candidate Memory</a>
+          <a href="#update_memorycell_state" class="toc-item toc-h2">Update Memory(cell state)</a>
+          <a href="#output_gate" class="toc-item toc-h2">Output gate</a>
+          <a href="#hidden_state" class="toc-item toc-h2">Hidden state</a>
+          <a href="#gru" class="toc-item toc-h2">GRU</a>
+          <a href="#update_gate" class="toc-item toc-h3">Update Gate</a>
+          <a href="#reset_gate" class="toc-item toc-h3">Reset Gate</a>
+          <a href="#candidate_hidden_state" class="toc-item toc-h2">Candidate Hidden state</a>
+          <a href="#final_hidden_state" class="toc-item toc-h2">Final Hidden State</a>
+          <a href="#note_about_activation_functions_used" class="toc-item toc-h2">note about activation functions used:</a>
+          <a href="#sigmoid" class="toc-item toc-h3">sigmoid:</a>
+          <a href="#tanh" class="toc-item toc-h3">tanh:</a>
+        </div>
+      </nav>
+
+      <div class="note-content" id="note-content">
+        <p>RNN has a bunch of drawbacks that include:</p>
+<ol>
+<li>Exploding/Vanishing gradients</li>
+<li>No memory control- This means that the most recent memory is the one that is typically used the most to update the current one.
+For example, if I need to borrow memory from a whole other instance, I won&#39;t be able to do that. &#39;kanishk is french, he speaks <em>french</em>&#39;
+Here the model can predict the word &#39;french&#39; only if it looks at the previous memory where it is mentioned that the person is french
+So we need a way of controlling how much memory and which memory is used in the current instance.
+Here is where LSTM comes in, it stands for Long short term memory.</li>
+</ol>
+<p>LSTM introduces a memory cell which has a bunch of gates that do the following funcitonalities:</p>
+<h2 id="cell_state">Cell State</h2>
+<p>Cell states in lstm is like a passage running through the entire gates that exist, any information that passes through the network passes through the cell state
+The cell state consists of:</p>
+<h2 id="forget_gate">Forget Gate</h2>
+<p>It learns to forget the useless past memory from the past using the previous hidden and the current input 
+So it decides what information to keep and what to forget based on the previous cell state and the new input information</p>
+<span class="math-display">$$f^{(t)} = \sigma(W_f x^{(t)} + U_f h^{(t-1)} + b_f)$$</span>
+where we use the sigmoid function to control the amount of information that needs to be added
+sigmoid function is used in gates to control the amount of information that flows through in lstms</p>
+<p>The forget gate coupled with the previous cell state is added to the new input gate&#39;s dot product with the new candidate memory to update the entire memory</p>
+<h2 id="input_gate">Input Gate</h2>
+<p>Input gate again decides how much of the new candidate memory content to be added</p>
+<p>In a way input gate and forget gate both decide how much to add and forget to the memory respectively 
+The same way that the forget state decides how much memory to be removed from the previous cell state, input gate decides how much of the new input should be added to the new current state
+<span class="math-display">$$i^{(t)} = \sigma(W_i x^{(t)} + U_i h^{(t-1)} + b_i)$$</span>
+<h2 id="candidate_memory">Candidate Memory</h2>
+<p>This contains the new memory content, it contains the actual new information that might be stored in the memory</p>
+<span class="math-display">$$\tilde{c}^{(t)} = \tanh(W_c x^{(t)} + U_c h^{(t-1)} + b_c)$$</span>
+even though input gate and candidate memory have the same equation,
+the activation function plays a vital role in determining what their individual role is </p>
+<p>Input gate decides how much of the information from candidate memory to let through </p>
+<h2 id="update_memorycell_state">Update Memory(cell state)</h2>
+<span class="math-display">$$c^{(t)} = f^{(t)} \circ c^{(t-1)} + i^{(t)} \circ \tilde{c}^{(t)}$$</span>
+here is where the memory update process happens 
+the forget state is multiplied with the old state so that the memory is forgotten and that memory is added with the new memory that we&#39;re bringing in through the candidate memory and adjusting the amount with the help of input gate</p>
+<h2 id="output_gate">Output gate</h2>
+<span class="math-display">$$o^{(t)} = \sigma(W_o x^{(t)} + U_o h^{(t-1)} + b_o)$$</span>
+output gate again chooses how much of the cell state is to be used and sent to the hidden state</p>
+<h2 id="hidden_state">Hidden state</h2>
+<span class="math-display">$$h^{(t)} = o^{(t)} \circ \tanh(c^{(t)})$$</span>
+Hidden state is the final output we pass on to the next layer, output gate decides how much of cell state is to be considered while computing the hidden state</p>
+<h2 id="gru">GRU</h2>
+<p>GRU tries to achieve the same thing LSTU does but using less gates and less computational power</p>
+<p>It only uses two gates in all:</p>
+<h3 id="update_gate">Update Gate</h3>
+<span class="math-display">$$z^{(t)} = \sigma(W_z x^{(t)} + U_z h^{(t-1)} + b_z)$$</span>
+Decides what percentage of past memory to keep vs how much to embrace the new info (in the final state equation)
+if z=0 then only past memory is kept, if z=1 then only new memory is kept</p>
+<h3 id="reset_gate">Reset Gate</h3>
+<span class="math-display">$$r^{(t)} = \sigma(W_r x^{(t)} + U_r h^{(t-1)} + b_r)$$</span>
+controls how much of the paste state to use when learning new info
+low r, suppress parts of the old memory while learning input
+high r, consider full memory to keep while learning new input</p>
+<p><strong>Note:</strong> Even though update and reset gate use the same equations their purpose is completely different because of how their weights get trained in training.</p>
+<h2 id="candidate_hidden_state">Candidate Hidden state</h2>
+<span class="math-display">$$\tilde{h}^{(t)} = \tanh(W_h x^{(t)} + U_h (r^{(t)} \circ h^{(t-1)}) + b_h)$$</span>
+<ul>
+<li>This is the <strong>new state computed from current input</strong></li>
+<li>Notice: it uses the <strong>reset gate</strong> to selectively erase past info before mixing it into the candidate</li>
+<li>This gate uses reset gate to erase the past while simultaneously taking new info inside</li>
+<li>this new state is the entire info that <strong>&#39;could&#39;</strong> be accepted into the network (it is like a draft of what memory could be given)</li>
+<li>the next state, i.e the final hidden state, actually decides how much of this new info to keep and how much of the old info to keep</li>
+</ul>
+<h2 id="final_hidden_state">Final Hidden State</h2>
+<span class="math-display">$$h^{(t)} = (1 - z^{(t)}) \circ h^{(t-1)} + z^{(t)} \circ \tilde{h}^{(t)}$$</span>
+<p>this state actually decides how much mixture of the new info + old info to keep 
+z decides the % of both the info 
+that is why we use 1 - z and z so that both of them add upto 1 so that both of their percentages add upto 100%
+this is the actual memory update</p>
+<div class="table-wrapper"><table>
+<thead><tr><th><strong>Multiplier</strong></th><th><strong>Controls</strong></th><th><strong>Gate value</strong></th></tr></thead>
+<tbody><tr><td>1 - <span class="math-inline">$z^{(t)}$</span></td><td>How much of the <strong>old memory to keep</strong></td><td>Inversely related to z</td></tr><tr><td><span class="math-inline">$z^{(t)}$</span></td><td>How much of the <strong>new info to write</strong></td><td>Directly related</td></tr></tbody>
+</table></div>
+<h2 id="note_about_activation_functions_used">note about activation functions used:</h2>
+<h3 id="sigmoid">sigmoid:</h3>
+<p>sigmoid is used to control how much information or how much of a memory to accept
+since it lies in the range of (0,1) 0 would mean nothing to keep and 1 would mean to preserve the memory 
+It is used in gates for the same reason, since gates decide how much of a memory they want to actually keep </p>
+<p>tanh cant be used here since its range lies between (-1,1) which means it could invert or modify the data
+but thats not what gates are for, theyre for controlling how much data is allowed through</p>
+<h3 id="tanh">tanh:</h3>
+<p>it is used to process the information,content so we use both negative and positive values to show negative influence and positive influence
+for example, a word may have negative or positive influence on another word which tanh allows to show</p>
+
+      </div>
+
+      <nav class="note-nav-bottom">
+        <a href="16_sequence_to_sequence_rnns.html" class="nav-prev"><span class="nav-label">Previous</span><span class="nav-title">← Sequence to Sequence RNNs</span></a>
+        <a href="18_bidirectional_rnns.html" class="nav-next"><span class="nav-label">Next</span><span class="nav-title">Bidirectional RNNs →</span></a>
+      </nav>
+    </article>
+  </main>
+</div>
+
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"
+  onload="renderMathInElement(document.getElementById('note-content'), {
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '$', right: '$', display: false}
+    ],
+    throwOnError: false,
+    trust: true,
+    strict: false
+  });"></script>
+<script>
+(function initAmbientBackground() {
+  const canvas = document.getElementById('ambient-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  
+  let width = canvas.width = window.innerWidth;
+  let height = canvas.height = window.innerHeight;
+  
+  window.addEventListener('resize', () => {
+    width = canvas.width = window.innerWidth;
+    height = canvas.height = window.innerHeight;
+  });
+  
+  const particles = [];
+  const particleCount = Math.min(60, Math.floor((width * height) / 20000));
+  const connectionDistance = 120;
+  
+  class Particle {
+    constructor() {
+      this.x = Math.random() * width;
+      this.y = Math.random() * height;
+      this.vx = (Math.random() - 0.5) * 0.25;
+      this.vy = (Math.random() - 0.5) * 0.25;
+      this.radius = Math.random() * 1.2 + 0.6;
+    }
+    
+    update() {
+      this.x += this.vx;
+      this.y += this.vy;
+      
+      if (this.x < 0 || this.x > width) this.vx *= -1;
+      if (this.y < 0 || this.y > height) this.vy *= -1;
+    }
+    
+    draw() {
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(126, 247, 201, 0.4)';
+      ctx.fill();
+    }
+  }
+  
+  for (let i = 0; i < particleCount; i++) {
+    particles.push(new Particle());
+  }
+  
+  function animate() {
+    ctx.clearRect(0, 0, width, height);
+    particles.forEach(p => {
+      p.update();
+      p.draw();
+    });
+    
+    for (let i = 0; i < particles.length; i++) {
+      for (let j = i + 1; j < particles.length; j++) {
+        const dx = particles[i].x - particles[j].x;
+        const dy = particles[i].y - particles[j].y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        
+        if (dist < connectionDistance) {
+          const alpha = (1 - (dist / connectionDistance)) * 0.08;
+          ctx.beginPath();
+          ctx.moveTo(particles[i].x, particles[i].y);
+          ctx.lineTo(particles[j].x, particles[j].y);
+          ctx.strokeStyle = "rgba(126, 247, 201, " + alpha + ")";
+          ctx.lineWidth = 0.8;
+          ctx.stroke();
+        }
+      }
+    }
+    requestAnimationFrame(animate);
+  }
+  animate();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Normalization — kanishk's notes</title>
+  <meta name="description" content="Normalization — Deep Learning Foundations notes by kanishk" />
+  <link rel="icon" type="image/png" href="../assets/favicon.png" />
+  <link rel="stylesheet" href="../css/style.css" />
+  <link rel="stylesheet" href="../css/notes.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous" />
+</head>
+<body>
+<canvas id="ambient-canvas"></canvas>
+
+<!-- Top Floating Navigation Bar -->
+<header class="navbar">
+  <div class="nav-container">
+    <a href="../index.html" class="nav-logo">kanishk</a>
+    <nav class="nav-links">
+      <a href="../index.html#home">Home</a>
+      <a href="../index.html#projects">Projects</a>
+      <a href="../index.html#blogs">Blogs</a>
+      <a href="../index.html#notes" class="active">Notes</a>
+    </nav>
+    <div class="nav-socials">
+      <a href="https://github.com/kanishkez" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://huggingface.co/kanishkez" target="_blank" rel="noopener">HuggingFace</a>
+    </div>
+  </div>
+</header>
+
+<div class="container">
+  <main class="main-content">
+    <article class="note-page">
+      <div class="note-breadcrumb">
+        <a href="../index.html#notes">Notes</a>
+        <span class="breadcrumb-sep">›</span>
+        <a href="../index.html#notes">Deep Learning Foundations</a>
+        <span class="breadcrumb-sep">›</span>
+        <span>Normalization</span>
+      </div>
+
+      <header class="note-header">
+        <div class="note-category-tag">Deep Learning Foundations</div>
+        <h1>Normalization</h1>
+      </header>
+
+      <nav class="note-toc" id="note-toc">
+        <div class="toc-title">Contents</div>
+        <div class="toc-items">
+          <a href="#normalization" class="toc-item toc-h3">Normalization </a>
+          <a href="#batch_normalization" class="toc-item toc-h2">Batch Normalization</a>
+          <a href="#layer_normalization" class="toc-item toc-h2">Layer Normalization </a>
+          <a href="#rmsnorm" class="toc-item toc-h2">RMSNorm </a>
+        </div>
+      </nav>
+
+      <div class="note-content" id="note-content">
+        <h3 id="normalization">Normalization</h3>
+<p>Normalization is a way to stabilize activations/outputs in a neural network.
+Neural network can train poorly because:</p>
+<ol>
+<li>Activations can explode or vanish. This happens because during backpropagation, gradients are multiplied repeatedly by weights and derivatives of activation functions. If the derivative <span class="math-inline">$f(z)$</span> is small (&lt;1) repeated multiplication can make gradients shrink. Simiarly, if the gradients are big, repeated multiplication can make them huge causing them to explode.</li>
+<li>Internal Covariate Shift. It is a phenomenon where the distribution of inputs to the intermediate layers of a neural network changes during training because of the earlier layers&#39; weights. 
+At the start of the training, layer 5 may receive inputs with mean=0 and variance=1.
+After some weight updates, layer 5 may now receive inputs with mean=20 and huge variance.
+So, this forces deeper layers to continously readjust, slowing convergence and slowing down training. So, Normalization is used.</li>
+</ol>
+<p>The core idea is that it stabilizes activations.
+<span class="math-display">$$\text{Normalized} = \frac{x - \mu}{\sigma}$$</span>
+It rescales values to a stable range, making optimization more predictable. </p>
+<p>Modern networks also apply learnable scale and shift parameters, <span class="math-inline">$\gamma$</span> and <span class="math-inline">$\beta$</span>:</p>
+<span class="math-display">$$\hat{x} = \gamma \cdot \frac{x-\mu}{\sigma} + \beta$$</span>
+<h2 id="batch_normalization">Batch Normalization</h2>
+<p>It normalizes across the batch dimension/</p>
+<p>For a minibatch <span class="math-inline">$B = \{x_1, x_2, ..., x_m\}:$</span>
+<p>We calculate the mean and standard deviation:
+<span class="math-display">$$\mu_B = \frac{1}{m} \sum_{i=1} x_i,\quad \sigma_B^2 = \frac{1}{m}\sum_{i=1}(x_i - \mu_B)^2$$</span>
+Then we normalize using that:
+<span class="math-display">$$\hat{x}_i = \frac{x_i - \mu_B}{\sqrt{\sigma_B^2 + \epsilon}}$$</span>
+FInally apply affine transform:
+<span class="math-display">$$y_i = \gamma \hat{x}_i + \beta$$</span>
+<p>Normalization forces the data into a fixed distribution (mean=0,variance=1)
+That makes training stable but also restrict how much the network can learn. </p>
+<p>Without affine parameters, every layer would only see standardized values limiting how much the network can learn.
+So affine parameters preserve model capacity.</p>
+<p><span class="math-inline">$\beta$</span> controls the learned bias
+<span class="math-inline">$\gamma$</span> controls learned feature scaling, how much the feature can increase or decrease</p>
+<p>These are learnable parameters, that can decide how much the bias and scaling should be for a batch of features.</p>
+<p>Used in CNNs.</p>
+<h2 id="layer_normalization">Layer Normalization</h2>
+<p>It normalizes within a single sample, across a single layer.</p>
+<p>Given a vector of activations for one token:</p>
+<span class="math-display">$$x = [x_1, x_2, ..., x_d]$$</span>
+We calculate mean and deviation:
+<span class="math-display">$$\mu = \frac{1}{d}\sum_{j=1} x_j,\quad \sigma^2 = \frac{1}{d}\sum_{j=1}(x_j - \mu)^2$$</span>
+Then we get the output as:</p>
+<span class="math-display">$$y_j = \gamma \frac{x_j - \mu}{\sqrt{\sigma^2 + \epsilon}} + \beta$$</span>
+<p>It is independant of batch size.</p>
+<p>It is used in Transformers, RNNs/LSTMs and models with varying sequence lengths.</p>
+<h2 id="rmsnorm">RMSNorm</h2>
+<p>RMSNorm removes the mean from LayerNorm</p>
+<p>Formula:</p>
+<span class="math-display">$$\text{RMS}(x) = \sqrt{\frac{1}{d} \sum_{j=1} x_j^2}$$</span>
+Output:
+<span class="math-display">$$y = \frac{x}{\text{RMS}(x)} \cdot \gamma$$</span>
+There is no subtracting mean or no <span class="math-inline">$\beta$</span> shift</p>
+<p>It is not centered around zero/mean.</p>
+<p>It is simpler,lower compute and has better stability in large transformers</p>
+<p>Used in LLaMA, Falcon, Mistral</p>
+<p>Removing the subtracting from mean part can reduce computation, removes extra instability when mean fluctuates and in large networks like LLMs, centering around the mean isn&#39;t necessary.</p>
+<p>So instead of forcing. zero mean, it just ensures that the mean or all inputs are stable.</p>
+
+      </div>
+
+      <nav class="note-nav-bottom">
+        <a href="10_backpropagation.html" class="nav-prev"><span class="nav-label">Previous</span><span class="nav-title">← Backpropagation</span></a>
+        <a href="12_activation_functions.html" class="nav-next"><span class="nav-label">Next</span><span class="nav-title">Activation Functions →</span></a>
+      </nav>
+    </article>
+  </main>
+</div>
+
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"
+  onload="renderMathInElement(document.getElementById('note-content'), {
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '$', right: '$', display: false}
+    ],
+    throwOnError: false,
+    trust: true,
+    strict: false
+  });"></script>
+<script>
+(function initAmbientBackground() {
+  const canvas = document.getElementById('ambient-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  
+  let width = canvas.width = window.innerWidth;
+  let height = canvas.height = window.innerHeight;
+  
+  window.addEventListener('resize', () => {
+    width = canvas.width = window.innerWidth;
+    height = canvas.height = window.innerHeight;
+  });
+  
+  const particles = [];
+  const particleCount = Math.min(60, Math.floor((width * height) / 20000));
+  const connectionDistance = 120;
+  
+  class Particle {
+    constructor() {
+      this.x = Math.random() * width;
+      this.y = Math.random() * height;
+      this.vx = (Math.random() - 0.5) * 0.25;
+      this.vy = (Math.random() - 0.5) * 0.25;
+      this.radius = Math.random() * 1.2 + 0.6;
+    }
+    
+    update() {
+      this.x += this.vx;
+      this.y += this.vy;
+      
+      if (this.x < 0 || this.x > width) this.vx *= -1;
+      if (this.y < 0 || this.y > height) this.vy *= -1;
+    }
+    
+    draw() {
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(126, 247, 201, 0.4)';
+      ctx.fill();
+    }
+  }
+  
+  for (let i = 0; i < particleCount; i++) {
+    particles.push(new Particle());
+  }
+  
+  function animate() {
+    ctx.clearRect(0, 0, width, height);
+    particles.forEach(p => {
+      p.update();
+      p.draw();
+    });
+    
+    for (let i = 0; i < particles.length; i++) {
+      for (let j = i + 1; j < particles.length; j++) {
+        const dx = particles[i].x - particles[j].x;
+        const dy = particles[i].y - particles[j].y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        
+        if (dist < connectionDistance) {
+          const alpha = (1 - (dist / connectionDistance)) * 0.08;
+          ctx.beginPath();
+          ctx.moveTo(particles[i].x, particles[i].y);
+          ctx.lineTo(particles[j].x, particles[j].y);
+          ctx.strokeStyle = "rgba(126, 247, 201, " + alpha + ")";
+          ctx.lineWidth = 0.8;
+          ctx.stroke();
+        }
+      }
+    }
+    requestAnimationFrame(animate);
+  }
+  animate();
+})();
+</script>
+</body>
+</html>

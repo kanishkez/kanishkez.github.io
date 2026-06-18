@@ -1,0 +1,840 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Retrieval Augmented Generation — kanishk's notes</title>
+  <meta name="description" content="Retrieval Augmented Generation — Retrieval Augmented Generation notes by kanishk" />
+  <link rel="icon" type="image/png" href="../assets/favicon.png" />
+  <link rel="stylesheet" href="../css/style.css" />
+  <link rel="stylesheet" href="../css/notes.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous" />
+</head>
+<body>
+<canvas id="ambient-canvas"></canvas>
+
+<!-- Top Floating Navigation Bar -->
+<header class="navbar">
+  <div class="nav-container">
+    <a href="../index.html" class="nav-logo">kanishk</a>
+    <nav class="nav-links">
+      <a href="../index.html#home">Home</a>
+      <a href="../index.html#projects">Projects</a>
+      <a href="../index.html#blogs">Blogs</a>
+      <a href="../index.html#notes" class="active">Notes</a>
+    </nav>
+    <div class="nav-socials">
+      <a href="https://github.com/kanishkez" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://huggingface.co/kanishkez" target="_blank" rel="noopener">HuggingFace</a>
+    </div>
+  </div>
+</header>
+
+<div class="container">
+  <main class="main-content">
+    <article class="note-page">
+      <div class="note-breadcrumb">
+        <a href="../index.html#notes">Notes</a>
+        <span class="breadcrumb-sep">›</span>
+        <a href="../index.html#notes">Retrieval Augmented Generation</a>
+        <span class="breadcrumb-sep">›</span>
+        <span>Retrieval Augmented Generation</span>
+      </div>
+
+      <header class="note-header">
+        <div class="note-category-tag">Retrieval Augmented Generation</div>
+        <h1>Retrieval Augmented Generation</h1>
+      </header>
+
+      <nav class="note-toc" id="note-toc">
+        <div class="toc-title">Contents</div>
+        <div class="toc-items">
+          <a href="#retrieval_augmented_generation" class="toc-item toc-h1">Retrieval Augmented Generation</a>
+          <a href="#retrieval_types" class="toc-item toc-h2">Retrieval Types</a>
+          <a href="#sparse_retrieval" class="toc-item toc-h1">Sparse Retrieval</a>
+          <a href="#tf_idf" class="toc-item toc-h2">TF IDF</a>
+          <a href="#term_frequency" class="toc-item toc-h3">Term Frequency</a>
+          <a href="#inverse_document_frequency" class="toc-item toc-h3">Inverse Document Frequency</a>
+          <a href="#tf_idf_weight" class="toc-item toc-h3">TF IDF Weight</a>
+          <a href="#cosine_similarity" class="toc-item toc-h3">Cosine Similarity</a>
+          <a href="#limitations_of_tf_idf" class="toc-item toc-h3">Limitations of TF IDF</a>
+          <a href="#bm25" class="toc-item toc-h2">BM25</a>
+          <a href="#modified_idf_in_bm25" class="toc-item toc-h3">Modified IDF in BM25</a>
+          <a href="#why_bm25_works_better" class="toc-item toc-h3">Why BM25 Works Better</a>
+          <a href="#dense_retrieval" class="toc-item toc-h1">Dense Retrieval</a>
+          <a href="#dense_retrieval_pipeline" class="toc-item toc-h2">Dense Retrieval Pipeline</a>
+          <a href="#training_dense_retrievers" class="toc-item toc-h2">Training Dense Retrievers</a>
+          <a href="#hybrid_retrieval" class="toc-item toc-h1">Hybrid Retrieval</a>
+          <a href="#vector_indexing" class="toc-item toc-h1">Vector Indexing</a>
+          <a href="#faiss" class="toc-item toc-h1">FAISS</a>
+          <a href="#faiss_indexing_workflow" class="toc-item toc-h1">FAISS Indexing Workflow</a>
+          <a href="#approximate_nearest_neighbor_search" class="toc-item toc-h1">Approximate Nearest Neighbor Search</a>
+          <a href="#common_index_types" class="toc-item toc-h2">Common Index Types</a>
+          <a href="#flat_index" class="toc-item toc-h3">Flat Index</a>
+          <a href="#ivf_inverted_file_index" class="toc-item toc-h3">IVF (Inverted File Index)</a>
+          <a href="#hnsw_hierarchical_navigable_small_world_graph" class="toc-item toc-h3">HNSW (Hierarchical Navigable Small World Graph)</a>
+          <a href="#product_quantization_pq" class="toc-item toc-h3">Product Quantization (PQ)</a>
+          <a href="#rag_workflow" class="toc-item toc-h1">RAG Workflow</a>
+          <a href="#chunking" class="toc-item toc-h2">Chunking</a>
+          <a href="#retrieval" class="toc-item toc-h2">Retrieval</a>
+          <a href="#generation" class="toc-item toc-h2">Generation</a>
+          <a href="#practical_tools_for_rag" class="toc-item toc-h1">Practical Tools for RAG</a>
+          <a href="#minimal_rag_system_components" class="toc-item toc-h1">Minimal RAG System Components</a>
+          <a href="#hnsw_indexing" class="toc-item toc-h1">HNSW Indexing</a>
+          <a href="#hnsw_hierarchical_navigable_small_world_graph" class="toc-item toc-h2">HNSW (Hierarchical Navigable Small World Graph)</a>
+          <a href="#intuition_behind_hnsw" class="toc-item toc-h1">Intuition Behind HNSW</a>
+          <a href="#small_world_graph_idea" class="toc-item toc-h1">Small World Graph Idea</a>
+          <a href="#hierarchical_structure" class="toc-item toc-h1">Hierarchical Structure</a>
+          <a href="#hnsw_index_construction" class="toc-item toc-h1">HNSW Index Construction</a>
+          <a href="#hnsw_search_algorithm" class="toc-item toc-h1">HNSW Search Algorithm</a>
+          <a href="#step_1_start_at_top_layer" class="toc-item toc-h3">Step 1: Start at top layer</a>
+          <a href="#step_2_move_down_layers" class="toc-item toc-h3">Step 2: Move down layers</a>
+          <a href="#step_3_final_search" class="toc-item toc-h3">Step 3: Final search</a>
+          <a href="#hnsw_complexity" class="toc-item toc-h1">HNSW Complexity</a>
+          <a href="#parameters_in_hnsw" class="toc-item toc-h1">Parameters in HNSW</a>
+          <a href="#m" class="toc-item toc-h3">M</a>
+          <a href="#efconstruction" class="toc-item toc-h3">efConstruction</a>
+          <a href="#efsearch" class="toc-item toc-h3">efSearch</a>
+          <a href="#hybrid_retrieval" class="toc-item toc-h1">Hybrid Retrieval</a>
+          <a href="#hybrid_retrieval_architecture" class="toc-item toc-h1">Hybrid Retrieval Architecture</a>
+          <a href="#sparse_retrieval_component" class="toc-item toc-h1">Sparse Retrieval Component</a>
+          <a href="#dense_retrieval_component" class="toc-item toc-h1">Dense Retrieval Component</a>
+          <a href="#score_fusion" class="toc-item toc-h1">Score Fusion</a>
+          <a href="#weighted_score_fusion" class="toc-item toc-h2">Weighted Score Fusion</a>
+          <a href="#reciprocal_rank_fusion_rrf" class="toc-item toc-h2">Reciprocal Rank Fusion (RRF)</a>
+          <a href="#hybrid_retrieval_with_faiss_bm25" class="toc-item toc-h1">Hybrid Retrieval With FAISS + BM25</a>
+          <a href="#query_time" class="toc-item toc-h3">Query Time</a>
+          <a href="#hybrid_retrieval_in_rag" class="toc-item toc-h1">Hybrid Retrieval in RAG</a>
+          <a href="#practical_production_rag_systems" class="toc-item toc-h1">Practical Production RAG Systems</a>
+        </div>
+      </nav>
+
+      <div class="note-content" id="note-content">
+        <h1 id="retrieval_augmented_generation">Retrieval Augmented Generation</h1>
+<p>RAG is a neat way to give a language model access to external, real time knowledge when it runs inference, rather than expecting it to memorize every single fact during training. We are basically feeding the model context on the fly so it can generate better, more grounded answers.</p>
+<p>Instead of:</p>
+<span class="math-display">$$Answer = f_\theta(prompt)$$</span>
+we do:</p>
+<span class="math-display">$$Answer = f_\theta(\text{prompt + Retrieved Documents})$$</span>
+<p>The key idea is:</p>
+<blockquote>
+<p>Do not force the model to memorize all knowledge. Instead, retrieve relevant information at inference time</p>
+</blockquote>
+<p>This idea was introduced in the paper:</p>
+<ul>
+<li>Retrieval Augmented Generation for Knowledge Intensive NLP Tasks</li>
+</ul>
+<h2 id="retrieval_types"><strong>Retrieval Types</strong></h2>
+<p>Retrieval is broadly of two types:</p>
+<ol>
+<li><strong>Sparse Retrieval</strong> </li>
+<li><strong>Dense Retrieval</strong></li>
+</ol>
+<p>Modern systems often combine both using <strong>Hybrid Retrieval</strong>.</p>
+<h1 id="sparse_retrieval"><strong>Sparse Retrieval</strong></h1>
+<p>Sparse retrieval methods represent documents as <strong>high dimensional sparse vectors</strong>
+If the vocabulary size is V, the document representation is:</p>
+<span class="math-display">$$d \in \mathbb{R}^{V}$$</span>
+<p>Since a document only contains a small number of words, most entries are <strong>zero</strong>, making the vector sparse.</p>
+<p>Sparse retrieval relies on <strong>exact token matching</strong>.
+Example:
+Query:</p>
+<pre><code>machine learning</code></pre>
+<p>Document:</p>
+<pre><code>machine learning tutorial</code></pre>
+<p>This matches well because tokens overlap.</p>
+<p>But:
+Query:</p>
+<pre><code>car</code></pre>
+<p>Document:</p>
+<pre><code>automobile</code></pre>
+<p>No match occurs.</p>
+<h2 id="tf_idf"><strong>TF IDF</strong></h2>
+<p>TF IDF stands for <strong>Term Frequency and Inverse Document Frequency</strong>.
+It measures how important a word is to a document relative to the corpus.</p>
+<h3 id="term_frequency"><strong>Term Frequency</strong></h3>
+<p>Term frequency measures how often a word appears in a document.</p>
+<span class="math-display">$$TF(t, d) = \frac{\text{count}(t \in d)}{|d|}$$</span>
+Where:</p>
+<ul>
+<li>t = term</li>
+<li>d = document</li>
+<li>|d| = total words in document</li>
+</ul>
+<p>This captures the idea that:</p>
+<blockquote>
+<p>Words that appear frequently in a document are likely important for that document.</p>
+</blockquote>
+<h3 id="inverse_document_frequency"><strong>Inverse Document Frequency</strong></h3>
+<p>Some words appear in many documents (like &quot;the&quot;, &quot;is&quot;).
+Such words carry very little information.
+IDF measures how <strong>rare a term is across documents</strong>.</p>
+<span class="math-display">$$IDF(t) = \log \frac{N}{df(t)}$$</span>
+<p>Where:</p>
+<ul>
+<li>N = total number of documents</li>
+<li>df(t) = number of documents containing term t
+Rare words receive higher weight.</li>
+</ul>
+<h3 id="tf_idf_weight"><strong>TF IDF Weight</strong></h3>
+<p>TF and IDF are combined:</p>
+<span class="math-display">$$w(t, d) = TF(t,d) \cdot IDF(t)$$</span>
+<p>Thus a term is important if:</p>
+<ul>
+<li>it appears frequently in a document</li>
+<li>but rarely across the corpus</li>
+</ul>
+<h3 id="cosine_similarity"><strong>Cosine Similarity</strong></h3>
+<p>Documents and queries are represented as vectors.
+Similarity is usually computed using cosine similarity:</p>
+<span class="math-display">$$\cos(q, d) =
+
+\frac{q \cdot d}{|q| |d|}$$</span>
+<p>Where:</p>
+<ul>
+<li>q = query vector</li>
+<li>d = document vector</li>
+</ul>
+<p>Cosine similarity measures the <strong>angle between vectors</strong>.</p>
+<p>Key advantage:</p>
+<p>It normalizes for document length.</p>
+<p>Two documents with similar word distributions will have a high cosine similarity even if one is longer.</p>
+<h3 id="limitations_of_tf_idf"><strong>Limitations of TF IDF</strong></h3>
+<ul>
+<li>No semantic understanding</li>
+<li>Cannot handle synonyms</li>
+<li>High dimensional vectors</li>
+<li>Sensitive to vocabulary mismatch</li>
+</ul>
+<h2 id="bm25"><strong>BM25</strong></h2>
+<p>BM25 is an improved ranking function derived from probabilistic information retrieval.</p>
+<p>It improves TF IDF by introducing:</p>
+<ol>
+<li><strong>term frequency saturation</strong></li>
+<li><strong>document length normalization</strong></li>
+</ol>
+<p>BM25 scoring function:</p>
+<span class="math-display">$$BM25(q, d) =
+
+\sum_{t \in q}
+
+IDF(t) \cdot
+
+\frac{f_{t,d}(k_1+1)}
+
+{f_{t,d} + k_1\left(1 - b + b\frac{|d|}{avgdl}\right)}$$</span>
+<p>Where:</p>
+<ul>
+<li>f_{t,d} = frequency of term t in document</li>
+<li>|d| = document length</li>
+<li>avgdl = average document length</li>
+<li>k_1 = term saturation parameter</li>
+<li>b = length normalization parameter
+Typical values:</li>
+</ul>
+<span class="math-display">$$k_1 \approx 1.2$$</span>
+<span class="math-display">$$b \approx 0.75$$</span>
+<h3 id="modified_idf_in_bm25"><strong>Modified IDF in BM25</strong></h3>
+<p>BM25 uses a modified IDF:</p>
+<span class="math-display">$$IDF(t) =
+
+\log
+
+\left(
+
+\frac{N - df(t) + 0.5}{df(t) + 0.5}
+
+\right)$$</span>
+<p>This prevents extreme values for rare words.</p>
+<h3 id="why_bm25_works_better"><strong>Why BM25 Works Better</strong></h3>
+<ul>
+<li>Prevents frequent words from dominating</li>
+<li>Penalizes long documents</li>
+<li>Handles term frequency nonlinearly</li>
+<li>More robust than TF IDF</li>
+</ul>
+<p>Many search engines like:</p>
+<ul>
+<li>Elasticsearch</li>
+<li>Apache Lucene</li>
+</ul>
+<p>use BM25 as the default ranking function.</p>
+<h1 id="dense_retrieval"><strong>Dense Retrieval</strong></h1>
+<p>Dense retrieval represents documents using <strong>neural embeddings</strong>.</p>
+<p>Instead of sparse vectors:</p>
+<span class="math-display">$$d \in \mathbb{R}^{|V|}$$</span>
+<p>we use low dimensional dense vectors:</p>
+<span class="math-display">$$d \in \mathbb{R}^{768}$$</span>
+<p>or</p>
+<span class="math-display">$$d \in \mathbb{R}^{1024}$$</span>
+<p>These vectors are generated using neural networks.</p>
+<p>Example embedding:</p>
+<pre><code>"machine learning is powerful"</code></pre>
+<p>might become</p>
+<span class="math-display">$$[0.14, -0.81, 0.42, …, 0.17]$$</span>
+<h2 id="dense_retrieval_pipeline"><strong>Dense Retrieval Pipeline</strong></h2>
+<ol>
+<li>Encode documents</li>
+</ol>
+<span class="math-display">$$d = f_\theta(document)$$</span>
+<ol start="2">
+<li>Encode query</li>
+</ol>
+<span class="math-display">$$q = f_\theta(query)$$</span>
+<ol start="3">
+<li>Compute similarity</li>
+</ol>
+<p>Usually:</p>
+<p>Dot product</p>
+<span class="math-display">$$score(q,d) = q^T d$$</span>
+<p>or cosine similarity.</p>
+<ol start="4">
+<li>Retrieve nearest neighbors.</li>
+</ol>
+<h2 id="training_dense_retrievers"><strong>Training Dense Retrievers</strong></h2>
+<p>Dense retrievers are trained using <strong>contrastive learning</strong>.</p>
+<p>For each query:</p>
+<ul>
+<li>one positive document</li>
+<li>several negative documents</li>
+</ul>
+<p>Loss function:</p>
+<span class="math-display">$$L =
+
+-\log
+
+\frac{e^{q \cdot d^+}}
+
+{\sum_{i=1}^{n} e^{q \cdot d_i}}$$</span>
+The model learns to:</p>
+<ul>
+<li>pull relevant documents closer</li>
+<li>push irrelevant ones away</li>
+</ul>
+<p>Dense retrieval became popular with:</p>
+<ul>
+<li>Dense Passage Retrieval for Open Domain Question Answering</li>
+</ul>
+<h1 id="hybrid_retrieval"><strong>Hybrid Retrieval</strong></h1>
+<p>Modern retrieval systems combine sparse and dense retrieval.</p>
+<p>Score is typically:</p>
+<span class="math-display">$$Score =
+
+\alpha \cdot BM25 +
+
+(1-\alpha) \cdot DenseScore$$</span>
+<p>Why hybrid works better:</p>
+<p>Sparse retrieval handles:</p>
+<ul>
+<li>exact tokens</li>
+<li>numbers</li>
+<li>names</li>
+<li>code</li>
+</ul>
+<p>Dense retrieval handles:</p>
+<ul>
+<li>semantics</li>
+<li>paraphrases</li>
+<li>long questions</li>
+</ul>
+<p>Most production RAG systems use <strong>hybrid retrieval</strong>.</p>
+<h1 id="vector_indexing"><strong>Vector Indexing</strong></h1>
+<p>Dense retrieval requires searching through <strong>millions of embeddings</strong>.</p>
+<p>Brute force search would require computing similarity with every vector.</p>
+<p>Cost:</p>
+<span class="math-display">$$O(N)$$</span>
+<p>This becomes too slow for large datasets.
+Vector indexing solves this problem.</p>
+<h1 id="faiss"><strong>FAISS</strong></h1>
+<p>One of the most widely used libraries for vector search is:</p>
+<ul>
+<li>FAISS</li>
+</ul>
+<p>FAISS is a library designed for <strong>fast similarity search on dense vectors</strong>.</p>
+<p>It allows efficient retrieval of nearest neighbors in large embedding datasets.</p>
+<h1 id="faiss_indexing_workflow"><strong>FAISS Indexing Workflow</strong></h1>
+<p>Step 1: Generate embeddings</p>
+<pre><code>documents → embeddings</code></pre>
+<p>Matrix representation:</p>
+<span class="math-display">$$E \in \mathbb{R}^{n \times d}$$</span>
+<p>Where:</p>
+<ul>
+<li>n = number of documents</li>
+<li>d = embedding dimension</li>
+</ul>
+<p>Step 2: Create index</p>
+<p>Example:</p>
+<pre><code>index = faiss.IndexFlatL2(d)</code></pre>
+<p>Step 3: Add vectors</p>
+<pre><code>index.add(embeddings)</code></pre>
+<p>The embeddings are stored internally.</p>
+<p>Step 4: Query</p>
+<pre><code>D, I = index.search(query_vector, k)</code></pre>
+<p>Returns:</p>
+<ul>
+<li>I = indices of nearest vectors</li>
+<li>D = distances</li>
+</ul>
+<h1 id="approximate_nearest_neighbor_search"><strong>Approximate Nearest Neighbor Search</strong></h1>
+<p>To scale retrieval, FAISS implements <strong>ANN algorithms</strong>.</p>
+<p>These approximate the nearest vectors much faster than brute force.</p>
+<h2 id="common_index_types"><strong>Common Index Types</strong></h2>
+<h3 id="flat_index"><strong>Flat Index</strong></h3>
+<p>Exact search.</p>
+<p>Searches every vector.</p>
+<p>Complexity:</p>
+<span class="math-display">$$O(N)$$</span>
+<p>Accurate but slow.</p>
+<h3 id="ivf_inverted_file_index"><strong>IVF (Inverted File Index)</strong></h3>
+<p>Vectors are first clustered using k means.</p>
+<p>Example:</p>
+<pre><code>10M vectors → 1000 clusters</code></pre>
+<p>Each vector belongs to a cluster.</p>
+<p>Query workflow:</p>
+<ol>
+<li>find closest clusters    </li>
+<li>Search only within those clusters</li>
+</ol>
+<p>This reduces the search space dramatically.</p>
+<h3 id="hnsw_hierarchical_navigable_small_world_graph"><strong>HNSW (Hierarchical Navigable Small World Graph)</strong></h3>
+<p>Vectors are stored as nodes in a graph.</p>
+<p>Edges connect similar vectors.</p>
+<p>Search works by navigating the graph toward the nearest neighbor.</p>
+<p>Complexity roughly:</p>
+<span class="math-display">$$O(\log N)$$</span>
+<p>This is one of the fastest ANN methods.</p>
+<h3 id="product_quantization_pq"><strong>Product Quantization (PQ)</strong></h3>
+<p>Used to compress vectors.</p>
+<p>Instead of storing full embeddings, vectors are approximated using quantized representations.</p>
+<p>Benefits:</p>
+<ul>
+<li>reduces memory usage</li>
+<li>enables large scale indexing.</li>
+</ul>
+<h1 id="rag_workflow"><strong>RAG Workflow</strong></h1>
+<p>Typical RAG system pipeline:</p>
+<pre><code>Documents
+↓
+Chunking
+↓
+Embeddings
+↓
+Vector Index
+↓
+Query
+↓
+Retrieve Top K Chunks
+↓
+LLM
+↓
+Generated Answer</code></pre>
+<h2 id="chunking"><strong>Chunking</strong></h2>
+<p>Large documents are split into smaller chunks.</p>
+<p>Example:</p>
+<pre><code>500 tokens per chunk</code></pre>
+<p>Reason:</p>
+<p>LLMs have limited context windows.</p>
+<h2 id="retrieval"><strong>Retrieval</strong></h2>
+<p>When a user asks a question:</p>
+<pre><code>query → embedding</code></pre>
+<p>Vector search retrieves top K chunks.</p>
+<p>Example:</p>
+<pre><code>k = 5</code></pre>
+<h2 id="generation"><strong>Generation</strong></h2>
+<p>The retrieved chunks are injected into the prompt.</p>
+<p>Example prompt:</p>
+<pre><code>Answer the question using the context below.
+
+Context:
+[retrieved chunks]
+
+Question:
+...</code></pre>
+<p>The LLM generates the final answer.</p>
+<h1 id="practical_tools_for_rag"><strong>Practical Tools for RAG</strong></h1>
+<p>Embedding models:</p>
+<ul>
+<li>sentence transformers</li>
+<li>bge embeddings</li>
+</ul>
+<p>Vector databases:</p>
+<ul>
+<li>FAISS</li>
+<li>Milvus</li>
+<li>Weaviate</li>
+</ul>
+<p>Local LLM inference:</p>
+<ul>
+<li>Ollama</li>
+<li>vLLM</li>
+</ul>
+<p>Frameworks (optional):</p>
+<ul>
+<li>LangChain</li>
+<li>LlamaIndex</li>
+</ul>
+<h1 id="minimal_rag_system_components"><strong>Minimal RAG System Components</strong></h1>
+<p>A minimal system needs:</p>
+<ol>
+<li>document loader</li>
+<li>text chunker</li>
+<li>embedding model</li>
+<li>vector index</li>
+<li>retriever</li>
+<li>prompt generator</li>
+<li>LLM inference</li>
+</ol>
+<h1 id="hnsw_indexing"><strong>HNSW Indexing</strong></h1>
+<h2 id="hnsw_hierarchical_navigable_small_world_graph"><strong>HNSW (Hierarchical Navigable Small World Graph)</strong></h2>
+<p>HNSW is one of the most widely used <strong>Approximate Nearest Neighbor (ANN)</strong> algorithms for dense vector retrieval.</p>
+<p>It is used in systems like:</p>
+<ul>
+<li>FAISS</li>
+<li>Milvus</li>
+<li>Weaviate</li>
+</ul>
+<p>The idea is to represent embeddings as <strong>nodes in a graph</strong>, where edges connect <strong>similar vectors</strong>.</p>
+<p>Instead of scanning every vector, we <strong>navigate through the graph to reach the nearest vectors quickly</strong>.</p>
+<h1 id="intuition_behind_hnsw"><strong>Intuition Behind HNSW</strong></h1>
+<p>Suppose we have embeddings:</p>
+<pre><code>e1
+e2
+e3
+...
+eN</code></pre>
+<p>Each embedding is a <strong>node in a graph</strong>.</p>
+<p>Edges connect nodes that are <strong>similar vectors</strong>.</p>
+<p>Example structure:</p>
+<pre><code>e1 ──── e5 ──── e9
+ │       │
+e2 ──── e6 ──── e10
+ │       │
+e3 ──── e7 ──── e11</code></pre>
+<p>When searching for nearest vectors, we <strong>walk through this graph toward nodes that are closer to the query</strong>.</p>
+<h1 id="small_world_graph_idea"><strong>Small World Graph Idea</strong></h1>
+<p>HNSW is based on the concept of <strong>small world networks</strong>.</p>
+<p>Small world networks have two properties:</p>
+<ol>
+<li><strong>Local connections</strong> (connect to nearby nodes)</li>
+<li><strong>Long range connections</strong> (jump across graph)</li>
+</ol>
+<p>Example:</p>
+<pre><code>A ── B ── C ── D ── E
+ \              /
+   ──── Z ────</code></pre>
+<p>This allows:</p>
+<ul>
+<li>fast traversal</li>
+<li>logarithmic search time.</li>
+</ul>
+<h1 id="hierarchical_structure"><strong>Hierarchical Structure</strong></h1>
+<p>HNSW adds <strong>multiple layers of graphs</strong>.
+Upper layers contain <strong>fewer nodes</strong> and act as shortcuts.</p>
+<p>Example structure:</p>
+<pre><code>Layer 2 (very sparse)
+        A
+       / \
+      B   C
+
+Layer 1 (medium density)
+     A ── B ── C ── D
+
+Layer 0 (dense)
+  many nodes connected</code></pre>
+<p>Key idea:</p>
+<ul>
+<li>Top layers allow <strong>large jumps</strong></li>
+<li>Bottom layers perform <strong>fine search</strong></li>
+</ul>
+<h1 id="hnsw_index_construction"><strong>HNSW Index Construction</strong></h1>
+<p>Each vector is inserted sequentially.</p>
+<p>For each new vector:</p>
+<ol>
+<li>Start from the <strong>top layer entry point</strong></li>
+<li>Navigate toward the nearest node</li>
+<li>Insert the vector into appropriate layers</li>
+<li>Connect it to nearest neighbors</li>
+</ol>
+<p>Graph edges are limited to a fixed number:</p>
+<pre><code>M ≈ 16</code></pre>
+<p>Meaning each node connects to ~16 neighbors.</p>
+<p>This keeps the graph sparse and efficient.</p>
+<h1 id="hnsw_search_algorithm"><strong>HNSW Search Algorithm</strong></h1>
+<p>Given query embedding:
+<span class="math-display">$$q$$</span>
+<p>Search works in stages.</p>
+<h3 id="step_1_start_at_top_layer"><strong>Step 1: Start at top layer</strong></h3>
+<p>Begin from a fixed <strong>entry node</strong>.</p>
+<p>Navigate greedily toward nodes closer to the query.</p>
+<p>Distance measure usually:</p>
+<ul>
+<li>cosine similarity</li>
+<li>L2 distance</li>
+</ul>
+<h3 id="step_2_move_down_layers"><strong>Step 2: Move down layers</strong></h3>
+<p>Once no closer node exists at the current layer:</p>
+<p>move down to the next layer.
+Continue search.</p>
+<h3 id="step_3_final_search"><strong>Step 3: Final search</strong></h3>
+<p>At the lowest layer (layer 0):
+perform local exploration to find <strong>top K nearest vectors</strong>.</p>
+<h1 id="hnsw_complexity"><strong>HNSW Complexity</strong></h1>
+<p>Search complexity approximately:</p>
+<span class="math-display">$$O(\log N)$$</span>
+<p>Instead of brute force:</p>
+<span class="math-display">$$O(N)$$</span>
+<p>This is why HNSW works well for millions or billions of vectors.</p>
+<h1 id="parameters_in_hnsw"><strong>Parameters in HNSW</strong></h1>
+<p>Important parameters:</p>
+<h3 id="m"><strong>M</strong></h3>
+<p>Maximum number of edges per node.</p>
+<p>Typical value:</p>
+<pre><code>M = 16</code></pre>
+<p>Higher values:</p>
+<ul>
+<li>better recall</li>
+<li>slower indexing.</li>
+</ul>
+<h3 id="efconstruction"><strong>efConstruction</strong></h3>
+<p>Controls search breadth during index building.</p>
+<p>Higher values improve index quality.</p>
+<h3 id="efsearch"><strong>efSearch</strong></h3>
+<p>Controls search depth during queries.</p>
+<p>Higher value:</p>
+<ul>
+<li>higher recall</li>
+<li>slower search.</li>
+</ul>
+<h1 id="hybrid_retrieval"><strong>Hybrid Retrieval</strong></h1>
+<p>Modern retrieval systems combine <strong>sparse and dense retrieval</strong>.</p>
+<p>This is called <strong>hybrid retrieval</strong>.</p>
+<p>Reason:
+Sparse retrieval captures:</p>
+<ul>
+<li>exact tokens</li>
+<li>numbers</li>
+<li>names</li>
+<li>code</li>
+</ul>
+<p>Dense retrieval captures:</p>
+<ul>
+<li>semantic similarity</li>
+<li>paraphrases</li>
+<li>natural language questions
+Combining both improves recall.</li>
+</ul>
+<h1 id="hybrid_retrieval_architecture"><strong>Hybrid Retrieval Architecture</strong></h1>
+<p>Typical architecture:</p>
+<pre><code>Query
+  ↓
+Sparse Retriever (BM25)
+  ↓
+Dense Retriever (Embeddings)
+  ↓
+Combine Results
+  ↓
+Rerank
+  ↓
+Top K Documents</code></pre>
+<h1 id="sparse_retrieval_component"><strong>Sparse Retrieval Component</strong></h1>
+<p>Sparse retriever uses:</p>
+<ul>
+<li>inverted index</li>
+<li>BM25 scoring</li>
+</ul>
+<p>Example systems:</p>
+<ul>
+<li>Elasticsearch</li>
+<li>Apache Lucene
+Output:</li>
+</ul>
+<pre><code>top K documents by BM25</code></pre>
+<h1 id="dense_retrieval_component"><strong>Dense Retrieval Component</strong></h1>
+<p>Dense retriever uses:</p>
+<ul>
+<li>embeddings</li>
+<li>ANN search (FAISS / HNSW)</li>
+</ul>
+<p>Output:</p>
+<pre><code>top K nearest embeddings</code></pre>
+<h1 id="score_fusion"><strong>Score Fusion</strong></h1>
+<p>Results from both retrievers must be combined.
+Two common approaches exist.</p>
+<h2 id="weighted_score_fusion"><strong>Weighted Score Fusion</strong></h2>
+<p>Scores are combined using:</p>
+<span class="math-display">$$Score =
+
+\alpha \cdot BM25 +
+
+(1-\alpha) \cdot DenseScore$$</span>
+<p>Where:</p>
+<ul>
+<li>\alpha controls sparse importance.</li>
+</ul>
+<p>Example:</p>
+<pre><code>α = 0.5</code></pre>
+<h2 id="reciprocal_rank_fusion_rrf"><strong>Reciprocal Rank Fusion (RRF)</strong></h2>
+<p>Another method combines ranks instead of scores.</p>
+<p>Score is computed as:</p>
+<span class="math-display">$$RRF(d) =
+
+\sum_{m \in M}
+
+\frac{1}{k + rank_m(d)}$$</span>
+<p>Where:</p>
+<ul>
+<li>M is the set of retrieval systems</li>
+<li>rank_m(d) is the rank of document d in system m</li>
+<li>k is a constant (typically 60)</li>
+</ul>
+<p>This method is robust and widely used in hybrid retrieval.</p>
+<h1 id="hybrid_retrieval_with_faiss_bm25"><strong>Hybrid Retrieval With FAISS + BM25</strong></h1>
+<p>Practical pipeline:</p>
+<pre><code>documents
+   ↓
+chunking
+   ↓
+build two indexes</code></pre>
+<p>Index 1:</p>
+<pre><code>BM25 inverted index</code></pre>
+<p>Index 2:</p>
+<pre><code>dense embeddings → FAISS HNSW index</code></pre>
+<h3 id="query_time"><strong>Query Time</strong></h3>
+<ol>
+<li>compute BM25 results</li>
+<li>compute dense retrieval results</li>
+<li>merge results</li>
+<li>rerank</li>
+<li>return top documents.</li>
+</ol>
+<h1 id="hybrid_retrieval_in_rag"><strong>Hybrid Retrieval in RAG</strong></h1>
+<p>Full RAG pipeline with hybrid retrieval:</p>
+<pre><code>Documents
+   ↓
+Chunking
+   ↓
+Sparse Index (BM25)
+Dense Index (HNSW / FAISS)
+   ↓
+User Query
+   ↓
+Sparse Retrieval
+Dense Retrieval
+   ↓
+Fusion
+   ↓
+Top K Documents
+   ↓
+LLM Prompt
+   ↓
+Generated Answer</code></pre>
+<h1 id="practical_production_rag_systems"><strong>Practical Production RAG Systems</strong></h1>
+<p>Real systems usually add another stage.</p>
+<pre><code>Retriever
+   ↓
+Reranker
+   ↓
+LLM</code></pre>
+<p>Rerankers are <strong>cross encoder models</strong> that evaluate query document pairs more precisely.</p>
+<p>They improve retrieval quality significantly.</p>
+<p>Adding a reranking step ensures the most contextually relevant chunks actually make it to the top of the LLM prompt, keeping the model focused. Combining hybrid search with a cross encoder makes for a solid, production ready RAG setup that scales pretty well.</p>
+
+      </div>
+
+      <nav class="note-nav-bottom">
+        <span></span>
+        <span></span>
+      </nav>
+    </article>
+  </main>
+</div>
+
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"
+  onload="renderMathInElement(document.getElementById('note-content'), {
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '$', right: '$', display: false}
+    ],
+    throwOnError: false,
+    trust: true,
+    strict: false
+  });"></script>
+<script>
+(function initAmbientBackground() {
+  const canvas = document.getElementById('ambient-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  
+  let width = canvas.width = window.innerWidth;
+  let height = canvas.height = window.innerHeight;
+  
+  window.addEventListener('resize', () => {
+    width = canvas.width = window.innerWidth;
+    height = canvas.height = window.innerHeight;
+  });
+  
+  const particles = [];
+  const particleCount = Math.min(60, Math.floor((width * height) / 20000));
+  const connectionDistance = 120;
+  
+  class Particle {
+    constructor() {
+      this.x = Math.random() * width;
+      this.y = Math.random() * height;
+      this.vx = (Math.random() - 0.5) * 0.25;
+      this.vy = (Math.random() - 0.5) * 0.25;
+      this.radius = Math.random() * 1.2 + 0.6;
+    }
+    
+    update() {
+      this.x += this.vx;
+      this.y += this.vy;
+      
+      if (this.x < 0 || this.x > width) this.vx *= -1;
+      if (this.y < 0 || this.y > height) this.vy *= -1;
+    }
+    
+    draw() {
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(126, 247, 201, 0.4)';
+      ctx.fill();
+    }
+  }
+  
+  for (let i = 0; i < particleCount; i++) {
+    particles.push(new Particle());
+  }
+  
+  function animate() {
+    ctx.clearRect(0, 0, width, height);
+    particles.forEach(p => {
+      p.update();
+      p.draw();
+    });
+    
+    for (let i = 0; i < particles.length; i++) {
+      for (let j = i + 1; j < particles.length; j++) {
+        const dx = particles[i].x - particles[j].x;
+        const dy = particles[i].y - particles[j].y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        
+        if (dist < connectionDistance) {
+          const alpha = (1 - (dist / connectionDistance)) * 0.08;
+          ctx.beginPath();
+          ctx.moveTo(particles[i].x, particles[i].y);
+          ctx.lineTo(particles[j].x, particles[j].y);
+          ctx.strokeStyle = "rgba(126, 247, 201, " + alpha + ")";
+          ctx.lineWidth = 0.8;
+          ctx.stroke();
+        }
+      }
+    }
+    requestAnimationFrame(animate);
+  }
+  animate();
+})();
+</script>
+</body>
+</html>

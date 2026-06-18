@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Attention in RNNs — kanishk's notes</title>
+  <meta name="description" content="Attention in RNNs — Sequence & Recurrent Models notes by kanishk" />
+  <link rel="icon" type="image/png" href="../assets/favicon.png" />
+  <link rel="stylesheet" href="../css/style.css" />
+  <link rel="stylesheet" href="../css/notes.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous" />
+</head>
+<body>
+<canvas id="ambient-canvas"></canvas>
+
+<!-- Top Floating Navigation Bar -->
+<header class="navbar">
+  <div class="nav-container">
+    <a href="../index.html" class="nav-logo">kanishk</a>
+    <nav class="nav-links">
+      <a href="../index.html#home">Home</a>
+      <a href="../index.html#projects">Projects</a>
+      <a href="../index.html#blogs">Blogs</a>
+      <a href="../index.html#notes" class="active">Notes</a>
+    </nav>
+    <div class="nav-socials">
+      <a href="https://github.com/kanishkez" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://huggingface.co/kanishkez" target="_blank" rel="noopener">HuggingFace</a>
+    </div>
+  </div>
+</header>
+
+<div class="container">
+  <main class="main-content">
+    <article class="note-page">
+      <div class="note-breadcrumb">
+        <a href="../index.html#notes">Notes</a>
+        <span class="breadcrumb-sep">›</span>
+        <a href="../index.html#notes">Sequence & Recurrent Models</a>
+        <span class="breadcrumb-sep">›</span>
+        <span>Attention in RNNs</span>
+      </div>
+
+      <header class="note-header">
+        <div class="note-category-tag">Sequence & Recurrent Models</div>
+        <h1>Attention in RNNs</h1>
+      </header>
+
+      <nav class="note-toc" id="note-toc">
+        <div class="toc-title">Contents</div>
+        <div class="toc-items">
+          <a href="#problem_with_rnns" class="toc-item toc-h3">Problem with RNNS:</a>
+          <a href="#how_its_done" class="toc-item toc-h3">How it's done:</a>
+          <a href="#bidirectional_rnns_with_attention" class="toc-item toc-h2">Bidirectional RNNS with Attention:</a>
+          <a href="#encoder_bidirectional" class="toc-item toc-h3">Encoder: Bidirectional</a>
+          <a href="#decoder_unidirectional_rnn_with_attention" class="toc-item toc-h3">Decoder: Unidirectional RNN with attention</a>
+          <a href="#note" class="toc-item toc-h3">Note:</a>
+        </div>
+      </nav>
+
+      <div class="note-content" id="note-content">
+        <h3 id="problem_with_rnns">Problem with RNNS:</h3>
+<p>The final encoder state that is passed to the decoder in seq2seq modules is just one token vector which is supposed to carry how important each token is in the sequence which is boderline impossible
+A better solution would be to pass all of the encoder hidden states to the decoder state and let it choose which parts are important for itself by assigning each part a score</p>
+<p>So lets take the example of a simple sentence:
+This is an apple 
+With attention the decoder learns to look at the object &#39;apple&#39; being referred to as &#39;this&#39; because let&#39;s say we&#39;re generating the word &#39;apple&#39; in the decoder state then the word &#39;this&#39; will be given more importance because we&#39;re referring to the apple </p>
+<p>In RNNs, attention is only applied to Decoder as they use the encoder&#39;s hidden states while generating the output.</p>
+<h3 id="how_its_done">How it&#39;s done:</h3>
+<p>At each time step of the encoder we have hidden states:
+,h2,h3....hT
+Decoder hidden state at time t= <span class="math-inline">$s_{t}$</span>
+<p>We give each hidden state a score based on how important/relevant it is to the decoder time state s
+<span class="math-display">$$e_{ti}=score(s_{t},h_{t})$$</span>
+In <strong>additive attention(Bahdanau attention):</strong>
+<span class="math-display">$$e_{ti}=v_{a}^T\tanh(W_{1}s_{t}+W_{2}h_{i})$$</span>
+where W1 and W2 are weight matrices (learned)
+and v is a weight vector (learned)</p>
+<p>We use a weight vector instead of a matrix because the attention score is suppoesd to be one single scalar so we use it to get the score in 1d</p>
+<p>In <strong>multiplicative attention:</strong>
+we  use</p>
+<p>a dot product:
+<span class="math-display">$$score(s_{t},h_{i})=s_{t}^Th_{i}$$</span>
+or a general form:
+<span class="math-display">$$score(s_{t},h_{i}=s_{t}^TW_{a}h_{i})$$</span>
+where W is a learnable weight matrix</p>
+<p>Now that we have <strong>attention scores</strong> we convert to <strong>attention weights</strong> using softmax so that all of the scores are normalized/regularized
+<span class="math-display">$$\alpha_{ti}=\frac{\exp(e_{ti})}{\sum_{i}\exp(e_{ti})}$$</span>
+This gives us attention weights to every hidden state in the range of (0,1)</p>
+<p>We use these attention weights and build a <strong>context vector</strong></p>
+<span class="math-display">$$e_{t}=\sum_{i=1}^{T}\alpha_{ti}.h_{i}$$</span>So we multiply each hidden state with attention weights to scale them by how important they are
+This context vector includes all of the hidden states and how important they are with respect to the current decoder state</p>
+<p>Now this context vector is passed along with the decoder state to generate the next <strong>output</strong>
+<span class="math-display">$$s_{t}=\tanh(W_{c}[c_{t}];s_{t})$$</span>
+; means we concatenate both the vectors together to give the final output</p>
+<h2 id="bidirectional_rnns_with_attention">Bidirectional RNNS with Attention:</h2>
+<h3 id="encoder_bidirectional">Encoder: Bidirectional</h3>
+<p>Each input token xi produces two hidden states:</p>
+<ol>
+<li>Forward RNN</li>
+<li>Backward RNN</li>
+</ol>
+<p>we concatenate them to produce a token ht</p>
+<p>so the encoder hidden state ht now contains information from both paste and future around token xi</p>
+<h3 id="decoder_unidirectional_rnn_with_attention">Decoder: Unidirectional RNN with attention</h3>
+<p>The decoder works as usual from left to right and at each decoder time step we do the same things as in normal attention </p>
+<ol>
+<li>Calculate a score for the combined hiddden state and the current decoder state</li>
+<li>Find attention weights </li>
+<li>Make a context vector with the weighted sum of bidirectional encoder hidden states </li>
+<li>Use the context vector and generate output</li>
+</ol>
+<h3 id="note">Note:</h3>
+<p>In RNNS with attention we use both the final hidden encoder state as input for the decoder state and also the hidden states at every time step in attention to generate the next output 
+So this means we use hidden states in:</p>
+<ol>
+<li>Start of decoder as final hidden stae</li>
+<li>Attention 
+So in backprop, there are two routes that lead to the gradients of these states
+But autograd engines like the one in pytorch are so smart that due to them using computational graphs and stuff the total gradient of each hidden state is the <strong>sum of gradients through both the routes</strong></li>
+</ol>
+<span class="math-display">$$\frac{\partial \mathcal{L}}{\partial h_3} = \frac{\partial \mathcal{L}}{\partial h_3}^{(1)} + \frac{\partial \mathcal{L}}{\partial h_3}^{(2)}$$</span>
+
+      </div>
+
+      <nav class="note-nav-bottom">
+        <a href="18_bidirectional_rnns.html" class="nav-prev"><span class="nav-label">Previous</span><span class="nav-title">← Bidirectional RNNs</span></a>
+        <span></span>
+      </nav>
+    </article>
+  </main>
+</div>
+
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"
+  onload="renderMathInElement(document.getElementById('note-content'), {
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '$', right: '$', display: false}
+    ],
+    throwOnError: false,
+    trust: true,
+    strict: false
+  });"></script>
+<script>
+(function initAmbientBackground() {
+  const canvas = document.getElementById('ambient-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  
+  let width = canvas.width = window.innerWidth;
+  let height = canvas.height = window.innerHeight;
+  
+  window.addEventListener('resize', () => {
+    width = canvas.width = window.innerWidth;
+    height = canvas.height = window.innerHeight;
+  });
+  
+  const particles = [];
+  const particleCount = Math.min(60, Math.floor((width * height) / 20000));
+  const connectionDistance = 120;
+  
+  class Particle {
+    constructor() {
+      this.x = Math.random() * width;
+      this.y = Math.random() * height;
+      this.vx = (Math.random() - 0.5) * 0.25;
+      this.vy = (Math.random() - 0.5) * 0.25;
+      this.radius = Math.random() * 1.2 + 0.6;
+    }
+    
+    update() {
+      this.x += this.vx;
+      this.y += this.vy;
+      
+      if (this.x < 0 || this.x > width) this.vx *= -1;
+      if (this.y < 0 || this.y > height) this.vy *= -1;
+    }
+    
+    draw() {
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(126, 247, 201, 0.4)';
+      ctx.fill();
+    }
+  }
+  
+  for (let i = 0; i < particleCount; i++) {
+    particles.push(new Particle());
+  }
+  
+  function animate() {
+    ctx.clearRect(0, 0, width, height);
+    particles.forEach(p => {
+      p.update();
+      p.draw();
+    });
+    
+    for (let i = 0; i < particles.length; i++) {
+      for (let j = i + 1; j < particles.length; j++) {
+        const dx = particles[i].x - particles[j].x;
+        const dy = particles[i].y - particles[j].y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        
+        if (dist < connectionDistance) {
+          const alpha = (1 - (dist / connectionDistance)) * 0.08;
+          ctx.beginPath();
+          ctx.moveTo(particles[i].x, particles[i].y);
+          ctx.lineTo(particles[j].x, particles[j].y);
+          ctx.strokeStyle = "rgba(126, 247, 201, " + alpha + ")";
+          ctx.lineWidth = 0.8;
+          ctx.stroke();
+        }
+      }
+    }
+    requestAnimationFrame(animate);
+  }
+  animate();
+})();
+</script>
+</body>
+</html>
