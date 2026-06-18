@@ -85,7 +85,7 @@ button {
   padding: 18px 0;
 
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: 34px;
 
   background: rgba(232, 250, 234, .92);
@@ -126,7 +126,7 @@ button {
   margin-left: auto;
   z-index: 5;
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   justify-content: flex-end;
   gap: 10px 14px;
   max-width: min(420px, calc(100vw - 44px));
@@ -704,6 +704,8 @@ h1 {
   .header-links {
     position: static;
     margin-left: 0;
+    display: flex;
+    flex-wrap: wrap;
     justify-content: flex-start;
     max-width: 100%;
     padding: 0;
