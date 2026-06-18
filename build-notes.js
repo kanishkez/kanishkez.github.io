@@ -378,9 +378,9 @@ function slugify(filename) {
 // ── HTML Template ──────────────────────────────────────────────
 
 function generateNotePage(note, category, prev, next) {
-  const headings = note.headings.filter(h => h.level <= 3);
+  const headings = note.headings.filter(h => h.level >= 2 && h.level <= 3);
 
-  const tocHtml = headings.length > 2
+  const tocHtml = headings.length > 1
     ? `<nav class="note-toc" id="note-toc">
         <div class="toc-title">Table of Contents</div>
         <div class="toc-items">

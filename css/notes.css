@@ -101,6 +101,7 @@
 }
 
 .toc-items {
+  counter-reset: toc-counter;
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -122,20 +123,23 @@
   text-decoration: underline;
 }
 
-.toc-h1 {
+.toc-item.toc-h2 {
+  counter-increment: toc-counter;
   padding-left: 0;
-  font-weight: 600;
-  color: var(--ink);
 }
 
-.toc-h2 {
-  padding-left: 12px;
-  color: var(--dim);
+.toc-item.toc-h2::before {
+  content: counter(toc-counter) ". ";
 }
 
-.toc-h3 {
+.toc-item.toc-h3 {
   padding-left: 24px;
   color: var(--dim);
+}
+
+.toc-item.toc-h3::before {
+  content: "• ";
+  margin-right: 6px;
 }
 
 /* ── Note Content (Blog Prose) ──────────── */
@@ -403,6 +407,7 @@
   border: 1px solid var(--line);
   border-radius: 16px;
   overflow-x: auto;
+  overflow-y: hidden;
   text-align: center;
   box-shadow: 0 4px 20px rgba(11, 31, 22, 0.02);
 }
@@ -428,10 +433,11 @@
 
 .note-content .math-display::-webkit-scrollbar {
   height: 4px;
+  width: 0px;
 }
 
 .note-content .math-display::-webkit-scrollbar-thumb {
-  background: var(--acc-glow);
+  background: rgba(8, 80, 40, 0.15);
   border-radius: 2px;
 }
 
@@ -1085,6 +1091,8 @@ body{
  outline:none !important;
  padding:0 !important;
  margin:2rem 0 !important;
+ overflow-y:hidden !important;
+ overflow-x:auto !important;
 }
 
 .note-content .math-inline{
