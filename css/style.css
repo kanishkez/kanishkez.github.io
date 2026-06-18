@@ -908,7 +908,6 @@ body>* {
 
 /* Section transition */
 .section.active {
-  animation: section-in 320ms ease both;
 }
 
 @keyframes section-in {
