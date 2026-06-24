@@ -17,6 +17,14 @@ const DATA_FILE = path.join(OUTPUT_DIR, 'notes-data.js');
 // Ordered with RL, RAG, and Transformers on top
 const CATEGORIES = [
   {
+    id: 'harness_engineering',
+    title: 'Harness Engineering',
+    description: 'Building reliable LLM agents, harnesses, and tooling.',
+    notes: [
+      { file: 'Harness Engineering.md', folder: null },
+    ],
+  },
+  {
     id: 'reinforcement_learning',
     title: 'Reinforcement Learning',
     description: 'Policy gradients, value functions, actor critic methods, PPO, GRPO, and post training alignment.',
@@ -441,10 +449,14 @@ function generateNotePage(note, category, prev, next) {
         <span>${note.title}</span>
       </div>
 
+      ${note.slug === 'harness_engineering' ? `
+        <h1 style="margin-top: 2rem; margin-bottom: 2rem; font-size: 2.5rem;">Notes on Harness Engineering</h1>
+      ` : `
       <header class="note-header">
         <div class="note-category-tag">${category.title}</div>
         <h1>${note.title}</h1>
       </header>
+      `}
 
       ${tocHtml}
 
@@ -605,8 +617,11 @@ function build() {
 
       try {
         const rawMd = fs.readFileSync(filepath, 'utf-8');
-        const title = cleanTitle(item.file);
+        let title = cleanTitle(item.file);
         const slug = slugify(item.file);
+        if (slug === 'harness_engineering') {
+          title = 'Notes on Harness Engineering';
+        }
         const html = convertNote(rawMd);
         const headings = extractHeadings(rawMd);
 

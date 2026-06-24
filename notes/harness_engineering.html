@@ -1,0 +1,398 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Notes on Harness Engineering — kanishk's notes</title>
+  <meta name="description" content="Notes on Harness Engineering — Harness Engineering notes by kanishk" />
+  <link rel="icon" type="image/png" href="../assets/favicon.png" />
+  <link rel="stylesheet" href="../css/style.css?v=2" />
+  <link rel="stylesheet" href="../css/notes.css?v=2" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous" />
+</head>
+<body>
+<canvas id="ambient-canvas"></canvas>
+ 
+<!-- Top Floating Navigation Bar -->
+<header class="navbar">
+  <div class="nav-container">
+    <a href="../index.html" class="nav-logo">kanishk</a>
+    <nav class="nav-links">
+      <a href="../index.html#home">Home</a>
+      <a href="../index.html#projects">Projects</a>
+      <a href="../index.html#blogs">Blogs</a>
+      <a href="../index.html#notes" class="active">Notes</a>
+    </nav>
+    <div class="nav-socials">
+      <a href="https://github.com/kanishkez" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://huggingface.co/kanishkez" target="_blank" rel="noopener">HuggingFace</a>
+    </div>
+  </div>
+</header>
+ 
+<div class="container">
+  <main class="main-content">
+    <article class="note-page">
+      <div class="note-breadcrumb">
+        <a href="../index.html#notes">Notes</a>
+        <span class="breadcrumb-sep">›</span>
+        <a href="../index.html#notes">Harness Engineering</a>
+        <span class="breadcrumb-sep">›</span>
+        <span>Notes on Harness Engineering</span>
+      </div>
+
+      
+        <h1 style="margin-top: 2rem; margin-bottom: 2rem; font-size: 2.5rem;">Notes on Harness Engineering</h1>
+      
+
+      <nav class="note-toc" id="note-toc">
+        <div class="toc-title">Table of Contents</div>
+        <div class="toc-items">
+          <a href="#what_is_a_harness" class="toc-item toc-h2">What is a Harness?</a>
+          <a href="#5_subsystem_harness_model" class="toc-item toc-h2">5 subsystem Harness model:</a>
+          <a href="#a_good_repo_structure" class="toc-item toc-h3">A good repo structure</a>
+          <a href="#splitting_instructions" class="toc-item toc-h3">Splitting Instructions </a>
+          <a href="#working_with_context_windows" class="toc-item toc-h2">Working with Context Windows</a>
+          <a href="#initializing_a_new_session" class="toc-item toc-h3">Initializing a new session</a>
+          <a href="#how_to_get_tasks_done" class="toc-item toc-h2">How to get Tasks done</a>
+          <a href="#implementing_feature_lists" class="toc-item toc-h3">Implementing Feature Lists</a>
+          <a href="#tests_and_verification" class="toc-item toc-h2">Tests and Verification</a>
+          <a href="#end_to_end_testing_and_verification" class="toc-item toc-h2">End to End testing and Verification</a>
+          <a href="#observability" class="toc-item toc-h2">Observability </a>
+        </div>
+      </nav>
+
+      <div class="note-content" id="note-content">
+        <p><em>Borrowed from <a href="https://walkinglabs.github.io/learn-harness-engineering/en/">&#39;Learn Harness Engineering&#39; by walking labs</a></em></p>
+<h2 id="what_is_a_harness">What is a Harness?</h2>
+<p>Essentially, a harness is everything we provide to a model, such as tools, tests, .md files, instructions, sandboxes to operate in etc.</p>
+<p>Whatever set of tools, memory , instructions and environment we provide to the model to make it act better as an agent, actually helps the model performance.</p>
+<p>For example, OpenAI team worked on building a project solely using Codex.
+At first, it was difficult but after they harness engineered, they were actually able to build a codebase of millions of lines just by codex.</p>
+<p>It starts with the very basics: an Agents.md file that tells the model what tech stack to use, how to verify and run tests etc, what architecture to use etc.</p>
+<p>An Agents.md file can significantly increase model&#39;s capabilities.</p>
+<p>So, model capability and execution are two different things, a good harness is very important to ensure that any model works well.</p>
+<p>Think about it this way: If you&#39;re a new engineer given access to just a codebase without any prior context, theres not much you can understand even if you&#39;re a really good coder.
+It works the same with agents as well.</p>
+<p>Everything you provide as context and infrastructure to the model determines how much of the model&#39;s capability gets realized.</p>
+<p>Claude Code reads everything from a Claude.md repo so that it understands everything.</p>
+<p>Cursor uses .cursorrules file.</p>
+<p>A harness should be a map, not a manual. A good harness uses rule to constraint the agent, rather than just listing a bunch of instructions.</p>
+<h2 id="5_subsystem_harness_model">5 subsystem Harness model:</h2>
+<figure><img src="images/Pasted%20image%2020260624085022.png" alt="image" loading="lazy"><figcaption>image</figcaption></figure>
+<p>Instructions: Agents.md or Claude.md files that contain a project overview, architecture and tech stack instructions.</p>
+<p>Tool subsystem: Shell tools, execution tools and access to a file subsystem.</p>
+<p>Progress/State subsystem: Ensure it can track everything that has been going on through a simple progress.md or git commits.</p>
+<p>Runtime/Environment subsystem: Mention packages to use via package.json or pyproject.toml to specify runtime versions and use Docker to make the environment reproducible.</p>
+<p>Feedback/Results subsystem:  This is very important, list verification commands in Agents.md or any other file of your choice.
+Mention tests and full verification methods to make sure everything is working.</p>
+<p>Tests: pytest tests/ -x</p>
+<p>All 5 of these components makeup a good harness.</p>
+<h3 id="a_good_repo_structure">A good repo structure</h3>
+<p>It is important to make sure that everything about the code lives inside the codebase, every small instruction, every architecture decision should live inside the codebase.
+The codebase should be so fool-proof that any new agent in a new session should be able to look at it and understand everything.</p>
+<p>A good repo structure looks like:</p>
+<pre><code>project/
+├── AGENTS.md              # Entry: project overview, run commands, hard constraints
+├── src/
+│   ├── api/
+│   │   ├── ARCHITECTURE.md  # API layer architecture decisions
+│   │   └── ...
+│   ├── db/
+│   │   ├── CONSTRAINTS.md   # Database operation hard constraints
+│   │   └── ...
+│   └── ...
+├── PROGRESS.md             # Current progress: done, in-progress, blocked
+└── Makefile                # Standardized commands: setup, test, lint, check </code></pre>
+<h3 id="splitting_instructions">Splitting Instructions</h3>
+<p>After making a good Agents.md file, if you adding hard enforced rules or keep increasing the size of the file, there will come a point where the model performance will deteriorate again. </p>
+<p>A model has a limited context window, a rule buried in 1000 lines of instructions is less likely to be seen.</p>
+<p>&#39;Lost in the middle&#39; paper states that LLMs utilize information in the middle of long texts/files less effectively than at the beginning or end.</p>
+<p>So, imagine a very important constraint that is buried in 1000 lines of rules, the agent will just ignore it.</p>
+<p>Important things to ensure:</p>
+<p>Agents.md file should be at 50-200 lines and should only contain the essentials: a project overview, tests and hard constraints.</p>
+<pre><code># AGENTS.md
+
+## Project Overview
+Python 3.11 FastAPI backend, PostgreSQL 15 database.
+
+## Quick Start
+- Install: `make setup`
+- Test: `make test`
+- Full verification: `make check`
+
+## Hard Constraints
+- All APIs must use OAuth 2.0 authentication
+- All database queries must use SQLAlchemy 2.0 syntax
+- All PRs must pass pytest + mypy --strict + ruff check
+
+## Topic Docs
+- API Design Patterns (`docs/api-patterns.md`) — Required reading when adding endpoints
+- Database Rules (`docs/database-rules.md`) — Required when modifying database operations
+- Testing Standards (`docs/testing-standards.md`) — Reference when writing tests</code></pre>
+<p>Each specific topic file can be organized by subject in a docs directory, an agent only reads them when needed.</p>
+<p>Every instruction should have an example as to why it was added.</p>
+<h2 id="working_with_context_windows">Working with Context Windows</h2>
+<p>Context windows are finite. No matter the window size, long tasks will eventually exhaust them.
+Anthropic observed that agents exhibit rushed finish behavior when approaching context limits, ending tasks early to avoid information loss. At its core, it&#39;s an irrational resource anxiety. This is context anxiety.</p>
+<p>So, ultimately you will run out of context over long horizon tasks. </p>
+<p>This is how to handle it:
+State persistence files, files that let a new session resume where the last one left off. This includes creating progress files, next action files and verification records.</p>
+<p>Progress.md: It just records the progress of the current session.</p>
+<pre><code># Project Progress
+
+## Current State
+- Latest commit: abc1234 (feat: add user preferences endpoint)
+- Test status: 42/43 passing (test_pagination_edge_case failing)
+- Lint: passing
+
+## Completed
+- [x] User model and database migration
+- [x] Basic CRUD endpoints
+- [x] Auth middleware integration
+
+## In Progress
+- [ ] Pagination feature (90% - edge case test failing)
+
+## Known Issues
+- test_pagination_edge_case returns 500 on empty result sets
+- Need to confirm whether deleted users should appear in listings
+
+## Next Steps
+1. Fix pagination edge case bug
+2. Add "include deleted users" query parameter
+3. Update API documentation</code></pre>
+<p>Decisions.md: Records important decisions architecture and design wise.
+Also contains the reasons for the decisions taken.</p>
+<pre><code># Design Decisions
+
+## 2024 01 15: Use Redis for user preferences caching
+- Reason: High read frequency (every API call), small data size
+- Rejected alternative: PostgreSQL materialized view (high change frequency makes maintenance cost not worthwhile)
+- Constraint: Cache TTL of 5 minutes, active invalidation on write</code></pre>
+<p>Using git commits as checkpooints.</p>
+<p>Explain the model everything it needs to do after a new session starts.
+This can just be placed in Agents.md such as:</p>
+<pre><code>## At session start (clock in)
+1. Read PROGRESS.md for current state
+2. Read DECISIONS.md for important decisions
+3. Run make check to confirm repo is in consistent state
+4. Continue from PROGRESS.md "Next Steps" section
+
+## Before session end (clock out)
+1. Update PROGRESS.md
+2. Run make check to confirm consistent state
+3. Commit all completed work</code></pre>
+<h3 id="initializing_a_new_session">Initializing a new session</h3>
+<ol>
+<li>Make sure that when a new session starts, the agent&#39;s environment has no issues, all dependancies are installed. </li>
+<li>Make sure that all example test cases and verifications work.</li>
+<li>Get a checklist that has to be cleared everytime you initialize a new session.</li>
+</ol>
+<h2 id="how_to_get_tasks_done">How to get Tasks done</h2>
+<p><strong>Completing a task</strong>
+Make sure that you split the entire work into an ordered task list, explain each task and what is the &#39;acceptance&#39; criteria.</p>
+<pre><code># Task Breakdown
+
+## Task 1: User Authentication Basics
+- Implement JWT auth middleware
+- Add login/register endpoints
+- Acceptance: pytest tests/test_auth.py all passing
+
+## Task 2: User Profile Page
+- Implement user profile CRUD
+- Add profile edit form
+- Acceptance: pytest tests/test_profile.py all passing
+
+## Task 3: Search Feature</code></pre>
+<p>More often that not, there will be two problems you will encounter when you ask your agent to add a feature: Overreach and Under-finish.</p>
+<p>Overreach refers to when the agent takes on more tasks than optimal and doesn&#39;t finish any of them.
+Under-finish happens when an agent assumes that a task is finished after completing only a small portion of it, delivering an incomplete solution.</p>
+<p>To avoid these two issues:</p>
+<p>Enforce Work In Progress rules: Enforce WIP=1 in your harness ( in agents.md ), so that the agent is only allowed to work on one task at any time.</p>
+<p>Define how a task can be marked as finished. There should be explicit verification tests done so that the feature is delivered.</p>
+<h3 id="implementing_feature_lists">Implementing Feature Lists</h3>
+<p>Typically, an agent can hugely benefit from a proper feature list.
+Feature lists need to be implemented in such a way that the agent understands when a feature is completed and also understand all the features that need to be added.</p>
+<p>Each feature&#39;s description should contain: description, verification command and current state.</p>
+<p>A feature list should contain:</p>
+<ol>
+<li>A scheduler that schedules which features to work on.</li>
+<li>A verifier that can verify a feature.</li>
+<li>A progress tracker.</li>
+</ol>
+<p>Here is how to define a feature list format: </p>
+<pre><code>{
+  "id": "F03",
+  "behavior": "POST /cart/items with {product_id, quantity} returns 201",
+  "verification": "curl -X POST http://localhost:3000/api/cart/items -H 'Content-Type: application/json' -d '{\"product_id\":1,\"quantity\":2}' | jq .status == 201",
+  "state": "passing",
+  "evidence": "commit abc123, test output log"
+}</code></pre>
+<p>Write rules in your Agents.md file:</p>
+<pre><code>## Feature List Rules
+- Feature list file: /docs/features.md
+- Only one feature active at a time
+- Verification command must pass before marking as passing
+- Don't modify feature list states yourself — the verification script updates them automatically</code></pre>
+<h2 id="tests_and_verification">Tests and Verification</h2>
+<p>Agents tend to be overly-confident about task completions.
+They feel that the work is done even if reality is far from it.</p>
+<p>Defining tests and verifications is therefore, very important to ensure that everything works.</p>
+<p>To do this, we need to ensure that we have proper termination criteria. 
+An agent should satisfy all conditions before completing execution of the task.</p>
+<p>Verification should happen in 2 layers, the first layer checks if the code correctly implements what was asked and the second layer checks whether the feature/task or system meets the end-to-end requirements.</p>
+<p>We need to verify functional correctness, then address performance and then handle style.</p>
+<p>When an agent is asked to evaluate its work, it will always provide positive assessments ( according to Anthropic&#39;s research recently).</p>
+<p>To solve this, we need to enforce how verification is done properly.</p>
+<p><strong>Termination Judgement</strong>: The harness should independently execute termination validation using set rules instead of just taking the agent&#39;s word for it.
+You can spell this out in your Agents.md:</p>
+<pre><code>## Definition of Done
+- Feature complete = end-to-end verification passed, not "code is written"
+- Required verification levels:
+  1. Unit tests pass
+  2. Integration tests pass
+  3. End-to-end flow verification passes
+- Do not proceed to level 2 if level 1 fails
+- Do not proceed to level 3 if level 2 fails</code></pre>
+<p><strong>Using a 3 layer termination Validation</strong>
+Layer 1: Ensures that the syntax and static code used is correct.</p>
+<p>Layer 2: Executes the tests, checks application startup and validates if everything runs properly.</p>
+<p>Layer 3: Tests everything properly according to how an actual user would. Real-world execution tests are done.</p>
+<p><strong>Providing proper feedback</strong></p>
+<p>It is useless to just say &#39;Test failed&#39;, it is important that the agent understands what went wrong and how it went wrong. So, providing specific actionable feedback to the agent and letting the agent self-correct itself is very important.</p>
+<h2 id="end_to_end_testing_and_verification">End to End testing and Verification</h2>
+<p>When an agent knows its work will be validated by end to end tests, its coding behavior changes.
+It focuses on architectural boundaries and ensures that everything works together.</p>
+<p>Your harness should include multiple levels of tests as specified to ensure that everything works end to end.</p>
+<p>Make sure that components, features work together well instead of features passing their own unit tests but failing to work together.</p>
+<p>Tests should detect cross-component defects instead of isolating features.</p>
+<h2 id="observability">Observability</h2>
+<p>Increasing the agent&#39;s observability is important so that it sees its own mistakes and understands why things aren&#39;t working.</p>
+<p>This comes down to two things:</p>
+<ol>
+<li>Runtime observability includes logs, traces and events that tells the agent what happens during runtime and also what goes wrong.</li>
+<li>Process observability helps the agent understand decisions such as plans, acceptance criteria etc.</li>
+</ol>
+<p><strong>Enforcing Observability</strong></p>
+<p>Ensure that the harness collects the following signals/logs:</p>
+<ol>
+<li>Application lifestyle phases</li>
+<li>Feature path execution</li>
+<li>Data flow</li>
+<li>Resource utilization </li>
+<li>Errors and Exceptions</li>
+</ol>
+<p>Create a scoring rubric that gives a quantifiable score about every feature, every task such as:</p>
+<pre><code class="language-# Scoring Rubric">
+| Dimension | A | B | C | D |
+|-----------|---|---|---|---|
+| Code correctness | All tests pass | Main flow passes | Partial pass | Build fails |
+| Architecture compliance | Fully compliant | Minor deviations | Obvious deviations | Serious violations |
+| Test coverage | Main + edge cases | Main flow only | Only skeleton | No tests |</code></pre>
+<p>Runtime signals are important so that the agent understands what exactly happens.</p>
+<p><strong>Make sure that after every session, the state of the codebase is clean</strong></p>
+<p>This means that make sure everything like builds, tests, progress and properly checked.</p>
+<p>Make sure you track everything that has been done and completed so that you can use it for the next session.</p>
+<p>So, yes this was a guide to harness engineering and how to get the most out of your agents.
+Happy Coding!</p>
+
+      </div>
+
+      <nav class="note-nav-bottom">
+        <span></span>
+        <span></span>
+      </nav>
+    </article>
+  </main>
+</div>
+
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"
+  onload="renderMathInElement(document.getElementById('note-content'), {
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '$', right: '$', display: false}
+    ],
+    throwOnError: false,
+    trust: true,
+    strict: false
+  });"></script>
+<script>
+(function initAmbientBackground() {
+  const canvas = document.getElementById('ambient-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  
+  let width = canvas.width = window.innerWidth;
+  let height = canvas.height = window.innerHeight;
+  
+  window.addEventListener('resize', () => {
+    width = canvas.width = window.innerWidth;
+    height = canvas.height = window.innerHeight;
+  });
+  
+  const particles = [];
+  const particleCount = Math.min(60, Math.floor((width * height) / 20000));
+  const connectionDistance = 120;
+  
+  class Particle {
+    constructor() {
+      this.x = Math.random() * width;
+      this.y = Math.random() * height;
+      this.vx = (Math.random() - 0.5) * 0.25;
+      this.vy = (Math.random() - 0.5) * 0.25;
+      this.radius = Math.random() * 1.2 + 0.6;
+    }
+    
+    update() {
+      this.x += this.vx;
+      this.y += this.vy;
+      
+      if (this.x < 0 || this.x > width) this.vx *= -1;
+      if (this.y < 0 || this.y > height) this.vy *= -1;
+    }
+    
+    draw() {
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(126, 247, 201, 0.4)';
+      ctx.fill();
+    }
+  }
+  
+  for (let i = 0; i < particleCount; i++) {
+    particles.push(new Particle());
+  }
+  
+  function animate() {
+    ctx.clearRect(0, 0, width, height);
+    particles.forEach(p => {
+      p.update();
+      p.draw();
+    });
+    
+    for (let i = 0; i < particles.length; i++) {
+      for (let j = i + 1; j < particles.length; j++) {
+        const dx = particles[i].x - particles[j].x;
+        const dy = particles[i].y - particles[j].y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        
+        if (dist < connectionDistance) {
+          const alpha = (1 - (dist / connectionDistance)) * 0.08;
+          ctx.beginPath();
+          ctx.moveTo(particles[i].x, particles[i].y);
+          ctx.lineTo(particles[j].x, particles[j].y);
+          ctx.strokeStyle = "rgba(126, 247, 201, " + alpha + ")";
+          ctx.lineWidth = 0.8;
+          ctx.stroke();
+        }
+      }
+    }
+    requestAnimationFrame(animate);
+  }
+  animate();
+})();
+</script>
+</body>
+</html>
