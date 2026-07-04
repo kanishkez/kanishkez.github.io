@@ -154,7 +154,7 @@ button {
   flex-wrap: nowrap;
   justify-content: flex-end;
   gap: 10px 14px;
-  max-width: min(420px, calc(100vw - 44px));
+  max-width: max-content;
   padding: 8px 10px;
   border: 1px solid rgba(10, 20, 34, 0.1);
   border-radius: 999px;
