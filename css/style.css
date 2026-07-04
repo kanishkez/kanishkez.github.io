@@ -117,9 +117,13 @@ button {
 
 .primary-nav a,
 .nav-links a,
-.nav-socials a,
+.nav-socials a {
+  color: var(--muted);
+}
+
 .header-links a {
   color: var(--muted);
+  padding-right: 2px;
 }
 
 .primary-nav a.active,
@@ -160,6 +164,10 @@ button {
 
 .header-links span {
   color: var(--text);
+}
+
+.header-links > *:not(:first-child) {
+  margin-left: 14px;
 }
 
 .nav-container {
