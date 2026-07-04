@@ -166,10 +166,6 @@ button {
   color: var(--text);
 }
 
-.header-links > *:not(:first-child) {
-  margin-left: 14px;
-}
-
 .nav-container {
   display: contents;
 }
