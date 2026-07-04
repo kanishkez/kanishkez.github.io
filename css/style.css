@@ -936,8 +936,7 @@ body>* {
 }
 
 /* Nav link underline animation */
-.primary-nav a,
-.header-links a {
+.primary-nav a {
   position: relative;
   overflow: hidden;
 }
