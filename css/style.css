@@ -36,6 +36,7 @@ html {
   background: var(--bg);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  scroll-behavior: smooth;
 }
 
 body {
@@ -44,6 +45,12 @@ body {
   background: var(--bg);
   color: var(--text);
   font-family: var(--font-sans);
+  animation: page-fade-in 600ms ease both;
+}
+
+@keyframes page-fade-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 #ambient-canvas,
@@ -119,6 +126,20 @@ button {
 .nav-links a.active {
   color: var(--text);
   font-weight: 500;
+  position: relative;
+}
+
+.primary-nav a.active::before,
+.nav-links a.active::before {
+  content: '';
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #0b6e4f;
 }
 
 .header-links {
@@ -191,6 +212,7 @@ h1 {
   font-weight: 700;
   line-height: 1.08;
   letter-spacing: -0.03em;
+  text-wrap: balance;
 }
 
 .lead,
@@ -204,7 +226,9 @@ h1 {
 
 .intro {
   max-width: 760px;
-  margin-bottom: 64px;
+  margin-bottom: 72px;
+  padding-bottom: 48px;
+  border-bottom: 1px solid var(--line);
 }
 
 .intro-line {
@@ -213,6 +237,7 @@ h1 {
   color: var(--muted);
   font-size: 22px;
   line-height: 1.6;
+  text-wrap: balance;
 }
 
 .intro-line span {
@@ -366,6 +391,11 @@ h1 {
   font-size: 16px;
   font-weight: 700;
   line-height: 1.25;
+  transition: color 200ms ease;
+}
+
+.mini-item:hover h3 {
+  color: #0b6e4f;
 }
 
 .mini-item p {
@@ -385,13 +415,26 @@ h1 {
   display: grid;
   gap: 10px;
   margin-top: 64px;
+  padding-top: 32px;
+  border-top: 1px solid var(--line);
   color: var(--muted);
   font-family: var(--font-mono);
   font-size: 13px;
 }
 
+.contact-line span {
+  font-style: italic;
+  opacity: 0.8;
+}
+
 .contact-line a:first-child {
   color: var(--text);
+  transition: color 200ms ease, letter-spacing 300ms ease;
+}
+
+.contact-line a:first-child:hover {
+  color: #0b6e4f;
+  letter-spacing: 0.02em;
 }
 
 .project-list {
@@ -415,13 +458,14 @@ h1 {
 
 .project-list h2 {
   margin: 0;
+  transition: color 200ms ease;
 }
 
 .project-list p {
   max-width: 900px;
   margin: 0;
   color: var(--muted);
-  font-size: 15px;
+  font-size: 14.5px;
   line-height: 1.65;
 }
 
@@ -498,6 +542,11 @@ h1 {
 .notes-category-header strong {
   font-size: 19px;
   font-weight: 700;
+  transition: color 200ms ease;
+}
+
+.notes-category-header:hover strong {
+  color: #0b6e4f;
 }
 
 .notes-category-header em,
@@ -823,7 +872,11 @@ body>* {
 .project-list article:hover {
   background: rgba(199, 242, 212, 0.32) !important;
   transform: translateX(3px) !important;
-  box-shadow: inset 3px 0 0 rgba(8, 80, 40, 0.3);
+  box-shadow: inset 3px 0 0 #0b6e4f;
+}
+
+.project-list article:hover h2 {
+  color: #0b6e4f;
 }
 
 /* Mini-item hover */
@@ -885,11 +938,36 @@ body>* {
 }
 
 /* Page intro h1 reveal */
+.page-intro {
+  margin-bottom: 48px;
+  padding-bottom: 40px;
+  border-bottom: 1px solid var(--line);
+  position: relative;
+}
+
+.page-intro::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 60px;
+  height: 2px;
+  background: #0b6e4f;
+}
+
 .page-intro h1 {
-  background: linear-gradient(135deg, var(--text) 60%, rgba(8, 80, 40, 0.5) 100%);
+  font-size: 48px;
+  background: linear-gradient(135deg, var(--text) 60%, #0b6e4f 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
+}
+
+.page-intro p {
+  font-size: 17px;
+  line-height: 1.7;
+  color: var(--muted);
+  max-width: 600px;
 }
 
 /* Section transition */
@@ -1021,18 +1099,14 @@ body>* {
 .writing-list article:hover {
   background: rgba(199, 242, 212, 0.28) !important;
   transform: translateX(3px) !important;
-  box-shadow: inset 3px 0 0 rgba(8, 80, 40, 0.25);
+  box-shadow: inset 3px 0 0 #0b6e4f;
 }
 
-/* Note link hover */
-.note-link:hover {
-  background: rgba(199, 242, 212, 0.28) !important;
-  border-radius: 4px;
-  padding-left: 8px;
-  padding-right: 8px;
-  margin-left: -8px;
-  margin-right: -8px;
+.writing-list article:hover h2 {
+  color: #0b6e4f;
 }
+
+
 
 /* Header links glassmorphism boost */
 .header-links {
@@ -1071,7 +1145,6 @@ body>* {
 .hero-actions a:hover,
 .header-links a:hover,
 .primary-nav a:hover,
-.note-link:hover,
 .item-actions a:hover {
   color: #0b6e4f !important;
   background: rgba(11, 110, 79, .10) !important;

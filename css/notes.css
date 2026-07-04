@@ -45,12 +45,23 @@
 .note-header {
   position: relative;
   margin-bottom: 48px;
-  padding: 40px;
-  background: var(--tile);
-  border: 1px solid var(--line);
-  border-radius: 18px;
-  box-shadow: 0 4px 20px rgba(11, 31, 22, 0.02);
-  overflow: hidden;
+  padding: 0 0 32px 0;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  border-bottom: 1px solid var(--line);
+  box-shadow: none;
+  overflow: visible;
+}
+
+.note-header::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 60px;
+  height: 2px;
+  background: #0b6e4f;
 }
 
 .note-category-tag {
@@ -77,6 +88,7 @@
   letter-spacing: -0.02em;
   position: relative;
   z-index: 1;
+  text-wrap: balance;
 }
 
 /* ── Table of Contents ──────────────────── */
@@ -114,13 +126,15 @@
   color: var(--dim);
   text-decoration: none;
   padding: 4px 0;
-  transition: var(--transition);
+  transition: var(--transition), transform 200ms ease;
   line-height: 1.6;
 }
 
 .toc-item:hover {
   color: var(--acc);
   text-decoration: underline;
+  text-underline-offset: 3px;
+  transform: translateX(3px);
 }
 
 .toc-item.toc-h2 {
@@ -262,15 +276,15 @@
 .note-content blockquote {
   margin: 32px 0;
   padding: 20px 28px;
-  border-left: 3px solid var(--ink);
-  background: var(--tile);
+  border-left: 3px solid #0b6e4f;
+  background: rgba(11, 110, 79, 0.04);
   color: var(--dim);
   font-size: 15px;
   line-height: 1.75;
   border-radius: 0 12px 12px 0;
   border: 1px solid var(--line);
   border-left-width: 4px;
-  border-left-color: var(--ink);
+  border-left-color: #0b6e4f;
   box-shadow: 0 4px 15px rgba(11, 31, 22, 0.01);
 }
 
@@ -362,16 +376,16 @@
 }
 
 .note-content tbody tr:hover {
-  background: var(--dim-light);
+  background: rgba(11, 110, 79, 0.04);
 }
 
 /* ── Horizontal Rules ───────────────────── */
 .note-content hr {
   border: none;
   height: 1px;
-  background: var(--line-strong);
-  margin: 48px 0;
-  max-width: 100px;
+  background: linear-gradient(90deg, var(--line-strong) 0%, rgba(11, 110, 79, 0.2) 50%, var(--line-strong) 100%);
+  margin: 48px auto;
+  max-width: 120px;
 }
 
 /* ── Images & Figures ──────────────────── */
@@ -474,8 +488,8 @@
 }
 
 .note-nav-bottom a:hover {
-  border-color: var(--acc-glow);
-  background: var(--tile);
+  border-color: rgba(11, 110, 79, 0.3);
+  background: rgba(11, 110, 79, 0.03);
   transform: translateY(-4px);
   box-shadow: 0 20px 48px rgba(11, 31, 22, 0.06);
 }
@@ -498,7 +512,7 @@
 }
 
 .note-nav-bottom a:hover .nav-title {
-  color: var(--acc);
+  color: #0b6e4f;
 }
 
 /* ==========================================================================
@@ -770,7 +784,13 @@
   box-shadow: none;
 }
 
-.note-header,
+.note-header {
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+}
+
 .notes-category {
   background: linear-gradient(180deg, rgba(126, 247, 201, 0.055), rgba(255, 255, 255, 0.018));
   border-color: var(--line);
@@ -778,9 +798,7 @@
 }
 
 .note-category-tag {
-  color: #06130f;
-  background: var(--mint);
-  border-color: transparent;
+  display: none;
 }
 
 .note-content {
@@ -1009,8 +1027,9 @@
 .notes-list {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 0;
-  border-top: 1px solid rgba(8, 20, 16, 0.1);
+  gap: 8px;
+  border-top: none;
+  padding-top: 8px;
 }
 
 .note-link {
@@ -1018,18 +1037,22 @@
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   gap: 18px;
-  padding: 13px 0;
-  border: 0;
-  border-bottom: 1px solid rgba(8, 20, 16, 0.1);
-  border-radius: 0;
-  background: transparent;
+  padding: 14px 18px;
+  border: 1px solid rgba(8, 20, 16, 0.08);
+  border-left: 3px solid transparent;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.18);
   color: var(--text);
   box-shadow: none;
+  transition: all 220ms ease;
 }
 
 .note-link:hover {
-  background: rgba(255, 255, 255, 0.14);
-  border-color: rgba(8, 20, 16, 0.16);
+  background: rgba(199, 242, 212, 0.22);
+  border-left-color: #0b6e4f;
+  border-color: rgba(11, 110, 79, 0.2);
+  transform: translateX(4px);
+  box-shadow: 0 2px 12px rgba(8, 80, 40, 0.06);
 }
 
 .note-link-title {
@@ -1038,15 +1061,27 @@
   font-size: 15px;
   font-weight: 600;
   overflow-wrap: anywhere;
+  transition: color 200ms ease;
+}
+
+.note-link:hover .note-link-title {
+  color: #0b6e4f;
 }
 
 .note-link-arrow {
-  color: var(--mint-deep);
+  color: var(--muted);
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 500;
-  opacity: 1;
+  opacity: 0.5;
   white-space: nowrap;
+  transition: all 200ms ease;
+}
+
+.note-link:hover .note-link-arrow {
+  opacity: 1;
+  color: #0b6e4f;
+  transform: translateX(3px);
 }
 
 @media (max-width: 680px) {
@@ -1109,4 +1144,85 @@ body{
 
 mjx-container{
   color:#000 !important;
+}
+
+/* ── Reading progress bar ─────────────── */
+.reading-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 0%;
+  height: 2px;
+  background: linear-gradient(90deg, #0b6e4f, #38b27a);
+  z-index: 9999;
+  transition: width 50ms linear;
+  border-radius: 0 1px 1px 0;
+}
+
+/* ── Scroll to top button ─────────────── */
+.scroll-top-btn {
+  position: fixed;
+  bottom: 28px;
+  right: 28px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid rgba(8, 17, 13, 0.12);
+  background: rgba(232, 250, 234, 0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: #08110d;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 300ms ease, transform 300ms ease, background 200ms ease;
+  pointer-events: none;
+  z-index: 999;
+  box-shadow: 0 4px 16px rgba(8, 80, 40, 0.08);
+}
+
+.scroll-top-btn.visible {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.scroll-top-btn:hover {
+  background: rgba(11, 110, 79, 0.1);
+  border-color: rgba(11, 110, 79, 0.3);
+}
+
+/* ── Heading anchor highlight on scroll ── */
+.note-content h2,
+.note-content h3 {
+  scroll-margin-top: 80px;
+}
+
+/* ── Selection color ─────────────────── */
+.note-content ::selection {
+  background: rgba(11, 110, 79, 0.15);
+  color: inherit;
+}
+
+/* ── Image hover zoom ─────────────────── */
+.note-content img {
+  transition: transform 300ms ease, box-shadow 300ms ease;
+}
+
+.note-content img:hover {
+  transform: scale(1.01);
+  box-shadow: 0 8px 32px rgba(8, 80, 40, 0.08);
+}
+
+/* ── Inline code polish ───────────────── */
+.note-content :not(pre) > code {
+  transition: background 200ms ease;
+}
+
+.note-content :not(pre) > code:hover {
+  background: rgba(11, 110, 79, 0.06);
 }

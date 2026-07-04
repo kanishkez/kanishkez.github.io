@@ -414,8 +414,8 @@ function generateNotePage(note, category, prev, next) {
   <title>${note.title} — kanishk's notes</title>
   <meta name="description" content="${note.title} — ${category.title} notes by kanishk" />
   <link rel="icon" type="image/png" href="../assets/favicon.png" />
-  <link rel="stylesheet" href="../css/style.css?v=2" />
-  <link rel="stylesheet" href="../css/notes.css?v=2" />
+  <link rel="stylesheet" href="../css/style.css?v=5" />
+  <link rel="stylesheet" href="../css/notes.css?v=5" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous" />
 </head>
 <body>
@@ -453,7 +453,6 @@ function generateNotePage(note, category, prev, next) {
         <h1 style="margin-top: 2rem; margin-bottom: 2rem; font-size: 2.5rem;">Notes on Harness Engineering</h1>
       ` : `
       <header class="note-header">
-        <div class="note-category-tag">${category.title}</div>
         <h1>${note.title}</h1>
       </header>
       `}
@@ -471,6 +470,8 @@ function generateNotePage(note, category, prev, next) {
     </article>
   </main>
 </div>
+<div class="reading-progress" id="reading-progress"></div>
+<button class="scroll-top-btn" id="scroll-top-btn" aria-label="Scroll to top">↑</button>
 
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"
@@ -557,6 +558,28 @@ function generateNotePage(note, category, prev, next) {
     requestAnimationFrame(animate);
   }
   animate();
+})();
+</script>
+<script>
+// Reading progress bar
+(function() {
+  const bar = document.getElementById('reading-progress');
+  if (!bar) return;
+  window.addEventListener('scroll', function() {
+    const h = document.documentElement.scrollHeight - window.innerHeight;
+    bar.style.width = h > 0 ? (window.scrollY / h * 100) + '%' : '0%';
+  }, { passive: true });
+})();
+// Scroll to top button
+(function() {
+  const btn = document.getElementById('scroll-top-btn');
+  if (!btn) return;
+  window.addEventListener('scroll', function() {
+    btn.classList.toggle('visible', window.scrollY > 400);
+  }, { passive: true });
+  btn.addEventListener('click', function() {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
 })();
 </script>
 </body>
