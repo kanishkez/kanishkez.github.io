@@ -73,11 +73,11 @@ It consists of hidden states, timestamps and multiple layers to build up the mem
 <h2 id="decoder">Decoder:</h2>
 <p>Decoders take this final hidden state as input applies RNN operations on it and then it applies a linear layer to the output.
 <strong>RNN Step</strong>
-<span class="math-inline">$h_t$</span> = RNN(embedding(prev_token), h_{t - 1})
+<span class="math-inline">$h_t = RNN(embedding(prev\_token), h_{t - 1})$</span>
 <strong>Linear Layer</strong>:
-logits = W_out @ <span class="math-inline">$h_t$</span> + b</p>
+<span class="math-inline">$logits = W_{out} \cdot h_t + b$</span>
 <p><strong>Softmax and prediction</strong>
-next_token=argmax(softmax(logits))</p>
+<span class="math-inline">$next\_token=argmax(softmax(logits))$</span>
 <p>This next token is again taken as input for in the next RNN cycle in the decoder</p>
 <p>This cycle is repeated till we reach the End of the Sequence token </p>
 <h2 id="note">Note:</h2>
@@ -98,18 +98,18 @@ the expected output is &quot;im good&quot;</p>
 <p>After encoding is done and the context is built up, we get a final context vector from the encoder.
 So,
 <strong>At time step</strong>
-hidden_1=RNN(embedding(BOS),h_enc) 
+<span class="math-inline">$hidden_1=RNN(embedding(BOS),h_{enc})$</span> 
 (where BOS is the start token of any decoder which stands for beginning of sequence)
-logits_1=W_out*hidden_1 +b</p>
+<span class="math-inline">$logits_1=W_{out} \cdot hidden_1 + b$</span>
 <p>logits gives us the prediction of the first word
 ideally, the answer should be &#39;im&#39; (token id= 101)
 loss is computed:
-loss_1=CrossEntropy(logits_1,101)</p>
+<span class="math-inline">$loss_1=CrossEntropy(logits_1,101)$</span>
 <p><strong>At time step 2</strong></p>
 <p>Here is where teacher forcing comes in
-Instead of giving logits_1 as the next input (because most of the time it is wrong and so obviously the next prediction would also be wrong), we give it the correct answer that is &#39;im&#39; as input instead</p>
-<p>hidden_2=RNN(embedding(&quot;im&quot;),hidden_1)
-logits_2=W_out * hidden_2 +b</p>
+Instead of giving <span class="math-inline">$logits_1$</span> as the next input (because most of the time it is wrong and so obviously the next prediction would also be wrong), we give it the correct answer that is &#39;im&#39; as input instead</p>
+<p><span class="math-inline">$hidden_2=RNN(embedding("im"),hidden_1)$</span>
+<span class="math-inline">$logits_2=W_{out} \cdot hidden_2 +b$</span>
 <p>Ideally, the answer that it should give out is &#39;good&#39; (token id=275)</p>
 <p>So the loss is computed:
 loss_2=CrossEntropy(logits_2,275)</p>

@@ -134,11 +134,11 @@ Apply the chain rule:</p>
 <span class="math-display">$$\frac{\partial \mathcal{L}}{\partial W^{(L)}} = \frac{\partial \mathcal{L}}{\partial a^{(L)}} \cdot \frac{\partial a^{(L)}}{\partial z^{(L)}} \cdot \frac{\partial z^{(L)}}{\partial W^{(L)}}$$</span>
 <p>Where:</p>
 <ul>
-<li><p>a^{(L)}: activation</p>
+<li><p><span class="math-inline">$a^{(L)}$</span>: activation</p>
 </li>
-<li><p>z^{(L)}: input to activation function</p>
+<li><p><span class="math-inline">$z^{(L)}$</span>: input to activation function</p>
 </li>
-<li><p>W^{(L)}: weights</p>
+<li><p><span class="math-inline">$W^{(L)}$</span>: weights</p>
 </li>
 </ul>
 <p>To compute <span class="math-display">$$\frac{\partial \mathcal{L}}{\partial a^{(L-1)}}$$</span>which is needed to update earlier layers, we need:</p>
@@ -200,7 +200,7 @@ Gradient w.r.t. the input</li>
 <span class="math-display">$$Z_{i,j} = \sum_{m’=0}^{f-1} \sum_{n’=0}^{f-1} X_{i+m’, j+n’} \cdot K_{m’,n’}$$</span>
 <p>To get: </p>
 <span class="math-display">$$\frac{\partial Z_{i,j}}{\partial K_{m,n}} = X_{i+m, j+n}$$</span>
-<p>because K_{m,n} appears <strong>only once</strong> in that sum (as long as m’,n’ are indexed uniquely).
+<p>because <span class="math-inline">$K_{m,n}$</span> appears <strong>only once</strong> in that sum (as long as <span class="math-inline">$m',n'$</span> are indexed uniquely).
 This is because we take gradients for each parameter seperately.
 The kernel <span class="math-display">$$K \in \mathbb{R}^{f \times f}$$</span>is a <strong>matrix of learnable parameters</strong>.</p>
 <p>When doing backprop, you compute:</p>
