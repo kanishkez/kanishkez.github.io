@@ -244,7 +244,7 @@ K[i - p, j - q] & \text{if } (i - p, j - q) \in [0,k-1] \
 <h2 id="summary_of_derivatives"> Summary of Derivatives</h2>
 <div class="table-wrapper"><table>
 <thead><tr><th><strong>Gradient</strong></th><th><strong>Formula</strong></th><th><strong>Notes</strong></th></tr></thead>
-<tbody><tr><td>\frac{\partial \mathcal{L}}{\partial K}</td><td>\delta_Y * X</td><td>Cross correlation of input with upstream grad</td></tr><tr><td>\frac{\partial \mathcal{L}}{\partial X}</td><td>\delta_Y * K^{\text{rot}}</td><td>Convolution with rotated kernel</td></tr><tr><td>\frac{\partial \mathcal{L}}{\partial Y}</td><td>Comes from next layer</td><td>Used to compute both above</td></tr></tbody>
+<tbody><tr><td><span class="math-inline">$\frac{\partial \mathcal{L}}{\partial K}$</span></td><td><span class="math-inline">$\delta_Y * X$</span></td><td>Cross correlation of input with upstream grad</td></tr><tr><td><span class="math-inline">$\frac{\partial \mathcal{L}}{\partial X}$</span></td><td><span class="math-inline">$\delta_Y * K^{\text{rot}}$</span></td><td>Convolution with rotated kernel</td></tr><tr><td><span class="math-inline">$\frac{\partial \mathcal{L}}{\partial Y}$</span></td><td>Comes from next layer</td><td>Used to compute both above</td></tr></tbody>
 </table></div>
 <hr>
 <h2 id="final_takeaways"><strong>Final Takeaways</strong></h2>
