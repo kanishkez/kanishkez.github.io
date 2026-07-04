@@ -68,6 +68,7 @@
           <a href="#p_tuning_v2" class="toc-item toc-h3">P Tuning V2</a>
           <a href="#architecture" class="toc-item toc-h3">Architecture</a>
           <a href="#formulation" class="toc-item toc-h3">Formulation</a>
+          <a href="#rank" class="toc-item toc-h3">Rank</a>
           <a href="#why_low_rank" class="toc-item toc-h3">Why Low Rank?</a>
           <a href="#initialization" class="toc-item toc-h3">Initialization</a>
           <a href="#scaling" class="toc-item toc-h3">Scaling</a>
@@ -224,6 +225,10 @@ where <span class="math-inline">$r \ll \min(d, k)$</span> is the rank.</p>
 <p>The modified forward pass for an input <span class="math-inline">$x$</span> is:
 <span class="math-display">$$h = W' x = (W + \Delta W) x = W x + B(A x)$$</span>
 <p>During training, the base weight matrix <span class="math-inline">$W$</span> is kept frozen, and gradients only flow into the low rank matrices <span class="math-inline">$A$</span> and <span class="math-inline">$B$</span>.</p>
+<h3 id="rank">Rank</h3>
+<p>The parameter r determines the rank of the matrices (A and B), which in turns determines how big the matrices are and how much information they can hold.</p>
+<p>Suppose we want to fine-tune it on basic tasks, a relatively lower rank can do, but obviously for complex tasks we need a bigger rank.</p>
+<p>But, this also affects how much compute we need to fine-tune it.</p>
 <h3 id="why_low_rank">Why Low Rank?</h3>
 <p>During fine tuning, the weight update matrix <span class="math-inline">$\Delta W$</span> has a very low intrinsic rank. By factoring <span class="math-inline">$\Delta W$</span> into the product of two smaller matrices <span class="math-inline">$B$</span> and <span class="math-inline">$A$</span>, we drastically reduce the number of parameters we need to train.</p>
 <h3 id="initialization">Initialization</h3>
