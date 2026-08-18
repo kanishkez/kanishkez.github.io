@@ -1,0 +1,203 @@
+/* fixes.css — small, targeted overrides for notes */
+
+/* Make note figures larger and centered */
+.note-content figure {
+  text-align: center;
+  margin: 1.2rem 0;
+}
+
+.note-content figure img {
+  display: block;
+  margin: 0.4rem auto;
+  width: min(1400px, 98%);
+  height: auto;
+  box-shadow: 0 6px 20px rgba(10,20,30,0.08);
+  border-radius: 6px;
+  transition: transform 160ms ease;
+}
+
+/* Slight scale on hover for better focus */
+.note-content figure img:hover {
+  transform: scale(1.08);
+}
+
+/* Enlarge mermaid diagrams to match image sizing */
+.note-content .mermaid {
+  max-width: min(1400px, 98%);
+  margin: 1rem auto;
+}
+
+/* Improve caption visibility */
+.note-content figure figcaption {
+  color: #0b3d91; /* darker blue for contrast */
+  font-weight: 600;
+  font-size: 0.95rem;
+  margin-top: 0.4rem;
+  opacity: 0.95;
+}
+
+/* Ensure small screens still behave */
+@media (max-width: 640px) {
+  .note-content figure img { width: 100%; }
+  .note-content figure figcaption { font-size: 0.9rem; }
+}
+/* ==========================================================================   PAGE FIXES — load this AFTER style.css and notes.css.
+   Resolves conflicts between the two base stylesheets that only show up
+   once actually rendered: sticky nav overlap/duplication on scroll,
+   TOC losing its numbered single-column layout, and figcaptions being
+   nearly invisible.
+   ========================================================================== */
+
+
+/* ---- Sticky nav: solid background, correct stacking, no bleed-through ---- */
+.site-header,
+.navbar {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 10000 !important;
+  width: 100% !important;
+  max-width: none !important;
+  margin: 0 !important;
+  background: #e7f0fb !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border-bottom: 1px solid rgba(10, 20, 34, 0.1) !important;
+  box-shadow: 0 2px 12px rgba(10, 20, 34, 0.04) !important;
+}
+
+
+.site-header .identity,
+.site-header .primary-nav,
+.site-header .header-links,
+.navbar .identity,
+.navbar .primary-nav,
+.navbar .header-links {
+  position: relative !important;
+  z-index: 1 !important;
+  background: transparent !important;
+}
+
+
+/* Inner row that holds logo/nav/links, centered and padded so nothing
+   collides at any viewport width */
+.site-header,
+.navbar {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 16px !important;
+  padding: 16px max(20px, calc((100% - 860px) / 2)) !important;
+}
+
+
+/* Prevent any duplicate/overlapping header artifacts from stray absolute
+   positioning elsewhere on the page */
+.note-page .site-header,
+.note-page .navbar {
+  position: sticky !important;
+}
+
+
+/* ---- Table of Contents: single column, numbered, no grid collapse ---- */
+.note-toc .toc-items,
+.toc-items {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 6px !important;
+}
+
+
+.toc-item.toc-h2 {
+  counter-increment: toc-counter;
+  font-weight: 600 !important;
+}
+
+
+.toc-item.toc-h2::before {
+  content: counter(toc-counter) ". " !important;
+  color: var(--muted, #3d5a78) !important;
+}
+
+
+.toc-item.toc-h3 {
+  padding-left: 28px !important;
+  font-weight: 400 !important;
+}
+
+
+.toc-item.toc-h3::before {
+  content: "\2022" !important;
+  margin-right: 8px !important;
+  color: var(--faint, #6f84a0) !important;
+}
+
+
+.note-toc {
+  counter-reset: toc-counter;
+}
+
+
+/* ---- Figure captions: make them actually readable ---- */
+.note-content figcaption,
+figcaption {
+  display: block !important;
+  color: #3d5a78 !important;
+  opacity: 1 !important;
+  font-size: 13.5px !important;
+  line-height: 1.5 !important;
+  font-style: normal !important;
+  text-align: center !important;
+  margin-top: 10px !important;
+  max-width: 640px !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+
+.note-content figure {
+  margin: 36px auto !important;
+  text-align: center !important;
+}
+
+
+.note-content figure img {
+  display: block !important;
+  margin: 0 auto !important;
+}
+
+
+/* ---- General decluttering ---- */
+.note-content {
+  max-width: 720px !important;
+  margin: 0 auto !important;
+}
+
+
+.note-content p {
+  margin-bottom: 20px !important;
+  line-height: 1.75 !important;
+}
+
+
+.note-content h2 {
+  margin-top: 56px !important;
+  padding-top: 8px !important;
+}
+
+
+.note-content h3 {
+  margin-top: 36px !important;
+}
+
+
+.note-content hr {
+  margin: 48px auto !important;
+  max-width: 100px !important;
+  opacity: 0.5 !important;
+}
+
+
+.note-page {
+  padding-top: 8px !important;
+} 

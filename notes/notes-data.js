@@ -172,5 +172,16 @@ const NOTES_DATA = [
         "slug": "regularization"
       }
     ]
+  },
+  {
+    "id": "mechanistic_interpretability",
+    "title": "Mechanistic Interpretability",
+    "description": "Circuit tracing, activation patching, and probing what post-training actually changes inside a model.",
+    "notes": [
+      {
+        "title": "Post Training Mechanisms",
+        "slug": "post_training_mechanisms"
+      }
+    ]
   }
 ];

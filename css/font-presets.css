@@ -1,0 +1,33 @@
+/* font-presets.css
+
+Add one of these classes to the <body> element to try different font presets.
+Examples:
+  <body class="preset-inter"> ...
+  <body class="preset-ibm"> ...
+  <body class="preset-source"> ...
+  <body class="preset-merriweather"> ...
+
+This file relies on Google Fonts being imported by the main stylesheet.
+*/
+
+/* Inter (default) */
+body.preset-inter {
+  --font-sans: 'Inter', -apple-system, 'San Francisco', 'SF Pro Text', 'SF Pro Display', BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+/* IBM Plex Sans */
+body.preset-ibm {
+  --font-sans: 'IBM Plex Sans', -apple-system, 'San Francisco', BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+/* Source Sans 3 */
+body.preset-source {
+  --font-sans: 'Source Sans 3', -apple-system, 'San Francisco', BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+/* Merriweather (serif) for a more formal look */
+body.preset-merriweather {
+  --font-sans: 'Merriweather', Georgia, 'Times New Roman', Times, serif;
+}
+
+/* Usage note: the site uses var(--font-sans) in body styles. Adding one of the classes above will override the font stack for quick testing. */

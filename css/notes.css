@@ -405,11 +405,16 @@
 
 .note-content figcaption {
   margin-top: 12px;
-  font-size: 13px;
-  color: var(--dim);
+  font-size: 13.5px;
+  color: var(--text);
+  opacity: 0.85;
   font-family: var(--font-sans);
   font-style: normal;
   line-height: 1.5;
+  text-align: center;
+  max-width: 90%;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 /* ── Math / KaTeX ───────────────────────── */
@@ -808,7 +813,7 @@
 .note-content p,
 .note-content li,
 .note-content figcaption {
-  color: #c9d3de;
+  color: var(--text);
 }
 
 .note-content code,
