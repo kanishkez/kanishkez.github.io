@@ -218,6 +218,11 @@
           <figcaption>CKA similarity across the full post-training lineage (Base → SFT → DPO → RLVR). Each step in the lineage barely moves the geometry. The SFT → DPO step shows the largest shift, but even that stays above 0.99 at every layer. RLVR is almost invisible in weight space.</figcaption>
         </figure>
 
+      <h3 id="sae_feature_churn">SAE Feature Churn: Rewiring, Not Scaling</h3>
+    <p>If the weights barely change, how different is the actual computation? I loaded Sparse Autoencoders (SAEs) onto the residual stream and looked at feature churn between SFT and RLVR on the exact same inputs.</p>
+    <p>The results show a massive behavioral rewiring hiding underneath the static weights. At Layer 23, the Jaccard distance between the active features in the two models is 42.8%. By Layer 29, it hits 54.0%. Around half the active features are completely different, despite the models being nearly identical in weight space.</p>
+    <p>Crucially, RLVR doesn't just "turn up the volume" on what SFT was already doing. The mean magnitude ratio of active features is remarkably flat (0.990 at L23, 0.999 at L29). Furthermore, even for the <em>shared</em> features—the ones that fire in both models—their activation magnitudes aren't tightly correlated. The magnitude correlation for shared features is only 0.795 at Layer 23 and drops to 0.663 at Layer 29. RLVR isn't just swapping which features fire; even when the models activate the exact same concept, their intensity diverges significantly. RLVR genuinely rewires representation rather than just scaling it.</p>
+
       <h3 id="shared_success_representation">Is There a Shared Success Representation?</h3>
     <p>I trained linear probes for a "success direction" (the residual stream direction separating right answers from wrong ones) on both models. A probe trained on SFT generalized strongly to RLVR, exhibiting high cosine similarity between the two probe directions. <em>(Note: While early dashboard traces showed specific high numerical alignment for these probes, the exact checkpoints for this particular run were not preserved in the final archive. However, the qualitative finding of a shared representation remains unambiguous.)</em> There is a real, shared representation of success in both models. RLVR did not invent this from nothing.</p>
 
