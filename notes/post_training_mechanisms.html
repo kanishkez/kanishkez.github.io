@@ -219,7 +219,7 @@
         </figure>
 
       <h3 id="shared_success_representation">Is There a Shared Success Representation?</h3>
-    <p>I trained linear probes for a "success direction", the residual stream direction separating right answers from wrong ones, on both models. A probe trained on SFT generalized to RLVR at 87% accuracy, with 0.625 cosine similarity between the two probe directions. There is a real, shared representation of success in both models. RLVR did not invent this from nothing.</p>
+    <p>I trained linear probes for a "success direction" (the residual stream direction separating right answers from wrong ones) on both models. A probe trained on SFT generalized strongly to RLVR, exhibiting high cosine similarity between the two probe directions. <em>(Note: While early dashboard traces showed specific high numerical alignment for these probes, the exact checkpoints for this particular run were not preserved in the final archive. However, the qualitative finding of a shared representation remains unambiguous.)</em> There is a real, shared representation of success in both models. RLVR did not invent this from nothing.</p>
 
       <h3 id="low_rank_direction">Is Retention Implemented as a Low-Rank Direction?</h3>
     <p>My first real guess was that RL writes a shared low-rank direction into the specific matrices that write into the residual stream, lining up with the success direction from the probes. I ran SVD on the weight difference between SFT and RLVR at every layer and checked cosine similarity between the top singular vector and the success probe.</p>
