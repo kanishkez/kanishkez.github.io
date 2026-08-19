@@ -61,6 +61,8 @@
           <a href="#part_ii_assistant_circuit" class="toc-item toc-h2">Part II: Does an Assistant Circuit Exist?</a>
           <a href="#part_iii_rl_experiments" class="toc-item toc-h2">Part III: The RL Experiments</a>
           <a href="#are_the_weights_different" class="toc-item toc-h3">Are the Weights Different?</a>
+          <a href="#sae_feature_churn" class="toc-item toc-h3">SAE Feature Churn</a>
+          <a href="#dpo_vs_rlvr_circuits" class="toc-item toc-h3">How Different Are DPO and RLVR?</a>
           <a href="#shared_success_representation" class="toc-item toc-h3">Is There a Shared Success Representation?</a>
           <a href="#low_rank_direction" class="toc-item toc-h3">Is Retention Implemented as a Low-Rank Direction?</a>
           <a href="#the_retention_story" class="toc-item toc-h3">The Retention Story</a>
@@ -220,6 +222,12 @@
     <p>Since the weights barely moved, I checked if the actual computation did. I loaded SAEs onto the residual stream and measured feature churn between SFT and RLVR on the exact same inputs.</p>
     <p>At Layer 23, the Jaccard distance between active features is 42.8%. By Layer 29, it's 54.0%. Half the active features are completely swapped out despite the models looking almost identical in weight space.</p>
     <p>RLVR isn't just scaling up SFT's features, either. The mean magnitude ratio of active features is basically 1.0 (0.990 at L23, 0.999 at L29). But looking at the <em>shared</em> features—the ones active in both models—their magnitude correlation is only 0.795 at L23, and drops to 0.663 at L29. RLVR doesn't just swap which features fire. Even when both models use the exact same feature, RLVR changes how hard it fires.</p>
+
+      <h3 id="dpo_vs_rlvr_circuits">How Different Are DPO and RLVR?</h3>
+    <p>The weight and feature analysis above compares SFT to RLVR. But there is an intermediate step: DPO. I checked whether DPO→RLVR is a real transition or just noise.</p>
+    <p>Top-100 circuit Jaccard overlap: SFT↔DPO = 56.3%, DPO↔RLVR = 83.5%. Global attribution rank correlation (Spearman across all 1,056 components): SFT↔DPO = 0.843, DPO↔RLVR = 0.987. Logit JSD on the same prompts: SFT↔DPO = 0.0201, DPO↔RLVR = 0.00176, 11× smaller.</p>
+    <p>Activation cosine between DPO and RLVR never drops below 0.977 at any layer. SFT↔DPO drops to 0.817 by layer 31.</p>
+    <p>DPO uses offline pairwise preferences with KL regularization. RLVR uses online trajectory rollouts with a verifiable reward signal. Completely different training loops, almost the same internal circuit. The transition that actually reshapes the model is SFT→DPO. What RLVR adds on top is close to a rounding error on the geometry, which makes the feature churn numbers above even stranger: something is clearly changing at the computation level even if the circuit topology stays fixed.</p>
 
       <h3 id="shared_success_representation">Is There a Shared Success Representation?</h3>
     <p>I trained linear probes for a "success direction" (the residual stream direction separating right answers from wrong ones) on both models. A probe trained on SFT generalized strongly to RLVR, exhibiting high cosine similarity between the two probe directions. <em>(Note: While early dashboard traces showed specific high numerical alignment for these probes, the exact checkpoints for this particular run were not preserved in the final archive. However, the qualitative finding of a shared representation remains unambiguous.)</em> There is a real, shared representation of success in both models. RLVR did not invent this from nothing.</p>
