@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>What Does Post-Training Change? — kanishk's notes</title>
-  <meta name="description" content="A Mechanistic Study of SFT, Routing, and RLVR Retention — Mechanistic Interpretability notes by kanishk" />
+  <title>What Does Post-Training Change? | kanishk's notes</title>
+  <meta name="description" content="A Mechanistic Study of SFT, Routing, and RLVR Retention | Mechanistic Interpretability notes by kanishk" />
   <link rel="icon" type="image/png" href="../assets/favicon.png" />
   <link rel="stylesheet" href="../css/style.css?v=5" />
   <link rel="stylesheet" href="../css/notes.css?v=5" />
@@ -107,18 +107,18 @@
         
         <figure>
           <img src="images/jsd_temporal.png" alt="JS Divergence across layers" loading="lazy">
-          <figcaption>Layer-wise JS divergence between Qwen 2.5 Base and Instruct on 400 matched prompts. The models compute virtually identically for the first 20+ layers — the distributions only split decisively at layers 25–27. SFT is a <em>late-layer override</em>, not a whole-network rewrite.</figcaption>
+          <figcaption>Layer-wise JS divergence between Qwen 2.5 Base and Instruct on 400 matched prompts. The models compute virtually identically for the first 20+ layers, the distributions only split decisively at layers 25 to 27. SFT is a <em>late-layer override</em>, not a whole-network rewrite.</figcaption>
         </figure>
 
         <figure>
           <img src="images/jsd_stratified.png" alt="JS Divergence stratified by domain" loading="lazy">
-          <figcaption>JSD split by domain. Code and Reasoning diverge most sharply in the late layers; Creative Writing barely diverges at all — consistent with the idea that SFT primarily changes how structured outputs are assembled, not general language generation.</figcaption>
+          <figcaption>JSD split by domain. Code and Reasoning diverge most sharply in the late layers; Creative Writing barely diverges at all, consistent with the idea that SFT primarily changes how structured outputs are assembled, not general language generation.</figcaption>
         </figure>
 
     <p><strong>CKA</strong> let me compare the geometry of the two latent spaces directly, across all 28 layers on 500 prompts.</p>
         <figure>
           <img src="images/cka_temporal.png" alt="CKA similarity across layers" loading="lazy">
-          <figcaption>CKA similarity stays above 0.9 for the vast majority of the forward pass — the latent spaces are geometrically almost identical. The one exception: Reasoning shows a distinct dip in the middle layers before recovering. Instruct uses the same conceptual representations as Base; it just does something different with them at the very end.</figcaption>
+          <figcaption>CKA similarity stays above 0.9 for the vast majority of the forward pass, the latent spaces are geometrically almost identical. The one exception: Reasoning shows a distinct dip in the middle layers before recovering. Instruct uses the same conceptual representations as Base; it just does something different with them at the very end.</figcaption>
         </figure>
 
         <figure>
@@ -132,13 +132,13 @@
     <p>I used the <strong>logit lens</strong> by taking the residual stream at an early layer and multiplying it against the final unembedding matrix, showing what the model would predict if the network stopped right there.</p>
         <figure>
           <img src="images/fig_logit_lens_v2.png" alt="Logit Lens Comparison" loading="lazy">
-          <figcaption>Logit lens probability of the correct token at every layer for Base (left) vs Instruct (right). Base stays near-zero throughout — it never confidently commits to the answer. Instruct begins building probability mass as early as layers 3–5. Even though both models share the same mid-layer representations, the trajectory of evidence accumulation diverges from the very start.</figcaption>
+          <figcaption>Logit lens probability of the correct token at every layer for Base (left) vs Instruct (right). Base stays near-zero throughout, it never confidently commits to the answer. Instruct begins building probability mass as early as layers 3 to 5. Even though both models share the same mid-layer representations, the trajectory of evidence accumulation diverges from the very start.</figcaption>
         </figure>
 
     <p>I used <strong>Direct Logit Attribution (DLA)</strong> to measure the effect of each individual component on the final probability of the correct token.</p>
         <figure>
           <img src="images/fig_component_dla_v2.png" alt="DLA by Component" loading="lazy">
-          <figcaption>DLA decomposed by component (attention heads vs MLPs) across all layers. Attention heads contribute very little directly. The decisive action happens in the last few MLPs — layers 25–27. Notably, Base's early MLPs carry <em>negative</em> DLA: pretraining actively suppresses instruction-following, a bias that SFT has to actively neutralize.</figcaption>
+          <figcaption>DLA decomposed by component (attention heads vs MLPs) across all layers. Attention heads contribute very little directly. The decisive action happens in the last few MLPs, layers 25 to 27. Notably, Base's early MLPs carry <em>negative</em> DLA: pretraining actively suppresses instruction-following, a bias that SFT has to actively neutralize.</figcaption>
         </figure>
 
         <figure>
@@ -152,12 +152,12 @@
     <p>I ran <strong>activation patching</strong>, running Instruct but swapping specific attention heads with Base's heads:</p>
         <figure>
           <img src="images/exp2_layer_patching_local.png" alt="Activation Patching Results" loading="lazy">
-          <figcaption>Layer-wise activation patching result. Each bar shows how much Instruct's performance drops when that layer's activations are replaced with Base's. Swapping layer 27 heads 9 and 13 causes a substantial drop — causal evidence that these specific late-layer attention heads act as critical routing gates, not just passive relays.</figcaption>
+          <figcaption>Layer-wise activation patching result. Each bar shows how much Instruct's performance drops when that layer's activations are replaced with Base's. Swapping layer 27 heads 9 and 13 causes a substantial drop, causal evidence that these specific late-layer attention heads act as critical routing gates, not just passive relays.</figcaption>
         </figure>
 
         <figure>
           <img src="images/figure2_layer_importance.png" alt="Layer importance across domains" loading="lazy">
-          <figcaption>Layer importance broken down by domain. The critical layer window (25–27) is consistent across Code and QA, but shifts slightly for Reasoning — further evidence that SFT doesn't install a single fixed routing layer, but a domain-dependent one.</figcaption>
+          <figcaption>Layer importance broken down by domain. The critical layer window (25 to 27) is consistent across Code and QA, but shifts slightly for Reasoning, further evidence that SFT doesn't install a single fixed routing layer, but a domain-dependent one.</figcaption>
         </figure>
 
     <h3 id="understanding_the_circuit">Understanding the Circuit</h3>
@@ -167,7 +167,7 @@
 
         <figure>
           <img src="images/steering_curve.png" alt="Feature steering curve" loading="lazy">
-          <figcaption>Steering curve: as F106128 clamping strength increases in Base, instruction-following behavior emerges. The relationship is smooth and monotonic, not a threshold jump — this feature acts more like a dial than a switch.</figcaption>
+          <figcaption>Steering curve: as F106128 clamping strength increases in Base, instruction-following behavior emerges. The relationship is smooth and monotonic, not a threshold jump, this feature acts more like a dial than a switch.</figcaption>
         </figure>
 
       <h3 id="circuit_discovery">Circuit Discovery</h3>
@@ -248,21 +248,21 @@
 
         <figure>
           <img src="images/exp1_trajectories_local.png" alt="Occupancy trajectories SFT vs RLVR" loading="lazy">
-          <figcaption>Layer-by-layer occupancy trajectories for SFT (blue) and RLVR (green). Both models reach ~50% occupancy by layer 5 — no early divergence. Then SFT decays back to ~25% by layer 15 and stays flat. RLVR maintains ~45% all the way to layer 30. RL is not deciding earlier than SFT; it's <em>holding onto what it already decided</em>.</figcaption>
+          <figcaption>Layer-by-layer occupancy trajectories for SFT (blue) and RLVR (green). Both models reach ~50% occupancy by layer 5, no early divergence. Then SFT decays back to ~25% by layer 15 and stays flat. RLVR maintains ~45% all the way to layer 30. RL is not deciding earlier than SFT; it's <em>holding onto what it already decided</em>.</figcaption>
         </figure>
 
     <p>This is where I ended up correcting something I had expected to just confirm. Both models reach roughly the same occupancy (~50%) by layer 5. No early divergence at all. They are doing the same thing early on. The split happens after. SFT's occupancy falls back to ~25% by layer 15 and stays there. RLVR holds ~45% all the way to layer 30.</p>
     <p>RL is not deciding earlier than SFT. Both models pass through the same success state early on. SFT lets it fade. RLVR does not.</p>
 
       <h3 id="causal_validation">Causal Validation</h3>
-    <p>I patched RLVR's layers 15–30 into SFT's forward pass, and also ran the reverse:</p>
+    <p>I patched RLVR's layers 15 to 30 into SFT's forward pass, and also ran the reverse:</p>
     <ul>
       <li>Patching RLVR into SFT rescued its occupancy by 18% (p ≈ 0.0026 after scaling to 200 pairs)</li>
       <li>Patching SFT into RLVR killed its retention by 19% (p ≈ 0.016)</li>
     </ul>
     <figure>
       <img src="images/evolution_patching_plot.png" alt="Block patching rescue/kill results" loading="lazy">
-      <figcaption>Block patching results across the two directions. Patching RLVR activations into SFT (rescue direction, positive bars) and patching SFT activations into RLVR (kill direction, negative bars). Both effects are statistically significant and bidirectional — a real causal finding, not an artifact of using different activations.</figcaption>
+      <figcaption>Block patching results across the two directions. Patching RLVR activations into SFT (rescue direction, positive bars) and patching SFT activations into RLVR (kill direction, negative bars). Both effects are statistically significant and bidirectional, a real causal finding, not an artifact of using different activations.</figcaption>
     </figure>
     <p>Before trusting this, I had to rule out the obvious objection, that swapping in any different activation would move the number. My first control was actually wrong (patching a prompt's own activation back is an identity operation). Redone properly, patching different same-label prompts within one model: messy, high variance, and the joint permutation test held. Both directions are real.</p>
 
@@ -273,18 +273,18 @@
 
       <h3 id="layer_16_real_signal">Layer 16: Real Signal</h3>
     <p>Redoing with a continuous metric, signed distance to the decision boundary, and patching each layer's individual attention and MLP contribution rather than the full layer output:
-    A real peak showed up at layer 16, distinguishable from every neighboring layer on both sides, in both directions. Splitting into attention and MLP at that layer: MLP dominates, by roughly 4–5×. The other 477 prompts (excluding the fragile 23) also peak at layer 16, roughly double the effect seen at neighboring layers. Real, broad-based signal.</p>
+    A real peak showed up at layer 16, distinguishable from every neighboring layer on both sides, in both directions. Splitting into attention and MLP at that layer: MLP dominates, by roughly 4 to 5×. The other 477 prompts (excluding the fragile 23) also peak at layer 16, roughly double the effect seen at neighboring layers. Real, broad-based signal.</p>
 
         <figure>
           <img src="images/exp345_heatmaps.png" alt="Layer 16 localization heatmaps" loading="lazy">
-          <figcaption>Localization heatmaps across layers 12–24 using signed distance metric, split by domain (Math, Code, QA). Layer 16 shows a clear peak in all three domains for MLP contributions. The attention contribution at every layer is roughly one-fifth of the MLP. Each layer individually contributes a real amount — but summing them gives roughly 3× the block-patching effect, revealing substantial inter-layer redundancy.</figcaption>
+          <figcaption>Localization heatmaps across layers 12 to 24 using signed distance metric, split by domain (Math, Code, QA). Layer 16 shows a clear peak in all three domains for MLP contributions. The attention contribution at every layer is roughly one-fifth of the MLP. Each layer individually contributes a real amount, but summing them gives roughly 3× the block-patching effect, revealing substantial inter-layer redundancy.</figcaption>
         </figure>
 
-    <p>One more thing fell out of this unexpectedly: summing every individual layer's delta contribution across the whole 15–30 range gives something close to three times the effect you get patching all those layers together as a block. The layers are substantially compensating for each other, a second independent line of evidence for the redundancy the original repo's knockout experiments already pointed at. A layer can be the single largest individual contributor without being necessary for the final binary outcome, because everything else compensates when it is missing.</p>
+    <p>One more thing fell out of this unexpectedly: summing every individual layer's delta contribution across the whole 15 to 30 range gives something close to three times the effect you get patching all those layers together as a block. The layers are substantially compensating for each other, a second independent line of evidence for the redundancy the original repo's knockout experiments already pointed at. A layer can be the single largest individual contributor without being necessary for the final binary outcome, because everything else compensates when it is missing.</p>
 
       <h3 id="frontier_prompts">Frontier Prompts</h3>
     <p>I restricted path patching to cases where RLVR gets it right and SFT does not:</p>
-    <p>Patching RLVR's early layers into SFT only rescued these to 37–45%, well below the ~90% recovery you get on prompts both models already solve. Patching SFT into RLVR on these dropped it to 49–65%. If RLVR was only improving late-layer routing, these frontier prompts should behave like everything else. They did not. RLVR's uniquely correct examples seem to depend on more of the network, both early and late, than the shared cases. Treat this as a hypothesis worth testing, not a settled conclusion.</p>
+    <p>Patching RLVR's early layers into SFT only rescued these to 37 to 45%, well below the ~90% recovery you get on prompts both models already solve. Patching SFT into RLVR on these dropped it to 49 to 65%. If RLVR was only improving late-layer routing, these frontier prompts should behave like everything else. They did not. RLVR's uniquely correct examples seem to depend on more of the network, both early and late, than the shared cases. Treat this as a hypothesis worth testing, not a settled conclusion.</p>
 
       <h3 id="domain_breakdown">Domain Breakdown</h3>
     <p>I split the labeled set into three domains:</p>
