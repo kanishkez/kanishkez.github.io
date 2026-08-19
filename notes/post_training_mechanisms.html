@@ -218,14 +218,15 @@
         <figure>
           <img src="images/evolution_cka_plot.png" alt="CKA across post-training lineage" loading="lazy">
           <figcaption>CKA similarity across the full post-training lineage (Base → SFT → DPO → RLVR). Each step in the lineage barely moves the geometry. The SFT → DPO step shows the largest shift, but even that stays above 0.99 at every layer. RLVR is almost invisible in weight space.</figcaption>
+        </figure>
       <h3 id="sae_feature_churn">SAE Feature Churn</h3>
     <p>Since the weights barely moved, I checked if the actual computation did. I loaded SAEs onto the residual stream and measured feature churn between SFT and RLVR on the exact same inputs.</p>
     <p>At Layer 23, the Jaccard distance between active features is 42.8%. By Layer 29, it's 54.0%. Half the active features are completely swapped out despite the models looking almost identical in weight space.</p>
-    <p>RLVR isn't just scaling up SFT's features, either. The mean magnitude ratio of active features is basically 1.0 (0.990 at L23, 0.999 at L29). But looking at the <em>shared</em> features—the ones active in both models—their magnitude correlation is only 0.795 at L23, and drops to 0.663 at L29. RLVR doesn't just swap which features fire. Even when both models use the exact same feature, RLVR changes how hard it fires.</p>
+    <p>RLVR isn't just scaling up SFT's features, either. The mean magnitude ratio of active features is basically 1.0 (0.990 at L23, 0.999 at L29). But looking at the <em>shared</em> features, the ones active in both models, their magnitude correlation is only 0.795 at L23, and drops to 0.663 at L29. RLVR doesn't just swap which features fire. Even when both models use the exact same feature, RLVR changes how hard it fires.</p>
 
       <h3 id="dpo_vs_rlvr_circuits">How Different Are DPO and RLVR?</h3>
     <p>The weight and feature analysis above compares SFT to RLVR. But there is an intermediate step: DPO. I checked whether DPO→RLVR is a real transition or just noise.</p>
-    <p>Top-100 circuit Jaccard overlap: SFT↔DPO = 56.3%, DPO↔RLVR = 83.5%. Global attribution rank correlation (Spearman across all 1,056 components): SFT↔DPO = 0.843, DPO↔RLVR = 0.987. Logit JSD on the same prompts: SFT↔DPO = 0.0201, DPO↔RLVR = 0.00176, 11× smaller.</p>
+    <p>Top 100 circuit Jaccard overlap: SFT↔DPO = 56.3%, DPO↔RLVR = 83.5%. Global attribution rank correlation (Spearman across all 1,056 components): SFT↔DPO = 0.843, DPO↔RLVR = 0.987. Logit JSD on the same prompts: SFT↔DPO = 0.0201, DPO↔RLVR = 0.00176, 11× smaller.</p>
     <p>Activation cosine between DPO and RLVR never drops below 0.977 at any layer. SFT↔DPO drops to 0.817 by layer 31.</p>
     <p>DPO uses offline pairwise preferences with KL regularization. RLVR uses online trajectory rollouts with a verifiable reward signal. Completely different training loops, almost the same internal circuit. The transition that actually reshapes the model is SFT→DPO. What RLVR adds on top is close to a rounding error on the geometry, which makes the feature churn numbers above even stranger: something is clearly changing at the computation level even if the circuit topology stays fixed.</p>
 
