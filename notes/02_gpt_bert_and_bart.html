@@ -1,3 +1,6 @@
+---
+permalink: /notes/02_gpt_bert_and_bart/
+---
 <!doctype html>
 <html lang="en">
 <head>
@@ -5,9 +8,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>GPT BERT and BART — kanishk's notes</title>
   <meta name="description" content="GPT BERT and BART — Transformers & LLMs notes by kanishk" />
-  <link rel="icon" type="image/png" href="../assets/favicon.png" />
-  <link rel="stylesheet" href="../css/style.css?v=5" />
-  <link rel="stylesheet" href="../css/notes.css?v=5" />
+  <link rel="icon" type="image/png" href="/assets/favicon.png" />
+  <link rel="stylesheet" href="/css/style.css?v=5" />
+  <link rel="stylesheet" href="/css/notes.css?v=5" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous" />
 </head>
 <body>
@@ -16,7 +19,7 @@
 <!-- Top Floating Navigation Bar -->
 <header class="navbar">
   <div class="nav-container">
-    <a href="../index.html" class="nav-logo">kanishk</a>
+    <a href="/" class="nav-logo">kanishk</a>
     <nav class="nav-links">
       <a href="../index.html#home">Home</a>
       <a href="../index.html#projects">Projects</a>
@@ -67,7 +70,7 @@
         <h1 id="gpt_bert_and_bart">GPT BERT and BART</h1>
 <p>This note covers the evolution of three foundational Transformer architectures: GPT, BERT, and BART. We will look at how they differ in their attention mechanisms, training objectives, and whether they use encoder, decoder, or full sequence to sequence structures. Let&#39;s break down the details of pre training, fine tuning, and why each architecture is suited for specific tasks.</p>
 <h2 id="timeline">Timeline</h2>
-<figure><img src="images/Pasted%20image%2020251006115548.png" alt="image" loading="lazy"><figcaption>image</figcaption></figure>
+<figure><img src="/notes/images/Pasted%20image%2020251006115548.png" alt="image" loading="lazy"><figcaption>image</figcaption></figure>
 <h3 id="gpt">GPT</h3>
 <p>Generative Pre trained Transformer (see paper: <a href="https://cdn.openai.com/research-covers/language-unsupervised/language_understanding_paper.pdf">https://cdn.openai.com/research-covers/language-unsupervised/language_understanding_paper.pdf</a>)</p>
 <p>GPT is a <strong>decoder only transformer</strong> that is <strong>autoregressive</strong>. It predicts the next token in a sequence given all previous tokens. The key idea is to leverage <strong>unsupervised pre training</strong> on large corpora and then perform <strong>supervised fine tuning (SFT)</strong> on specific tasks such as question answering.</p>
@@ -215,8 +218,8 @@ It uses masked self attention and cross attention to decode the outputs and gene
       </div>
 
       <nav class="note-nav-bottom">
-        <a href="01_transformers.html" class="nav-prev"><span class="nav-label">Previous</span><span class="nav-title">← Transformers</span></a>
-        <a href="03_kv_caching.html" class="nav-next"><span class="nav-label">Next</span><span class="nav-title">KV Caching →</span></a>
+        <a href="/notes/01_transformers/" class="nav-prev"><span class="nav-label">Previous</span><span class="nav-title">← Transformers</span></a>
+        <a href="/notes/03_kv_caching/" class="nav-next"><span class="nav-label">Next</span><span class="nav-title">KV Caching →</span></a>
       </nav>
     </article>
   </main>

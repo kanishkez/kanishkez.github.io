@@ -1,3 +1,6 @@
+---
+permalink: /notes/introduction_to_reinforcement_learning/
+---
 <!doctype html>
 <html lang="en">
 <head>
@@ -5,9 +8,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Introduction to Reinforcement Learning — kanishk's notes</title>
   <meta name="description" content="Introduction to Reinforcement Learning — Reinforcement Learning notes by kanishk" />
-  <link rel="icon" type="image/png" href="../assets/favicon.png" />
-  <link rel="stylesheet" href="../css/style.css?v=5" />
-  <link rel="stylesheet" href="../css/notes.css?v=5" />
+  <link rel="icon" type="image/png" href="/assets/favicon.png" />
+  <link rel="stylesheet" href="/css/style.css?v=5" />
+  <link rel="stylesheet" href="/css/notes.css?v=5" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous" />
 </head>
 <body>
@@ -16,7 +19,7 @@
 <!-- Top Floating Navigation Bar -->
 <header class="navbar">
   <div class="nav-container">
-    <a href="../index.html" class="nav-logo">kanishk</a>
+    <a href="/" class="nav-logo">kanishk</a>
     <nav class="nav-links">
       <a href="../index.html#home">Home</a>
       <a href="../index.html#projects">Projects</a>
@@ -171,7 +174,7 @@ It is split based on the current reward and the future return.</p>
 <p>We expand these expectations over actions and transitions. Actions are chosen by the policy, and the next state is determined by the environment&#39;s transition dynamics.</p>
 <span class="math-display">$$V^\pi(s) = \sum_a \pi(a\mid s) \sum_{s'} P(s'\mid s,a) \Big[ R(s,a,s') + \gamma V^\pi(s') \Big]$$</span>
 So, the value is equal to the sum over all possible actions of the policy probability, times the sum over all possible next states of the transition probability, multiplied by the outcome value (the immediate reward plus the discounted value of the next state).</p>
-<figure><img src="images/Pasted%20image%2020251223133044.png" alt="image" loading="lazy"><figcaption>image</figcaption></figure>
+<figure><img src="/notes/images/Pasted%20image%2020251223133044.png" alt="image" loading="lazy"><figcaption>image</figcaption></figure>
 <p>The policy part gives us the probability of taking each action under the policy.</p>
 <p>The transition part describes the probability of transitioning to other states given the chosen action.</p>
 <p>The outcome value is the sum of the immediate reward and the discounted estimated value of the next state.</p>
@@ -251,7 +254,7 @@ It is like learning an overall strategy instead of just looking at the next best
 
       <nav class="note-nav-bottom">
         <span></span>
-        <a href="policy_gradient_theorem.html" class="nav-next"><span class="nav-label">Next</span><span class="nav-title">Policy Gradient Theorem →</span></a>
+        <a href="/notes/policy_gradient_theorem/" class="nav-next"><span class="nav-label">Next</span><span class="nav-title">Policy Gradient Theorem →</span></a>
       </nav>
     </article>
   </main>
