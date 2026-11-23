@@ -1,5 +1,5 @@
 /* ==========================================================================
-   NOTES — Blog-style Prose & KaTeX (Reversed Light Mint & White Design System)
+   NOTES — Blog-style Prose & KaTeX (sage notebook theme)
    ========================================================================== */
 
 /* ── Note Page Wrapper ──────────────────── */
@@ -61,7 +61,7 @@
   left: 0;
   width: 60px;
   height: 2px;
-  background: #2f5f9e;
+  background: var(--leaf);
 }
 
 .note-category-tag {
@@ -276,16 +276,16 @@
 .note-content blockquote {
   margin: 32px 0;
   padding: 20px 28px;
-  border-left: 3px solid #2f5f9e;
-  background: rgba(47, 95, 158, 0.04);
+  border-left: 3px solid var(--leaf);
+  background: rgba(61, 122, 38, 0.04);
   color: var(--dim);
   font-size: 15px;
   line-height: 1.75;
   border-radius: 0 12px 12px 0;
   border: 1px solid var(--line);
   border-left-width: 4px;
-  border-left-color: #2f5f9e;
-  box-shadow: 0 4px 15px rgba(10, 20, 34, 0.01);
+  border-left-color: var(--leaf);
+  box-shadow: 0 4px 15px rgba(30, 42, 27, 0.01);
 }
 
 .note-content blockquote p {
@@ -339,7 +339,7 @@
   border-radius: 16px;
   border: 1px solid var(--line);
   background: var(--tile);
-  box-shadow: 0 4px 20px rgba(10, 20, 34, 0.02);
+  box-shadow: 0 4px 20px rgba(30, 42, 27, 0.02);
 }
 
 .note-content table {
@@ -376,14 +376,14 @@
 }
 
 .note-content tbody tr:hover {
-  background: rgba(47, 95, 158, 0.04);
+  background: rgba(61, 122, 38, 0.04);
 }
 
 /* ── Horizontal Rules ───────────────────── */
 .note-content hr {
   border: none;
   height: 1px;
-  background: linear-gradient(90deg, var(--line-strong) 0%, rgba(47, 95, 158, 0.2) 50%, var(--line-strong) 100%);
+  background: linear-gradient(90deg, var(--line-strong) 0%, rgba(61, 122, 38, 0.2) 50%, var(--line-strong) 100%);
   margin: 48px auto;
   max-width: 120px;
 }
@@ -400,7 +400,7 @@
   border: 1px solid var(--line);
   background: var(--tile);
   padding: 12px;
-  box-shadow: 0 4px 20px rgba(10, 20, 34, 0.02);
+  box-shadow: 0 4px 20px rgba(30, 42, 27, 0.02);
 }
 
 .note-content figcaption {
@@ -428,7 +428,7 @@
   overflow-x: auto;
   overflow-y: hidden;
   text-align: center;
-  box-shadow: 0 4px 20px rgba(10, 20, 34, 0.02);
+  box-shadow: 0 4px 20px rgba(30, 42, 27, 0.02);
 }
 
 .note-content .math-inline {
@@ -456,7 +456,7 @@
 }
 
 .note-content .math-display::-webkit-scrollbar-thumb {
-  background: rgba(16, 45, 92, 0.15);
+  background: rgba(39, 83, 26, 0.15);
   border-radius: 2px;
 }
 
@@ -484,7 +484,7 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  box-shadow: 0 4px 20px rgba(10, 20, 34, 0.02);
+  box-shadow: 0 4px 20px rgba(30, 42, 27, 0.02);
 }
 
 .note-nav-bottom a.nav-next {
@@ -493,10 +493,10 @@
 }
 
 .note-nav-bottom a:hover {
-  border-color: rgba(47, 95, 158, 0.3);
-  background: rgba(47, 95, 158, 0.03);
+  border-color: rgba(61, 122, 38, 0.3);
+  background: rgba(61, 122, 38, 0.03);
   transform: translateY(-4px);
-  box-shadow: 0 20px 48px rgba(10, 20, 34, 0.06);
+  box-shadow: 0 20px 48px rgba(30, 42, 27, 0.06);
 }
 
 .note-nav-bottom .nav-label {
@@ -517,7 +517,7 @@
 }
 
 .note-nav-bottom a:hover .nav-title {
-  color: #2f5f9e;
+  color: var(--leaf);
 }
 
 /* ==========================================================================
@@ -530,12 +530,12 @@
   border-radius: 18px;
   overflow: hidden;
   transition: var(--transition);
-  box-shadow: 0 4px 20px rgba(10, 20, 34, 0.02);
+  box-shadow: 0 4px 20px rgba(30, 42, 27, 0.02);
 }
 
 .notes-category:hover {
   border-color: var(--acc-glow);
-  box-shadow: 0 24px 52px rgba(10, 20, 34, 0.06);
+  box-shadow: 0 24px 52px rgba(30, 42, 27, 0.06);
 }
 
 .notes-category-header {
@@ -679,12 +679,12 @@
   margin-bottom: 10px;
   transition: var(--transition);
   text-decoration: none;
-  box-shadow: 0 4px 20px rgba(10, 20, 34, 0.02);
+  box-shadow: 0 4px 20px rgba(30, 42, 27, 0.02);
 }
 
 .mini-note:hover {
   border-color: var(--acc-glow);
-  box-shadow: 0 20px 48px rgba(10, 20, 34, 0.06);
+  box-shadow: 0 20px 48px rgba(30, 42, 27, 0.06);
   transform: translateY(-2px);
 }
 
@@ -987,7 +987,7 @@
 
 .notes-category-header b {
   padding: 6px 10px;
-  border: 1px solid rgba(10, 20, 34, 0.2);
+  border: 1px solid rgba(30, 42, 27, 0.2);
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.24);
   color: var(--text);
@@ -1043,7 +1043,7 @@
   align-items: center;
   gap: 18px;
   padding: 14px 18px;
-  border: 1px solid rgba(10, 20, 34, 0.08);
+  border: 1px solid rgba(30, 42, 27, 0.08);
   border-left: 3px solid transparent;
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.18);
@@ -1053,11 +1053,11 @@
 }
 
 .note-link:hover {
-  background: rgba(205, 222, 247, 0.22);
-  border-left-color: #2f5f9e;
-  border-color: rgba(47, 95, 158, 0.2);
+  background: rgba(207, 230, 164, 0.22);
+  border-left-color: var(--leaf);
+  border-color: rgba(61, 122, 38, 0.2);
   transform: translateX(4px);
-  box-shadow: 0 2px 12px rgba(16, 45, 92, 0.06);
+  box-shadow: 0 2px 12px rgba(39, 83, 26, 0.06);
 }
 
 .note-link-title {
@@ -1070,7 +1070,7 @@
 }
 
 .note-link:hover .note-link-title {
-  color: #2f5f9e;
+  color: var(--leaf);
 }
 
 .note-link-arrow {
@@ -1085,7 +1085,7 @@
 
 .note-link:hover .note-link-arrow {
   opacity: 1;
-  color: #2f5f9e;
+  color: var(--leaf);
   transform: translateX(3px);
 }
 
@@ -1098,7 +1098,7 @@
 
 /* ===== note readability overhaul ===== */
 body{
- color:#101d30 !important;
+ color:#1e2a1b !important;
 }
 
 .note-content,
@@ -1106,7 +1106,7 @@ body{
 .note-content li,
 .note-content ul,
 .note-content ol{
- color:#1e3350 !important;
+ color:#2b3a27 !important;
  opacity:1 !important;
 }
 
@@ -1143,12 +1143,12 @@ body{
 
 .katex,
 .katex *{
- color:#0a1422 !important;
+ color:var(--ink) !important;
  opacity:1 !important;
 }
 
 mjx-container{
-  color:#0a1422 !important;
+  color:var(--ink) !important;
 }
 
 /* ── Reading progress bar ─────────────── */
@@ -1158,7 +1158,7 @@ mjx-container{
   left: 0;
   width: 0%;
   height: 2px;
-  background: linear-gradient(90deg, #2f5f9e, #5b8fd9);
+  background: linear-gradient(90deg, var(--leaf), #6aa84a);
   z-index: 9999;
   transition: width 50ms linear;
   border-radius: 0 1px 1px 0;
@@ -1172,11 +1172,11 @@ mjx-container{
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  border: 1px solid rgba(10, 20, 34, 0.12);
-  background: rgba(231, 240, 251, 0.92);
+  border: 1px solid rgba(30, 42, 27, 0.12);
+  background: rgba(238, 242, 225, 0.92);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  color: #0a1422;
+  color: var(--ink);
   font-size: 16px;
   cursor: pointer;
   display: flex;
@@ -1187,7 +1187,7 @@ mjx-container{
   transition: opacity 300ms ease, transform 300ms ease, background 200ms ease;
   pointer-events: none;
   z-index: 999;
-  box-shadow: 0 4px 16px rgba(16, 45, 92, 0.08);
+  box-shadow: 0 4px 16px rgba(39, 83, 26, 0.08);
 }
 
 .scroll-top-btn.visible {
@@ -1197,8 +1197,8 @@ mjx-container{
 }
 
 .scroll-top-btn:hover {
-  background: rgba(47, 95, 158, 0.1);
-  border-color: rgba(47, 95, 158, 0.3);
+  background: rgba(61, 122, 38, 0.1);
+  border-color: rgba(61, 122, 38, 0.3);
 }
 
 /* ── Heading anchor highlight on scroll ── */
@@ -1209,7 +1209,7 @@ mjx-container{
 
 /* ── Selection color ─────────────────── */
 .note-content ::selection {
-  background: rgba(47, 95, 158, 0.15);
+  background: rgba(61, 122, 38, 0.15);
   color: inherit;
 }
 
@@ -1220,7 +1220,7 @@ mjx-container{
 
 .note-content img:hover {
   transform: scale(1.01);
-  box-shadow: 0 8px 32px rgba(16, 45, 92, 0.08);
+  box-shadow: 0 8px 32px rgba(39, 83, 26, 0.08);
 }
 
 /* ── Inline code polish ───────────────── */
@@ -1229,5 +1229,5 @@ mjx-container{
 }
 
 .note-content :not(pre) > code:hover {
-  background: rgba(47, 95, 158, 0.06);
+  background: rgba(61, 122, 38, 0.06);
 }

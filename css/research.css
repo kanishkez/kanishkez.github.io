@@ -1,0 +1,67 @@
+/* research write-ups, e.g. /research/safeswitch/ */
+
+.paper {
+  width: min(680px, calc(100% - 40px));
+  margin: 0 auto;
+  padding: 56px 0 90px;
+}
+
+.paper h1 { margin: 0 0 14px; font-size: 36px; line-height: 1.12; font-weight: 500; letter-spacing: -0.015em; }
+.dek { margin: 0 0 14px; font-size: 20px; color: var(--ink-2); }
+
+.byline { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 15px; color: var(--ink-3); }
+
+.tldr { margin: 26px 0 0; padding: 12px 16px; border-left: 2px solid var(--leaf); background: var(--sprout-soft); }
+.tldr b { font-weight: 500; color: var(--leaf-deep); }
+
+.paper h2 { margin: 52px 0 12px; font-size: 24px; font-weight: 500; }
+.paper h3 { margin: 30px 0 6px; font-size: 19px; font-weight: 500; }
+.paper p, .paper li { font-size: 18.5px; line-height: 1.7; }
+.paper p { margin: 0 0 16px; }
+.paper ul, .paper ol { padding-left: 22px; margin: 0 0 18px; }
+.paper li { margin-bottom: 6px; }
+.paper li::marker { color: var(--leaf); }
+.paper strong { font-weight: 600; }
+.paper code { font-family: var(--font-mono); font-size: 0.8em; padding: 1px 4px; background: var(--paper-2); }
+
+.aside { margin: 24px 0; padding: 12px 16px; border-left: 2px solid var(--leaf); background: var(--sprout-soft); }
+.aside p:last-child { margin: 0; }
+
+.fig { margin: 30px 0; }
+.fig figcaption { margin-top: 12px; font-size: 15px; line-height: 1.5; color: var(--ink-2); }
+.fig figcaption b { font-weight: 500; color: var(--ink); }
+
+.bars { font-family: var(--font-mono); font-size: 12px; color: var(--ink-2); }
+.bars .legend { display: flex; gap: 16px; margin-bottom: 10px; color: var(--ink-3); font-size: 11.5px; }
+.bars .legend i { display: inline-block; width: 9px; height: 9px; margin-right: 5px; }
+.bars .g { display: grid; grid-template-columns: 130px 1fr; gap: 12px; align-items: center; padding: 7px 0; }
+.bars .pair { display: grid; gap: 3px; }
+.bars .b { position: relative; height: 12px; }
+.bars .b > div { height: 100%; }
+.bars .b > em { position: absolute; top: 0; right: 0; line-height: 12px; font-style: normal; font-size: 10.5px; color: var(--ink-2); }
+.c-base { background: #a9b39b; }
+.c-lb { background: #9cc77a; }
+.c-ss { background: var(--leaf); }
+
+.chart svg { width: 100%; height: auto; display: block; overflow: visible; }
+.chart text { font-family: var(--font-mono); font-size: 11px; fill: var(--ink-3); }
+.chart .axis { stroke: var(--line-2); }
+.chart .grid { stroke: var(--line); stroke-dasharray: 2 4; }
+
+.table-scroll { overflow-x: auto; margin: 22px 0; }
+.paper table { width: 100%; border-collapse: collapse; font-size: 15px; }
+.paper th, .paper td { padding: 7px 10px; text-align: right; border-bottom: 1px solid var(--line); white-space: nowrap; }
+.paper th { font-weight: 500; font-size: 13px; color: var(--ink-3); vertical-align: bottom; white-space: normal; }
+.paper th:first-child, .paper td:first-child { text-align: left; padding-left: 0; }
+.paper tr.win td { color: var(--leaf-deep); font-weight: 600; }
+.paper tr.dim td { color: var(--ink-3); }
+
+.lessons { padding-left: 22px; }
+
+.back { margin-top: 56px; padding-top: 16px; border-top: 1px solid var(--line); font-size: 16px; display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+
+@media (max-width: 600px) {
+  .paper h1 { font-size: 30px; }
+  .bars .g { grid-template-columns: 1fr; gap: 4px; }
+  .paper p, .paper li { font-size: 17.5px; }
+}

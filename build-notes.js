@@ -181,7 +181,7 @@ function cleanObsidianImages(md) {
 
   // Obsidian wiki-style image embeds: ![[filename]]
   md = md.replace(/!\[\[([^\]]+)\]\]/g, (match, filename) => {
-    return `![image](images/${encodeURIComponent(filename.trim())})`;
+    return `![image](/notes/images/${encodeURIComponent(filename.trim())})`;
   });
 
   return md;
@@ -400,41 +400,35 @@ function generateNotePage(note, category, prev, next) {
     : '';
 
   const prevLink = prev
-    ? `<a href="${prev.slug}.html" class="nav-prev"><span class="nav-label">Previous</span><span class="nav-title">← ${prev.title}</span></a>`
+    ? `<a href="/notes/${prev.slug}/" class="nav-prev"><span class="nav-label">Previous</span><span class="nav-title">← ${prev.title}</span></a>`
     : '<span></span>';
   const nextLink = next
-    ? `<a href="${next.slug}.html" class="nav-next"><span class="nav-label">Next</span><span class="nav-title">${next.title} →</span></a>`
+    ? `<a href="/notes/${next.slug}/" class="nav-next"><span class="nav-label">Next</span><span class="nav-title">${next.title} →</span></a>`
     : '<span></span>';
 
   return `<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
+  <meta name="theme-color" content="#eef2e1" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>${note.title} — kanishk's notes</title>
   <meta name="description" content="${note.title} — ${category.title} notes by kanishk" />
-  <link rel="icon" type="image/png" href="../assets/favicon.png" />
-  <link rel="stylesheet" href="../css/style.css?v=5" />
-  <link rel="stylesheet" href="../css/notes.css?v=5" />
+  <link rel="icon" type="image/png" href="/assets/favicon.png" />
+  <link rel="stylesheet" href="/css/style.css?v=10" />
+  <link rel="stylesheet" href="/css/notes.css?v=10" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous" />
 </head>
 <body>
-<canvas id="ambient-canvas"></canvas>
- 
-<!-- Top Floating Navigation Bar -->
 <header class="navbar">
   <div class="nav-container">
-    <a href="../index.html" class="nav-logo">kanishk</a>
+    <a href="/" class="nav-logo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21v-8"/><path d="M12 13c0-4 3-7 8-7 0 5-3 8-8 7Z"/><path d="M12 15c0-3-2.5-5.5-7-5.5 0 4 2.5 6 7 5.5Z"/></svg><span>kanishk</span></a>
     <nav class="nav-links">
-      <a href="../index.html#home">Home</a>
-      <a href="../index.html#projects">Projects</a>
-      <a href="../index.html#blogs">Blogs</a>
-      <a href="../index.html#notes" class="active">Notes</a>
+      <a href="/#research">research</a>
+      <a href="/#projects">projects</a>
+      <a href="/#blogs" class="opt">blogs</a>
+      <a href="/#notes" class="active">notes</a>
     </nav>
-    <div class="nav-socials">
-      <a href="https://github.com/kanishkez" target="_blank" rel="noopener">GitHub</a>
-      <a href="https://huggingface.co/kanishkez" target="_blank" rel="noopener">HuggingFace</a>
-    </div>
   </div>
 </header>
  
@@ -442,9 +436,9 @@ function generateNotePage(note, category, prev, next) {
   <main class="main-content">
     <article class="note-page">
       <div class="note-breadcrumb">
-        <a href="../index.html#notes">Notes</a>
+        <a href="/#notes">Notes</a>
         <span class="breadcrumb-sep">›</span>
-        <a href="../index.html#notes">${category.title}</a>
+        <a href="/#notes">${category.title}</a>
         <span class="breadcrumb-sep">›</span>
         <span>${note.title}</span>
       </div>
@@ -664,7 +658,8 @@ function build() {
         i > 0 ? notes[i - 1] : null,
         i < notes.length - 1 ? notes[i + 1] : null
       );
-      fs.writeFileSync(path.join(OUTPUT_DIR, `${notes[i].slug}.html`), page, 'utf-8');
+      fs.mkdirSync(path.join(OUTPUT_DIR, notes[i].slug), { recursive: true });
+      fs.writeFileSync(path.join(OUTPUT_DIR, notes[i].slug, 'index.html'), page, 'utf-8');
     }
 
     allCategories.push({

@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#eef2e1" />
+  <title>SafeSwitch · Kanishk Kulkarni</title>
+  <meta name="description" content="Tiny Aya Fire refuses 76% of harmful requests in English but about 21% in Romanized Hindi and Hinglish. SafeSwitch LoRA closes most of that gap, and activation patching shows where it comes from." />
+  <link rel="icon" type="image/png" href="/assets/favicon.png" />
+  <link rel="stylesheet" href="/css/style.css?v=13" />
+  <link rel="stylesheet" href="/css/research.css?v=13" />
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="bar">
+      <nav aria-label="Sections">
+        <a href="/#research" class="active">research</a>
+        <a href="/#projects">projects</a>
+        <a href="/#blogs">blogs</a>
+        <a href="/#notes">notes</a>
+      </nav>
+    </div>
+  </header>
+
+  <article class="paper">
+
+    <h1>When typing Hindi in English letters becomes a jailbreak</h1>
+    <p class="dek">Auditing and fixing code-mixed Hindi safety in Tiny Aya Fire: a LoRA adapter that closes most of the gap, and a look inside the model at why the gap exists at all.</p>
+
+    <div class="byline">
+      <span>nov 2026</span>
+      <span>solo project</span>
+      <span>CohereLabs/tiny-aya-fire, 3.35B</span>
+      <a href="https://github.com/kanishkez/safeswitch" target="_blank" rel="noopener">code ↗</a>
+      <a href="https://huggingface.co/kanishkez/safeswitch-lora" target="_blank" rel="noopener">adapter ↗</a>
+      <a href="https://huggingface.co/datasets/kanishkez/safeswitch-eval" target="_blank" rel="noopener">eval data ↗</a>
+    </div>
+
+    <p class="tldr">Refusal of harmful requests in Romanized Hindi and Hinglish goes from <b>21.4% to 76.2%</b>. Attack success drops from 23.8% to 8.6%. MMLU doesn't move (55.3% → 56.0%).</p>
+
+    <h2>The problem</h2>
+    <p>Hundreds of millions of people type Hindi in Latin script. Sometimes it's Romanized Hindi (<i>"mujhe batao kaise..."</i>), sometimes it's Hinglish, which mixes Hindi and English mid-sentence. That's how most people actually text.</p>
+    <p>Tiny Aya Fire refuses 76% of harmful requests in English. Ask the same thing in Romanized Hindi or Hinglish and it refuses about 21%. No clever prompt, no jailbreak template. Just switching scripts is enough, which makes the script itself a free bypass for exactly the users these small multilingual models get deployed to.</p>
+    <p>So I asked two questions. Does the model refuse equally across all four forms (English, Devanagari Hindi, Romanized Hindi, Hinglish)? And can something cheap close the gap without making the model refuse harmless questions?</p>
+
+    <figure class="fig">
+      <div class="bars" role="img" aria-label="Harmful-request refusal by language form for the base model, an earlier LoRA baseline, and SafeSwitch LoRA. English 76, 80, 85. Hindi 56, 78, 81. Romanized Hindi 21, 53, 73. Hinglish 22, 61, 79 percent.">
+        <div class="legend"><span><i class="c-base"></i>base</span><span><i class="c-lb"></i>LoRA baseline</span><span><i class="c-ss"></i>SafeSwitch LoRA</span></div>
+        <div class="g"><span>English</span><div class="pair">
+          <div class="b"><div class="c-base" style="width:76.4%"></div><em>76.4</em></div>
+          <div class="b"><div class="c-lb" style="width:79.8%"></div><em>79.8</em></div>
+          <div class="b"><div class="c-ss" style="width:85.1%"></div><em>85.1</em></div>
+        </div></div>
+        <div class="g"><span>Hindi (Devanagari)</span><div class="pair">
+          <div class="b"><div class="c-base" style="width:56.2%"></div><em>56.2</em></div>
+          <div class="b"><div class="c-lb" style="width:77.9%"></div><em>77.9</em></div>
+          <div class="b"><div class="c-ss" style="width:80.8%"></div><em>80.8</em></div>
+        </div></div>
+        <div class="g"><span>Romanized Hindi</span><div class="pair">
+          <div class="b"><div class="c-base" style="width:21.1%"></div><em>21.1</em></div>
+          <div class="b"><div class="c-lb" style="width:53.4%"></div><em>53.4</em></div>
+          <div class="b"><div class="c-ss" style="width:73.1%"></div><em>73.1</em></div>
+        </div></div>
+        <div class="g"><span>Hinglish</span><div class="pair">
+          <div class="b"><div class="c-base" style="width:21.6%"></div><em>21.6</em></div>
+          <div class="b"><div class="c-lb" style="width:60.6%"></div><em>60.6</em></div>
+          <div class="b"><div class="c-ss" style="width:79.3%"></div><em>79.3</em></div>
+        </div></div>
+      </div>
+      <figcaption><b>fig. 1</b> Refusal of harmful requests (%) by form, on a fresh pre-registered test set evaluated exactly once. The Latin-script forms are where the base model falls apart, and where SafeSwitch gains the most.</figcaption>
+    </figure>
+
+    <h2>What I did</h2>
+    <p>The threat model is deliberately boring: a regular user sends a direct harmful request in one of the four forms. The only "attack" is asking again. Cost-to-break is how many tries it takes to get one harmful reply.</p>
+    <ol>
+      <li><strong>Built a fresh test set from scratch.</strong> 128 scenarios (52 harmful, 38 ordinary, 38 scary-but-benign) in all four forms, 512 prompts. Harmful items come from native-speaker red-teaming data; missing forms were written by Sarvam-M the way people type in chat apps, not letter-by-letter transliteration. Zero overlap with anything else in the project on exact, normalized and embedding checks, then committed by SHA-256 before any generation.</li>
+      <li><strong>Pre-registered the analysis.</strong> Two hypotheses and the guardrails were written down before the test set was ever run.</li>
+      <li><strong>Scored with a judge panel, not keywords.</strong> Qwen3Guard, Llama Guard 3, PolyGuard and a refined lexical matcher, checked against 78 outputs I labelled by hand, blind to condition.</li>
+      <li><strong>Compared three fixes:</strong> a prompt scaffold, probe-gated activation steering, and LoRA fine-tuning.</li>
+    </ol>
+    <p>The winner, <strong>SafeSwitch LoRA</strong>, is r = 16 on all linear layers, trained with completion-only loss on 618 pairs, 68% of them Romanized Hindi or Hinglish. The pairs are in-language refusals plus the base model's own helpful answers, filtered by the judge panel and CuratorKIT. Checkpoint chosen on validation only (step 150 of 200). Training took 8.3 minutes on one GPU.</p>
+
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr><th>arm</th><th>harmful refusal ↑</th><th>refusal, latin script ↑</th><th>attack success ↓</th><th>broken in 4 tries ↓</th><th>helpfulness ↑</th><th>scary false refusal ↓</th></tr>
+        </thead>
+        <tbody>
+          <tr class="dim"><td>base</td><td>43.9%</td><td>21.4%</td><td>23.8%</td><td>43.8%</td><td>91.5%</td><td>4.3%</td></tr>
+          <tr><td>prompt scaffold</td><td>59.9%</td><td>45.4%</td><td>13.5%</td><td>33.7%</td><td>92.4%</td><td>10.9%</td></tr>
+          <tr><td>base + gated steering</td><td>55.6%</td><td>26.4%</td><td>26.8%</td><td>49.5%</td><td>91.5%</td><td>4.3%</td></tr>
+          <tr><td>LoRA baseline</td><td>67.9%</td><td>57.0%</td><td>12.7%</td><td>26.4%</td><td>98.5%</td><td>8.4%</td></tr>
+          <tr class="win"><td>SafeSwitch LoRA</td><td>79.6%</td><td>76.2%</td><td>8.6%</td><td>16.4%</td><td>96.9%</td><td>10.7%</td></tr>
+          <tr><td>SafeSwitch + scaffold</td><td>92.3%</td><td>93.0%</td><td>1.4%</td><td>3.4%</td><td>98.4%</td><td>34.7%</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>Both pre-registered hypotheses held. Against the base model, harmful refusal goes up <strong>+35.7 points [+29.7, +41.6]</strong>. Against the earlier LoRA baseline (same recipe, less Latin-script data), Latin-script refusal goes up <strong>+19.2 [+13.0, +25.7]</strong>. Helpfulness actually rose, and MMLU didn't move. A second training run with the same recipe agrees with the first within the CIs at every checkpoint.</p>
+    <p>One guardrail missed: false refusal on scary-but-benign prompts landed at 10.7% against a 10% target. Stacking the prompt scaffold on top pushes refusal to 92% but over-refuses badly (34.7%), so that combination isn't the answer either.</p>
+
+    <h2>Why the gap exists</h2>
+    <p>This was the part I actually cared about. Steering barely helped (+5 points on Latin-script refusal, with more loops and more judged harm), and I wanted to know why fine-tuning worked when steering didn't.</p>
+
+    <h3>The model sees the harm</h3>
+    <p>A logistic probe trained on <em>English</em> activations at layer 16 separates harmful from benign prompts in Romanized Hindi with AUC 0.992, and in Hinglish with 0.988. So the problem isn't that the model fails to understand the request. It recognises harm and then just doesn't act on it.</p>
+
+    <h3>It never builds the "refuse" state</h3>
+    <p>I patched the last-token activations from the English version of a prompt into its Romanized Hindi version, one layer at a time, and measured how much of the refusal gap that closes.</p>
+
+    <figure class="fig chart">
+      <svg viewBox="0 0 690 252" role="img" aria-label="Share of the refusal gap recovered by patching English activations into Romanized Hindi prompts, by layer. With a harmful English donor, recovery rises from about 0.2 at layer 13 to 0.62 at layer 20 and jumps to 0.92 at layer 22. With a benign English donor it stays below 0.35 throughout.">
+        <rect x="275.2" y="12" width="134.4" height="200" fill="rgba(185,220,125,0.35)" />
+        <line class="grid" x1="40" y1="12" x2="628" y2="12" />
+        <line class="grid" x1="40" y1="112" x2="628" y2="112" />
+        <line class="axis" x1="40" y1="212" x2="628" y2="212" />
+        <text x="32" y="16" text-anchor="end">1.0</text>
+        <text x="32" y="116" text-anchor="end">0.5</text>
+        <text x="32" y="216" text-anchor="end">0</text>
+        <text x="40" y="232" text-anchor="middle">0</text>
+        <text x="275.2" y="232" text-anchor="middle">14</text>
+        <text x="409.6" y="232" text-anchor="middle">22</text>
+        <text x="628" y="232" text-anchor="middle">35</text>
+        <text x="334" y="248" text-anchor="middle">layer patched</text>
+        <text x="342.4" y="28" text-anchor="middle" style="fill:var(--leaf-deep)">layers 14–22</text>
+        <polyline fill="none" stroke="#9aa58b" stroke-width="2" stroke-dasharray="5 4" stroke-linejoin="round" points="40.0,212.0 56.8,212.0 73.6,210.0 90.4,198.0 107.2,196.0 124.0,196.0 140.8,194.0 157.6,192.0 174.4,194.0 191.2,192.0 208.0,194.0 224.8,192.0 241.6,176.0 258.4,180.0 275.2,186.0 292.0,176.0 308.8,188.0 325.6,200.0 342.4,200.0 359.2,198.0 376.0,206.0 392.8,206.0 409.6,160.0 426.4,158.0 443.2,160.0 460.0,162.0 476.8,166.0 493.6,160.0 510.4,160.0 527.2,158.0 544.0,150.0 560.8,148.0 577.6,148.0 594.4,150.0 611.2,146.0 628.0,144.0" />
+        <polyline fill="none" stroke="#3d7a26" stroke-width="2.6" stroke-linejoin="round" points="40.0,212.0 56.8,212.0 73.6,212.0 90.4,200.0 107.2,196.0 124.0,196.0 140.8,194.0 157.6,192.0 174.4,194.0 191.2,194.0 208.0,186.0 224.8,186.0 241.6,174.0 258.4,170.0 275.2,146.0 292.0,138.0 308.8,114.0 325.6,112.0 342.4,110.0 359.2,104.0 376.0,88.0 392.8,88.0 409.6,28.0 426.4,26.0 443.2,24.0 460.0,24.0 476.8,24.0 493.6,20.0 510.4,20.0 527.2,18.0 544.0,14.0 560.8,14.0 577.6,14.0 594.4,16.0 611.2,14.0 628.0,12.0" />
+        <circle cx="409.6" cy="28" r="3.5" fill="#3d7a26" />
+        <text x="418" y="50" style="fill:var(--leaf-deep)">0.92 at layer 22</text>
+        <text x="634" y="16" style="fill:var(--leaf-deep)">harmful</text>
+        <text x="634" y="148">benign</text>
+      </svg>
+      <figcaption><b>fig. 2</b> Share of the Romanized Hindi refusal gap closed by patching in English activations, per layer. With a harmful English donor (green) recovery climbs through layers 14 to 22. A benign English donor (dashed) barely helps, so what's missing is specifically a "this is harmful, refuse" signal. A <em>different</em> harmful request works just as well as the same one. Late-layer recovery near 1 is partly trivial, since patching there mostly sets the next token directly.</figcaption>
+    </figure>
+
+    <p>Two phases show up. In layers 3 to 13 a benign English donor helps as much as a harmful one, so the early signal is about language and format. From layer 14 a harm-specific signal appears: patching closes about 60% of the gap by layers 20–21 and over 90% at layer 22. Patching at the final layer lifts actual generated Romanized refusal from 5% to 85%.</p>
+    <p>Removing the English refusal direction from any single layer from 14 onward knocks English refusal down, while layers 0–12 and random directions do nothing. And with CircuitKIT attribution, one attention head, <code>A14.13</code>, shows up in the top refusal components for English, Romanized Hindi and Hinglish, at exactly the layer where refusal starts to matter.</p>
+
+    <div class="aside">
+      <p><strong>Putting it together:</strong> Latin-script prompts never reach the refusal state that English assembles between layers 14 and 22. Steering through a gate calibrated on English activations puts its threshold in the wrong place for Latin-script inputs. SafeSwitch trains the "recognise harm → refuse" conversion directly in Latin script, which is why it works.</p>
+    </div>
+
+    <h2>Things that changed the numbers</h2>
+    <p>Each of these moved a headline number at some point during development. If you're evaluating multilingual safety, I'd check all of them.</p>
+    <ul>
+      <li><span><strong>Turn the chat template on.</strong> Without it, Romanized and Hinglish replies loop 34–36% of the time. With it, 0–2%.</span></li>
+      <li><span><strong>Never default a judge parse failure to "safe".</strong> Qwen3Guard failed to parse 28% of baseline outputs on the first pass.</span></li>
+      <li><span><strong>Don't detect loops with compression ratios.</strong> Devanagari compresses so well that a zlib rule flags 73% of normal Hindi. N-gram detection agrees with my labels at κ = 0.82; the compression rule at −0.18.</span></li>
+      <li><span><strong>Score multiple choice by logits.</strong> Generative scoring put Hindi MMLU at 7%, below chance.</span></li>
+      <li><span><strong>Refusal needs a panel, not keywords.</strong> "Illegal" is usually topical, not a refusal. Qwen3Guard alone over-calls refusal (κ = 0.18 vs my labels).</span></li>
+      <li><span><strong>Don't truncate templated prompts.</strong> The chat template header is about 367 tokens, so a 256-token limit silently deletes the user's message.</span></li>
+      <li><span><strong>Check leakage on text and embeddings, not IDs.</strong> The same text can show up under different scenario IDs.</span></li>
+    </ul>
+
+    <h2>What I'd do with more compute</h2>
+    <ul>
+      <li>Every Latin-script test item is a machine translation. Native speakers writing a few hundred prompts would separate the effect of script from the effect of translation. (Hint that it matters: on native-written items the base model refuses 66%, on translated ones 21%.)</li>
+      <li>Double the scary-but-benign training pairs to get false refusal under 10%.</li>
+      <li>Add jailbreak-wrapped and multi-turn attacks, not just direct requests.</li>
+      <li>Ablate the adapter by layer band to check whether it really acts on layers 14–22 and head A14.13.</li>
+      <li>Merge the adapter. Unmerged, it serves at about half the base throughput.</li>
+    </ul>
+    <p>No raw harmful prompts or responses are released, only scenario IDs, scores, judge labels, code and the adapter.</p>
+
+    <h2>Links</h2>
+    <p><a href="https://github.com/kanishkez/safeswitch">code and full report</a> · <a href="https://huggingface.co/kanishkez/safeswitch-lora">safeswitch-lora</a> · <a href="https://huggingface.co/datasets/kanishkez/safeswitch-eval">safeswitch-eval</a></p>
+    <p>The pre-registration, the deviation log, per-finding reports and reproduction scripts are all in the repo. Built with CuratorKIT, SafeTune, CircuitKIT and AuditKIT, plus TRL and PEFT.</p>
+
+    <div class="back">
+      <a href="/#research">← back to research</a>
+      <a href="mailto:mkanishkkulkarni@gmail.com">questions? email me</a>
+    </div>
+  </article>
+
+</body>
+</html>

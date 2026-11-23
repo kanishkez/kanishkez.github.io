@@ -3,221 +3,140 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="theme-color" content="#dce9fb" />
+  <meta name="theme-color" content="#eef2e1" />
   <title>Kanishk Kulkarni</title>
+  <meta name="description" content="Kanishk Kulkarni: CS undergrad working on language models, reinforcement learning and interpretability." />
   <link rel="icon" type="image/png" href="assets/favicon.png" />
-  <link rel="stylesheet" href="css/style.css?v=8" />
-  <link rel="stylesheet" href="css/notes.css?v=8" />
+  <link rel="stylesheet" href="css/style.css?v=14" />
 </head>
 <body>
-  <canvas id="ambient-canvas" aria-hidden="true"></canvas>
 
   <header class="site-header">
-    <a class="identity" href="#home" onclick="navigate('home', event)">kanishk</a>
-    <nav class="primary-nav" aria-label="Primary">
-      <a href="#home" class="active" id="nav-home" onclick="navigate('home', event)">Home</a>
-      <a href="#projects" id="nav-projects" onclick="navigate('projects', event)">Projects</a>
-      <a href="#blogs" id="nav-blogs" onclick="navigate('blogs', event)">Blogs</a>
-      <a href="#notes" id="nav-notes" onclick="navigate('notes', event)">Notes</a>
-    </nav>
-    <nav class="header-links" aria-label="External">
-      <span>elsewhere:</span>
-      <a href="https://github.com/kanishkez" target="_blank" rel="noopener">GitHub</a>
-      <a href="https://huggingface.co/kanishkez" target="_blank" rel="noopener">HuggingFace</a>
-      <a href="https://kanishkk.substack.com" target="_blank" rel="noopener">Substack</a>
-      <a href="mailto:mkanishkkulkarni@gmail.com">Email</a>
-    </nav>
+    <div class="bar">
+      <nav aria-label="Sections">
+        <a href="#research">research</a>
+        <a href="#projects">projects</a>
+        <a href="#blogs">blogs</a>
+        <a href="#notes">notes</a>
+      </nav>
+      <div class="layer" id="layer" title="How far down the page you are, counted in Tiny Aya's 36 layers. SafeSwitch found refusal forming in layers 14–22.">
+        <span class="why">refusal forms here →</span>
+        <span class="ticks" aria-hidden="true"></span>
+        <span class="num">L00</span>
+      </div>
+    </div>
   </header>
 
-  <main class="site-shell">
-    <section id="home" class="section active">
-      <div class="orb-field" aria-hidden="true">
-        <div class="orb orb-1"></div>
-        <div class="orb orb-2"></div>
-        <div class="orb orb-3"></div>
-      </div>
-            <div class="intro">
-        <div class="intro-flex">
-          <div class="intro-text">
-            <p class="intro-line">I'm <span>kanishk</span>, an undergraduate student in computer science.</p>
-            <p class="lead">
-              I love working on LLMs and machine learning, making machines think using mathematics excites me a lot.
-            </p>
-            <p class="lead">
-              Currently exploring reinforcement learning, NLP, and computer vision. I like exploring rabbit holes about science, tech, and history.
-            </p>
-            <div class="hero-actions">
-              <a href="https://github.com/kanishkez" target="_blank" rel="noopener">GitHub</a>
-              <a href="https://huggingface.co/kanishkez" target="_blank" rel="noopener">HuggingFace</a>
-              <a href="https://kanishkk.substack.com" target="_blank" rel="noopener">Substack</a>
-              <a href="mailto:mkanishkkulkarni@gmail.com">Email</a>
-            </div>
-          </div>
-          <div class="intro-photo">
-            <img src="assets/profile.jpg" alt="Portrait illustration" loading="eager" />
-          </div>
+  <main class="page">
+
+    <section id="home" class="intro" style="margin-top:0">
+      <h1>Kanishk Kulkarni</h1>
+
+      <div class="intro-grid">
+        <div>
+          <p class="attn" id="attn">I'm an undergrad in computer science. I like making machines think with mathematics, which these days mostly means language models: training small ones from scratch, fine-tuning them, and opening them up to see what's actually going on inside.</p>
+          <ul class="btns">
+            <li><a href="https://github.com/kanishkez">github ↗</a></li>
+            <li><a href="https://huggingface.co/kanishkez">huggingface ↗</a></li>
+            <li><a href="https://kanishkk.substack.com">substack ↗</a></li>
+            <li><a href="mailto:mkanishkkulkarni@gmail.com">email</a></li>
+          </ul>
         </div>
-      </div></div>
-
-      <div class="home-grid">
-        <section class="index-list">
-          <div class="list-head">
-            <h2>Projects</h2>
-            <button onclick="navigateTo('projects')">see all →</button>
-          </div>
-          <article class="mini-item">
-            <h3>LoopedNanoGPT Experiments</h3>
-            <p>Investigating whether a single transformer block reused recurrently can substitute for N independent blocks.</p>
-            <div class="item-actions"><a href="https://github.com/kanishkez/LoopedNanoGPT-Experiments" target="_blank" rel="noopener">GitHub ↗</a></div>
-          </article>
-          <article class="mini-item">
-            <h3>PolyDB Context Graph Engine</h3>
-            <p>An API-first backend that gives LLMs structured context over databases.</p>
-            <div class="item-actions"><a href="https://github.com/kanishkez/PolyDB-Context-Graph-Engine" target="_blank" rel="noopener">GitHub ↗</a></div>
-          </article>
-          <article class="mini-item">
-            <h3>Can LLMs act as RL Agents?</h3>
-            <p>Using language models as pure policies across classic Gym environments.</p>
-            <div class="item-actions"><a href="https://kanishkk.substack.com/p/can-llms-solve-gym-environments" target="_blank" rel="noopener">Blog ↗</a><a href="https://github.com/kanishkez/LLMs-as-Gym-Agents" target="_blank" rel="noopener">GitHub ↗</a></div>
-          </article>
-          <article class="mini-item">
-            <h3>TinyLLM</h3>
-            <p>A decoder-only transformer built in pure PyTorch with modern LLM components.</p>
-            <div class="item-actions"><a href="https://github.com/kanishkez/TinyLLM" target="_blank" rel="noopener">GitHub ↗</a></div>
-          </article>
-          <article class="mini-item">
-            <h3>TinyPEFT</h3>
-            <p>A lightweight parameter-efficient fine-tuning engine for practical model adaptation.</p>
-            <div class="item-actions"><a href="https://github.com/kanishkez/TinyPEFT" target="_blank" rel="noopener">GitHub ↗</a></div>
-          </article>
-          <article class="mini-item">
-            <h3>Linesman, AI Referee</h3>
-            <p>A football VAR system combining computer vision with multimodal reasoning.</p>
-            <div class="item-actions"><a href="https://github.com/kanishkez/Linesman-AIReferee" target="_blank" rel="noopener">GitHub ↗</a></div>
-          </article>
-          <article class="mini-item">
-            <h3>KisanGPT</h3>
-            <p>A multilingual assistant for Indian farmers covering crops, markets, and disease diagnosis.</p>
-            <div class="item-actions"><a href="https://kisangpt-idgi.onrender.com" target="_blank" rel="noopener">Live ↗</a><a href="https://github.com/kanishkez/KisanGPT" target="_blank" rel="noopener">GitHub ↗</a></div>
-          </article>
-        </section>
-
-        <section class="index-list">
-          <div class="list-head">
-            <h2>Blogs</h2>
-            <button onclick="navigateTo('blogs')">see all →</button>
-          </div>
-          <article class="mini-item"><h3>What Post-Training Actually Changes: A Mechanistic Study</h3><p>A bottom-up investigation into how SFT, RLVR, and instruction following work inside language models.</p><div class="item-actions"><a href="notes/post_training_mechanisms/">read →</a><a href="https://github.com/kanishkez/MechInterp-Experiments" target="_blank" rel="noopener">GitHub ↗</a></div></article>
-          <article class="mini-item"><h3>An Intro to RL</h3><div class="item-actions"><a href="https://kanishkk.substack.com/p/an-intro-to-rl" target="_blank" rel="noopener">read ↗</a></div></article>
-          <article class="mini-item"><h3>Mixture of Experts Explained</h3><div class="item-actions"><a href="https://kanishkk.substack.com/p/mixture-of-experts-explained" target="_blank" rel="noopener">read ↗</a></div></article>
-          <article class="mini-item"><h3>Create Your Own GPT: The Magic of Parameter Efficient Fine-Tuning.</h3><div class="item-actions"><a href="https://kanishkk.substack.com/p/create-your-own-gpt" target="_blank" rel="noopener">read ↗</a></div></article>
-          <article class="mini-item"><h3>Rotatory Positional Embeddings (RoPE) Explained and Implemented</h3><div class="item-actions"><a href="https://kanishkk.substack.com/p/rotatory-positional-embeddings-rope" target="_blank" rel="noopener">read ↗</a></div></article>
-          <article class="mini-item"><h3>The Transformer Architecture Explained</h3><div class="item-actions"><a href="https://kanishkk.substack.com/p/the-transformer-architecture-explained" target="_blank" rel="noopener">read ↗</a></div></article>
-        </section>
+        <aside class="readout" id="readout" aria-live="polite">
+          <div class="h">attention head 0.0</div>
+          <div class="q">hover a word in my intro and watch what it attends to.</div>
+          <p class="fine">a toy head running in your browser: character-trigram embeddings, cosine similarity, softmax. no model was harmed.</p>
+        </aside>
       </div>
+    </section>
 
-      <footer class="contact-line">
-        <span>want to talk or build something together?</span>
+    <section id="research">
+      <h2 class="label">research:</h2>
+      <div class="cards">
+        <article class="card wide">
+          <div>
+            <div class="when">nov 2026 · safety · interpretability</div>
+            <h3><a href="research/safeswitch/">SafeSwitch</a></h3>
+            <p>Tiny Aya refuses 76% of harmful requests in English but only 21% when they're typed in Romanized Hindi or Hinglish. A LoRA adapter trained mostly on Latin-script Hindi fixes most of it without hurting helpfulness or MMLU.</p>
+            <p>Activation patching shows why: Latin-script prompts never reach the refusal state English builds in layers 14–22.</p>
+            <div class="more"><a href="research/safeswitch/">write-up →</a><a href="https://github.com/kanishkez/safeswitch">code ↗</a><a href="https://huggingface.co/kanishkez/safeswitch-lora">adapter ↗</a></div>
+          </div>
+          <div class="graph" id="graph" role="img" aria-label="Harmful refusal, base versus SafeSwitch: English 76 to 85, Hindi 56 to 81, Romanized Hindi 21 to 73, Hinglish 22 to 79 percent.">
+            <div class="cap">harmful refusal <i class="g-base"></i>base <i class="g-ss"></i>safeswitch</div>
+            <div class="row"><span>english</span><span class="bar"><i style="width:76.4%"></i><b style="--w:85.1%"></b></span><span class="n">76 → 85%</span></div>
+            <div class="row"><span>hindi</span><span class="bar"><i style="width:56.2%"></i><b style="--w:80.8%"></b></span><span class="n">56 → 81%</span></div>
+            <div class="row"><span>romanized</span><span class="bar"><i style="width:21.1%"></i><b style="--w:73.1%"></b></span><span class="n">21 → 73%</span></div>
+            <div class="row"><span>hinglish</span><span class="bar"><i style="width:21.6%"></i><b style="--w:79.3%"></b></span><span class="n">22 → 79%</span></div>
+          </div>
+        </article>
+
+        <article class="card">
+          <div class="when">interpretability · post-training</div>
+          <h3><a href="notes/post_training_mechanisms/">What does post-training change?</a></h3>
+          <p>A bottom-up look at how SFT, RLVR and instruction following work inside language models.</p>
+          <div class="more"><a href="notes/post_training_mechanisms/">read →</a><a href="https://github.com/kanishkez/MechInterp-Experiments">code ↗</a></div>
+        </article>
+
+        <article class="card">
+          <div class="when">architecture</div>
+          <h3><a href="https://github.com/kanishkez/LoopedNanoGPT-Experiments">Looped NanoGPT</a></h3>
+          <p>Can one transformer block, reused N times, stand in for N blocks? The gap narrows with training, and looping more at test time makes it worse.</p>
+          <div class="more"><a href="https://github.com/kanishkez/LoopedNanoGPT-Experiments">code ↗</a></div>
+        </article>
+      </div>
+    </section>
+
+    <section id="projects">
+      <h2 class="label">projects:</h2>
+      <ul class="projects">
+        <li><div class="top"><h3><a href="https://github.com/kanishkez/PolyDB-Context-Graph-Engine">PolyDB Context Graph</a></h3><span class="more"><a href="https://github.com/kanishkez/PolyDB-Context-Graph-Engine">code ↗</a></span></div><p>Structured database context for LLMs and agents, over MCP.</p></li>
+        <li><div class="top"><h3><a href="https://github.com/kanishkez/LLMs-as-Gym-Agents">LLMs as RL agents</a></h3><span class="more"><a href="https://kanishkk.substack.com/p/can-llms-solve-gym-environments">blog ↗</a><a href="https://github.com/kanishkez/LLMs-as-Gym-Agents">code ↗</a></span></div><p>An LLM as a pure policy in CartPole, FrozenLake and LunarLander.</p></li>
+        <li><div class="top"><h3><a href="https://github.com/kanishkez/TinyLLM">TinyLLM</a></h3><span class="more"><a href="https://github.com/kanishkez/TinyLLM">code ↗</a></span></div><p>A decoder-only transformer in pure PyTorch: RMSNorm, RoPE, SwiGLU, KV cache.</p></li>
+        <li><div class="top"><h3><a href="https://github.com/kanishkez/TinyPEFT">TinyPEFT</a></h3><span class="more"><a href="https://github.com/kanishkez/TinyPEFT">code ↗</a></span></div><p>LoRA, adapters, BitFit and prompt tuning in one pip package.</p></li>
+        <li><div class="top"><h3><a href="https://github.com/kanishkez/Linesman-AIReferee">Linesman</a></h3><span class="more"><a href="https://github.com/kanishkez/Linesman-AIReferee">code ↗</a></span></div><p>An AI VAR for football: vision plus a multimodal LLM making foul calls.</p></li>
+        <li><div class="top"><h3><a href="https://github.com/kanishkez/KisanGPT">KisanGPT</a></h3><span class="more"><a href="https://kisangpt-idgi.onrender.com">live ↗</a><a href="https://github.com/kanishkez/KisanGPT">code ↗</a></span></div><p>A multilingual assistant for Indian farmers: crop disease, prices, weather.</p></li>
+        <li><div class="top"><h3><a href="https://github.com/kanishkez/Reward-Model">Reward model</a></h3><span class="more"><a href="https://huggingface.co/kanishkez/Reward-Model">model ↗</a><a href="https://github.com/kanishkez/Reward-Model">code ↗</a></span></div><p>Qwen 2.5 3B on Anthropic's RLHF preferences, scored on RewardBench.</p></li>
+        <li><div class="top"><h3><a href="https://github.com/kanishkez/RL-Algorithms">RL algorithms</a></h3><span class="more"><a href="https://github.com/kanishkez/RL-Algorithms">code ↗</a></span></div><p>REINFORCE, actor-critic and PPO from scratch in PyTorch.</p></li>
+        <li><div class="top"><h3><a href="https://github.com/kanishkez/Paper-implementations">Paper implementations</a></h3><span class="more"><a href="https://github.com/kanishkez/Paper-implementations">code ↗</a></span></div><p>KV caching, Flash Attention, RoPE and GPT, from paper to code.</p></li>
+        <li><div class="top"><h3><a href="https://github.com/kanishkez/Llama3.2-physics-finetune">Llama 3.2 on physics</a></h3><span class="more"><a href="https://huggingface.co/kanishkez/llama3.2-fine-tuned-on-physics">model ↗</a><a href="https://github.com/kanishkez/Llama3.2-physics-finetune">code ↗</a></span></div><p>A LoRA fine-tune with Unsloth for physics reasoning.</p></li>
+        <li><div class="top"><h3><a href="https://github.com/kanishkez/Sentinel">Sentinel</a></h3><span class="more"><a href="https://github.com/kanishkez/Sentinel">code ↗</a></span></div><p>A global disease surveillance dashboard on live outbreak feeds.</p></li>
+        <li><div class="top"><h3><a href="https://github.com/kanishkez/KeyGoblin">KeyGoblin</a></h3><span class="more"><a href="https://github.com/kanishkez/KeyGoblin">code ↗</a></span></div><p>A CLI that sniffs out leaked API keys in web apps.</p></li>
+        <li><div class="top"><h3><a href="https://github.com/kanishkez/obsidian-mcp">obsidian-mcp</a></h3><span class="more"><a href="https://github.com/kanishkez/obsidian-mcp">code ↗</a></span></div><p>Lets Claude and other MCP hosts read and write an Obsidian vault.</p></li>
+        <li><div class="top"><h3><a href="https://github.com/kanishkez/HourSwap">HourSwap</a></h3><span class="more"><a href="https://hourswap.vercel.app">live ↗</a><a href="https://github.com/kanishkez/HourSwap">code ↗</a></span></div><p>Skill bartering for students, no money involved.</p></li>
+      </ul>
+    </section>
+
+    <section id="blogs">
+      <h2 class="label">blogs:</h2>
+      <ul class="blogs">
+        <li><a href="notes/post_training_mechanisms/">What post-training actually changes: a mechanistic study <span>on this site →</span></a></li>
+        <li><a href="https://kanishkk.substack.com/p/an-intro-to-rl">An intro to RL <span>substack ↗</span></a></li>
+        <li><a href="https://kanishkk.substack.com/p/mixture-of-experts-explained">Mixture of Experts explained <span>substack ↗</span></a></li>
+        <li><a href="https://kanishkk.substack.com/p/create-your-own-gpt">Create your own GPT: the magic of parameter-efficient fine-tuning <span>substack ↗</span></a></li>
+        <li><a href="https://kanishkk.substack.com/p/rotatory-positional-embeddings-rope">Rotary positional embeddings (RoPE), explained and implemented <span>substack ↗</span></a></li>
+        <li><a href="https://kanishkk.substack.com/p/beyond-transformers">Beyond transformers <span>substack ↗</span></a></li>
+        <li><a href="https://kanishkk.substack.com/p/the-transformer-architecture-explained">The transformer architecture explained <span>substack ↗</span></a></li>
+        <li><a href="https://kanishkk.substack.com/p/an-introduction-to-functional-programming">An introduction to functional programming and lambda calculus <span>substack ↗</span></a></li>
+        <li><a href="https://kanishkk.substack.com/p/how-far-is-agi">How far is AGI? <span>substack ↗</span></a></li>
+        <li><a href="https://kanishkk.substack.com/p/why-i-hate-existentialism">Why I hate existentialism <span>substack ↗</span></a></li>
+      </ul>
+    </section>
+
+    <section id="notes">
+      <h2 class="label">notes:</h2>
+      <div id="notes-container"></div>
+    </section>
+
+    <footer>
+      <a class="say-hi" href="mailto:mkanishkkulkarni@gmail.com">say <em>hi</em> <span class="arr">→</span></a>
+      <div class="foot-row">
         <a href="mailto:mkanishkkulkarni@gmail.com">mkanishkkulkarni@gmail.com</a>
-      </footer>
-    </section>
-
-    <section id="projects" class="section">
-      <div class="page-intro">
-        <h1>Projects</h1>
-        <p>Research systems, model tooling, and applied products across LLMs, RL, and developer infrastructure.</p>
+        <span><a href="https://github.com/kanishkez">github</a> · <a href="https://huggingface.co/kanishkez">huggingface</a> · <a href="https://kanishkk.substack.com">substack</a></span>
       </div>
-
-      <div class="project-list">
-        <article><h2>What Does Post-Training Change?</h2><p>A bottom-up investigation into how SFT, RLVR, and instruction following work inside language models.</p><div class="item-actions"><a href="notes/post_training_mechanisms/">Open →</a><a href="https://github.com/kanishkez/MechInterp-Experiments" target="_blank" rel="noopener">GitHub ↗</a></div></article>
-        <article><h2>Looped NanoGPT Experiments</h2><p>An investigation into whether a single transformer block reused recurrently across N iterations with shared weights can substitute for N independent blocks while retaining competitive language modeling performance. Experiments across TinyStories and FineWeb-Edu reveal a narrowing perplexity gap with more training and a meaningful negative result showing test-time loop scaling degrades rather than improves performance.</p><div class="item-actions"><a href="https://github.com/kanishkez/LoopedNanoGPT-Experiments" target="_blank" rel="noopener">GitHub ↗</a></div></article>
-        <article><h2>PolyDB Context Graph Engine</h2><p>An API-first backend for giving LLMs and agents structured database context. It connects to multiple databases, normalizes metadata into a unified model, builds a context graph, and adds embedding-based retrieval plus MCP-accessible tooling.</p><div class="item-actions"><a href="https://github.com/kanishkez/PolyDB-Context-Graph-Engine" target="_blank" rel="noopener">GitHub ↗</a></div></article>
-        <article><h2>Can LLMs act as RL Agents?</h2><p>Explores using an LLM as a pure policy in classic Gym environments: CartPole, FrozenLake, and LunarLander. The model reasons over episode history in natural language with no gradient updates or fine-tuning, relying entirely on in-context reasoning to select actions.</p><div class="item-actions"><a href="https://kanishkk.substack.com/p/can-llms-solve-gym-environments" target="_blank" rel="noopener">Blog ↗</a><a href="https://github.com/kanishkez/LLMs-as-Gym-Agents" target="_blank" rel="noopener">GitHub ↗</a></div></article>
-        <article><h2>TinyLLM</h2><p>A decoder-only Transformer built entirely from scratch in pure PyTorch. Implements modern architectural components, RMSNorm, Rotary Positional Embeddings (RoPE), SwiGLU feed-forward networks, and KV Caching, mirroring the design choices found in production-scale LLMs like LLaMA.</p><div class="item-actions"><a href="https://github.com/kanishkez/TinyLLM" target="_blank" rel="noopener">GitHub ↗</a></div></article>
-        <article><h2>TinyPEFT</h2><p>A lightweight parameter-efficient fine-tuning engine supporting LoRA, Adapter Tuning, Bitfit, and Prompt Tuning in a single unified package. Designed to make fine-tuning large language models cheap and accessible: installable via pip install tinypeft.</p><div class="item-actions"><a href="https://github.com/kanishkez/TinyPEFT" target="_blank" rel="noopener">GitHub ↗</a></div></article>
-        <article><h2>Linesman, AI Referee</h2><p>A Video Assistant Referee (VAR) system that analyzes football match footage to evaluate incidents and make foul decisions according to FIFA Law 12. Uses a two-stage pipeline combining computer vision for player and action detection with a multimodal LLM for objective, rule-aware decision-making.</p><div class="item-actions"><a href="https://github.com/kanishkez/Linesman-AIReferee" target="_blank" rel="noopener">GitHub ↗</a></div></article>
-        <article><h2>Sentinel</h2><p>A global disease surveillance dashboard that aggregates real-time outbreak data from multiple public health APIs and WHO feeds. Visualizes emerging threats on an interactive map, providing early-warning signals for pandemic preparedness and public health monitoring.</p><div class="item-actions"><a href="https://github.com/kanishkez/SentinelSENTINEL" target="_blank" rel="noopener">GitHub ↗</a></div></article>
-        <article><h2>KisanGPT</h2><p>A multilingual AI assistant built specifically for Indian farmers, combining image recognition for crop disease diagnosis with real-time market price feeds from data.gov.in. Supports regional languages and covers crop advice, pest management, government schemes, and weather-based recommendations.</p><div class="item-actions"><a href="https://kisangpt-idgi.onrender.com" target="_blank" rel="noopener">Live ↗</a><a href="https://github.com/kanishkez/KisanGPT" target="_blank" rel="noopener">GitHub ↗</a></div></article>
-        <article><h2>Reward Model (Qwen 2.5 3B)</h2><p>A reward model fine-tuned on Anthropic's RLHF preference dataset, designed to score model completions for use in RLHF training pipelines. Evaluated on the RewardBench benchmark to assess alignment quality across categories like safety, reasoning, and instruction-following.</p><div class="item-actions"><a href="https://huggingface.co/kanishkez/Reward-Model" target="_blank" rel="noopener">HuggingFace ↗</a><a href="https://github.com/kanishkez/Reward-Model" target="_blank" rel="noopener">GitHub ↗</a></div></article>
-        <article><h2>RL Implementations</h2><p>Clean from-scratch implementations of core reinforcement learning algorithms: REINFORCE, Actor-Critic, and PPO, built in PyTorch with Gymnasium environments.</p><div class="item-actions"><a href="https://github.com/kanishkez/RL-Algorithms" target="_blank" rel="noopener">GitHub ↗</a></div></article>
-        <article><h2>Paper Implementations</h2><p>A collection of transformer architecture deep dives implemented from paper to code: KV Caching, Flash Attention, Rotary Positional Embeddings, and GPT. Each implementation is paired with a detailed blog post explaining the math and intuition behind the technique.</p><div class="item-actions"><a href="https://github.com/kanishkez/llm-implementations" target="_blank" rel="noopener">GitHub ↗</a><a href="https://kanishkk.substack.com" target="_blank" rel="noopener">Blog ↗</a></div></article>
-        <article><h2>Llama 3.2 fine-tuned on Physics</h2><p>Llama 3.2 fine-tuned on curated physics question-answer datasets using LoRA and PEFT via Unsloth for efficient training. The resulting model demonstrates improved reasoning on physics problems spanning mechanics, electromagnetism, and thermodynamics compared to the base model.</p><div class="item-actions"><a href="https://huggingface.co/kanishkez/llama3.2-fine-tuned-on-physics" target="_blank" rel="noopener">Model ↗</a><a href="https://github.com/kanishkez/llama3.2-physics-finetune" target="_blank" rel="noopener">GitHub ↗</a></div></article>
-        <article><h2>KeyGoblin</h2><p>A CLI security tool that scans web applications for exposed API keys, secret tokens, and sensitive endpoints in JavaScript bundles, HTML source, and network responses. Helps developers catch credential leaks before they reach production or get picked up by automated scanners.</p><div class="item-actions"><a href="https://github.com/kanishkez/KeyGoblin" target="_blank" rel="noopener">GitHub ↗</a></div></article>
-        <article><h2>MCP server for Obsidian</h2><p>A Model Context Protocol server that gives Claude and other MCP-compatible hosts the ability to read and write notes directly inside an Obsidian vault. Enables AI-assisted note-taking workflows, knowledge graph traversal, and automated linking between related notes.</p><div class="item-actions"><a href="https://github.com/kanishkez/obsidian-mcp" target="_blank" rel="noopener">GitHub ↗</a></div></article>
-        <article><h2>HourSwap</h2><p>A barter platform designed for students to exchange skills and services without money: trade a guitar lesson for a coding session, or tutoring for design help. Built to foster community and make skill-sharing accessible on campus without financial barriers.</p><div class="item-actions"><a href="http://hourswap.vercel.app" target="_blank" rel="noopener">Live ↗</a><a href="https://github.com/kanishkez/HourSwap" target="_blank" rel="noopener">GitHub ↗</a></div></article>
-      </div>
-    </section>
-
-    <section id="blogs" class="section">
-      <div class="page-intro">
-        <h1>Blogs</h1>
-        <p>Notes, explainers, and long-form writing on transformers, reinforcement learning, systems, and philosophy.</p>
-      </div>
-
-      <div class="project-list writing-list">
-        <article><h2>What Does Post-Training Change?</h2><p>A bottom-up mechanistic interpretability investigation into how SFT, RLVR, and instruction following work inside language models.</p><div class="item-actions"><a href="notes/post_training_mechanisms/">read →</a><a href="https://github.com/kanishkez/MechInterp-Experiments" target="_blank" rel="noopener">GitHub ↗</a></div></article>
-        <article><h2>An Intro to RL</h2><p>A high-level introduction to the core ideas behind agents, rewards, policies, and learning through interaction.</p><div class="item-actions"><a href="https://kanishkk.substack.com/p/an-intro-to-rl" target="_blank" rel="noopener">read ↗</a></div></article>
-        <article><h2>Mixture of Experts Explained</h2><p>A practical breakdown of sparse expert routing, capacity management, and why MoE systems scale differently.</p><div class="item-actions"><a href="https://kanishkk.substack.com/p/mixture-of-experts-explained" target="_blank" rel="noopener">read ↗</a></div></article>
-        <article><h2>Create Your Own GPT: The Magic of Parameter Efficient Fine-Tuning.</h2><p>An accessible walkthrough of parameter-efficient fine-tuning and the tradeoffs behind adapting large models cheaply.</p><div class="item-actions"><a href="https://kanishkk.substack.com/p/create-your-own-gpt" target="_blank" rel="noopener">read ↗</a></div></article>
-        <article><h2>Rotatory Positional Embeddings (RoPE) Explained and Implemented</h2><p>An implementation-oriented explanation of rotary positional embeddings with intuition for how they preserve sequence structure.</p><div class="item-actions"><a href="https://kanishkk.substack.com/p/rotatory-positional-embeddings-rope" target="_blank" rel="noopener">read ↗</a></div></article>
-        <article><h2>Beyond Transformers</h2><p>A comparative guide to how major transformer families differ in objective, architecture, and downstream use.</p><div class="item-actions"><a href="https://kanishkk.substack.com/p/beyond-transformers" target="_blank" rel="noopener">read ↗</a></div></article>
-        <article><h2>The Transformer Architecture Explained</h2><p>A guided tour through attention, feed-forward blocks, residual pathways, and the design logic of transformer models.</p><div class="item-actions"><a href="https://kanishkk.substack.com/p/the-transformer-architecture-explained" target="_blank" rel="noopener">read ↗</a></div></article>
-        <article><h2>An Introduction to Functional Programming and Lambda Calculus</h2><p>A conceptual bridge from formal computation to functional programming ideas that still shape modern languages.</p><div class="item-actions"><a href="https://kanishkk.substack.com/p/an-introduction-to-functional-programming" target="_blank" rel="noopener">read ↗</a></div></article>
-        <article><h2>How far is AGI?</h2><p>A reflection on capability progress, open bottlenecks, and what it would actually mean to claim general intelligence.</p><div class="item-actions"><a href="https://kanishkk.substack.com/p/how-far-is-agi" target="_blank" rel="noopener">read ↗</a></div></article>
-        <article><h2>Why I hate existentialism</h2><p>A personal essay pushing against existentialist framing and testing its assumptions against lived experience.</p><div class="item-actions"><a href="https://kanishkk.substack.com/p/why-i-hate-existentialism" target="_blank" rel="noopener">read ↗</a></div></article>
-      </div>
-    </section>
-
-    <section id="notes" class="section">
-      <div class="page-intro">
-        <h1>Notes</h1>
-        <p>My notes on deep learning, reinforcement learning, and machine learning.</p>
-      </div>
-      <div id="notes-container" class="notes-index"></div>
-    </section>
+    </footer>
   </main>
 
   <script src="notes/notes-data.js"></script>
-  <script src="js/app.js"></script>
-  <script>
-    (function buildNotesSection() {
-      if (typeof NOTES_DATA === "undefined") return;
-      const container = document.getElementById("notes-container");
-      if (!container) return;
-
-      window.toggleCategory = function(catId) {
-        const catEl = document.getElementById("cat-" + catId);
-        if (!catEl) return;
-        const content = catEl.querySelector(".notes-category-content");
-        const header = catEl.querySelector(".notes-category-header");
-        if (content && header) {
-          content.classList.toggle("collapsed");
-          header.classList.toggle("collapsed");
-        }
-      };
-
-      NOTES_DATA.forEach((cat) => {
-        const section = document.createElement("div");
-        section.className = "notes-category";
-        section.id = "cat-" + cat.id;
-        const notesHtml = cat.notes.map((note) => `
-          <a href="notes/${note.slug}/" class="note-link">
-            <span class="note-link-title">${note.title}</span>
-            <span class="note-link-arrow">open</span>
-          </a>
-        `).join("");
-        section.innerHTML = `
-          <button class="notes-category-header collapsed" onclick="toggleCategory('${cat.id}')">
-            <span><strong>${cat.title}</strong><em>${cat.description}</em></span>
-            <i>+</i>
-          </button>
-          <div class="notes-category-content collapsed">
-            <div class="notes-list">${notesHtml}</div>
-          </div>
-        `;
-        container.appendChild(section);
-      });
-    })();
-  </script>
+  <script src="js/app.js?v=14"></script>
 </body>
 </html>
